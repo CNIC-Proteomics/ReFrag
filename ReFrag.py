@@ -207,7 +207,7 @@ def expSpectrum(fr_ns, scan, index2, mode):
     spec["CORR_INT"] = spec.apply(lambda x: max(ions.INT)-13 if x["CORR_INT"]>max(ions.INT) else x["CORR_INT"], axis=1)
     return(spec, ions, spec_correction)
 
-def theoSpectrum(seq, mods, pos, len_ions, dm):
+def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
     '''
     Prepare theoretical fragment matrix.
 
@@ -330,10 +330,10 @@ def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass, ftol):
     mim = sub.MH
     dm = mim - parental
     exp_spec, ions, spec_correction = expSpectrum(fr_ns, sub.FirstScan, index2, mode)
-    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0)
+    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec)
     ## DM OPERATIONS ##
-    dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm)
+    dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass)
     dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec)
     dmterrorsmin = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0)) # Parallel minima
     dmfppm = dmterrorsmin[(dmterrorsmin < 300).sum(axis=1) >= 0.01*len(dmterrorsmin.columns)]
