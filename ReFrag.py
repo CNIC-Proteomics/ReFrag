@@ -22,8 +22,10 @@ import re
 import scipy.stats
 import statistics
 import sys
+import shutup
 from tqdm import tqdm
 pd.options.mode.chained_assignment = None  # default='warn'
+shutup.please()
 
 def getTquery(fr_ns, mode):
     if mode == "mgf":
@@ -395,7 +397,7 @@ def parallelFragging(query, parlist):
                                parlist[0], parlist[1], parlist[2],
                                parlist[3], parlist[4], parlist[5])
     hscore = hyperscore(ions, proof)
-    return([MH, dm, hscore])
+    return([MH, dm, sequence, len(proof), hscore])
 
 def main(args):
     '''
@@ -429,7 +431,9 @@ def main(args):
     df['templist'] = refrags
     df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
     df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
-    df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+    df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+    df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
+    df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
     # TODO: REFRAG ions matched
     df = df.drop('templist', axis = 1)
     logging.info("Writing output file...")
