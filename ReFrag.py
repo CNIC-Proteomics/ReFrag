@@ -397,11 +397,12 @@ def main(args):
     Main function
     '''
     # Parameters
-    chunks = float(mass._sections['Parameters']['batch_size'])
+    chunks = int(mass._sections['Parameters']['batch_size'])
     min_dm = float(mass._sections['Parameters']['min_dm'])
     # Read results file from MSFragger
     logging.info("Reading MSFragger file...")
     df = pd.read_csv(Path(args.infile), sep="\t")
+    logging.info("\t " + str(len(df)) + " lines read.")
     # Read raw file
     msdata, mode, index2, tquery = readRaw(Path(args.rawfile))
     # Prepare to parallelize
@@ -409,10 +410,10 @@ def main(args):
     rowSeries = list(rowSeries)
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
-        chunks = len(df)/args.n_workers
+        chunks = math.ceil(len(df)/args.n_workers)
     parlist = [msdata, index2, mode, min_dm]
     logging.info("Refragging...")
-    logging.info("\tBatch size: " + str(chunks) + "(" + str(math.ceil(len(df)/chunks)) + " batches)")
+    logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
         refrags = list(tqdm(executor.map(parallelFragging,
                                          rowSeries,
