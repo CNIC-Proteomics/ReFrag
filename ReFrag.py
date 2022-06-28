@@ -77,7 +77,7 @@ def readRaw(msdata):
     else:
         logging.info("MS Data file extension not recognized!")
         sys.exit()
-    return(msdata, mode, index2, tquery)
+    return(fr_ns, mode, index2, tquery)
 
 def hyperscore(ions, proof):
     ## 1. Normalize intensity to 10^5
@@ -154,10 +154,7 @@ def getTheoMH(charge, sequence, mods, pos, nt, ct, mass):
 def expSpectrum(fr_ns, scan, index2, mode):
     '''
     Prepare experimental spectrum.
-    '''
-    # index1 = fr_ns.loc[fr_ns[0]=='SCANS='+str(scan)].index[0] + 1
-    # index2 = fr_ns.drop(index=fr_ns.index[:index1], axis=0).loc[fr_ns[0]=='END IONS'].index[0]
-    
+    '''    
     if mode == "mgf":
         index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
         index1 = np.where(index1)[0][0]
@@ -185,12 +182,9 @@ def expSpectrum(fr_ns, scan, index2, mode):
                 break # Scan numbers are unique
         
     ions["ZERO"] = 0
-    #ions["CCU"] = 0.01
     ions["CCU"] = ions.MZ - 0.01
     ions.reset_index(drop=True)
     
-    #bind = pd.DataFrame(list(itertools.chain(*set(zip(list(ions['CCU']),list(ions['MZ']))))), columns=["MZ"])
-    #bind["REL_INT"] = list(itertools.chain(*set(zip(list(ions['ZERO']),list(ions['INT'])))))
     bind = pd.DataFrame(list(itertools.chain.from_iterable(zip(list(ions['CCU']),list(ions['MZ'])))), columns=["MZ"])
     bind["REL_INT"] = list(itertools.chain.from_iterable(zip(list(ions['ZERO']),list(ions['INT']))))
     bind["ZERO"] = 0
