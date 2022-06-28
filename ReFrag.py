@@ -121,7 +121,7 @@ def insertMods(peptide, mods):
         peptide = peptide[:pos] + '[' + str(value) + ']' + peptide[pos:]
         omod.append(value)
         opos.append(pos)
-    return(peptide)
+    return(peptide, omod, opos)
 
 def getTheoMH(charge, sequence, mods, pos, nt, ct):
     '''    
@@ -149,7 +149,7 @@ def getTheoMH(charge, sequence, mods, pos, nt, ct):
         if i in pos:
             total_aas += float(mods[pos.index(i)])
     MH = total_aas - (charge-1)*m_proton
-    return MH
+    return(MH)
 
 def expSpectrum(fr_ns, scan, index2, mode):
     '''
@@ -384,11 +384,11 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton*charge)
     plain_peptide = query.peptide
-    sequence = insertMods(plain_peptide, query.modification_info)
+    sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence],
                     index = ["FirstScan", "Charge", "MH", "Sequence"])
-    ions, proof, dm = miniVseq(sub, plain_peptide, parlist[0], parlist[1], parlist[2], parlist[3])
+    ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos, parlist[0], parlist[1], parlist[2], parlist[3])
     hscore = hyperscore(ions, proof)
     return([MH, dm, hscore])
 
