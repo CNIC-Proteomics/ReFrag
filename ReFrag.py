@@ -387,7 +387,7 @@ def parallelFragging(query, parlist):
     m_proton = 1.007276
     scan = query.scannum
     charge = query.charge
-    MH = query.precursor_neutral_mass + (m_proton*charge)
+    MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
     sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     # Make a Vseq-style query
