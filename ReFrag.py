@@ -23,6 +23,7 @@ import scipy.stats
 import statistics
 import sys
 from tqdm import tqdm
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def getTquery(fr_ns, mode):
     if mode == "mgf":
