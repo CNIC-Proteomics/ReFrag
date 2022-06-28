@@ -123,7 +123,7 @@ def insertMods(peptide, mods):
         opos.append(pos)
     return(peptide, omod, opos)
 
-def getTheoMH(charge, sequence, mods, pos, nt, ct):
+def getTheoMH(charge, sequence, mods, pos, nt, ct, mass):
     '''    
     Calculate theoretical MH using the PSM sequence.
     '''
@@ -226,7 +226,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm):
         yn = list(seq[i:])
         if i > 0: nt = False
         else: nt = True
-        fragy = getTheoMH(0,yn,mods,pos,nt,True) + dm
+        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) + dm
         outy[i:] = fragy
         
     ## B SERIES ##
@@ -235,7 +235,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm):
         bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
-        fragb = getTheoMH(0,bn,mods,pos,True,ct) - 2*m_hydrogen - m_oxygen + dm
+        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen + dm
         outb[i:] = fragb
     
     ## FRAGMENT MATRIX ##
@@ -329,9 +329,9 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
-def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm):
+def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass):
     ## DM ##
-    parental = getTheoMH(sub.Charge, plainseq, mods, pos, True, True)
+    parental = getTheoMH(sub.Charge, plainseq, mods, pos, True, True, mass)
     mim = sub.MH
     dm = mim - parental
     exp_spec, ions, spec_correction = expSpectrum(fr_ns, sub.FirstScan, index2, mode)
@@ -388,7 +388,9 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence],
                     index = ["FirstScan", "Charge", "MH", "Sequence"])
-    ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos, parlist[0], parlist[1], parlist[2], parlist[3])
+    ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
+                               parlist[0], parlist[1], parlist[2],
+                               parlist[3], parlist[4])
     hscore = hyperscore(ions, proof)
     return([MH, dm, hscore])
 
@@ -411,7 +413,7 @@ def main(args):
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [msdata, index2, mode, min_dm]
+    parlist = [msdata, index2, mode, min_dm, mass]
     logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
