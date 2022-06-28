@@ -241,7 +241,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
     spec.reset_index(inplace=True, drop=True)
     return(spec)
 
-def errorMatrix(mz, theo_spec):
+def errorMatrix(mz, theo_spec, mass):
     '''
     Prepare ppm-error and experimental mass matrices.
     '''
@@ -276,7 +276,7 @@ def makeFrags(seq_len):
     frags.bydm3 = frags.by + "*+++"
     return(frags)
 
-def assignIons(theo_spec, dm_theo_spec, frags, dm, arg_dm):
+def assignIons(theo_spec, dm_theo_spec, frags, dm, arg_dm, mass):
     m_proton = mass.getfloat('Masses', 'm_proton')
     assign = pd.concat([frags.by, theo_spec.iloc[0]], axis=1)
     assign.columns = ['FRAGS', '+']
@@ -331,10 +331,10 @@ def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass, ftol):
     dm = mim - parental
     exp_spec, ions, spec_correction = expSpectrum(fr_ns, sub.FirstScan, index2, mode)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
-    terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec)
+    terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
     ## DM OPERATIONS ##
     dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass)
-    dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec)
+    dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
     dmterrorsmin = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0)) # Parallel minima
     dmfppm = dmterrorsmin[(dmterrorsmin < 300).sum(axis=1) >= 0.01*len(dmterrorsmin.columns)]
     dmfppm_fake = pd.DataFrame(50, index=list(range(0,len(plainseq)*2)), columns=list(range(0,len(plainseq)*2)))
@@ -346,7 +346,7 @@ def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass, ftol):
     dmterrors2.columns = frags.by2
     dmterrors3.columns = frags.by3
     ## ASSIGN IONS WITHIN SPECTRA ##
-    assign = assignIons(theo_spec, dm_theo_spec, frags, dm, min_dm)
+    assign = assignIons(theo_spec, dm_theo_spec, frags, dm, min_dm, mass)
     ## PPM ERRORS ##
     if sub.Charge == 2:
         ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
