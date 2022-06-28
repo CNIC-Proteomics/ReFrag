@@ -63,14 +63,14 @@ def getTquery(fr_ns, mode):
 def readRaw(msdata):
     if os.path.splitext(msdata)[1].lower() == ".mzml":
         mode = "mzml"
-        logging.info("\tReading mzML file...")
+        logging.info("Reading mzML file...")
         fr_ns = pyopenms.MSExperiment()
         pyopenms.MzMLFile().load(msdata, fr_ns)
         index2 = 0
         tquery = getTquery(fr_ns, mode)
     elif os.path.splitext(msdata)[1].lower() == ".mgf":
         mode = "mgf"
-        logging.info("\tReading MGF file...")
+        logging.info("Reading MGF file...")
         fr_ns = pd.read_csv(msdata, header=None)
         index2 = fr_ns.to_numpy() == 'END IONS'
         tquery = getTquery(fr_ns, mode)
@@ -400,6 +400,7 @@ def main(args):
     chunks = float(mass._sections['Parameters']['batch_size'])
     min_dm = float(mass._sections['Parameters']['min_dm'])
     # Read results file from MSFragger
+    logging.info("Reading MSFragger file...")
     df = pd.read_csv(Path(args.infile), sep="\t")
     # Read raw file
     msdata, mode, index2, tquery = readRaw(Path(args.rawfile))
@@ -410,6 +411,8 @@ def main(args):
     if len(df) <= chunks:
         chunks = len(df)/args.n_workers
     parlist = [msdata, index2, mode, min_dm]
+    logging.info("Refragging...")
+    logging.info("\tBatch size: " + str(chunks) + "(" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
         refrags = list(tqdm(executor.map(parallelFragging,
                                          rowSeries,
@@ -421,8 +424,10 @@ def main(args):
     df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
     df = df.drop('templist', axis = 1)
+    logging.info("Writing output file...")
     outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
     df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
+    logging.info("Done...")
     return
 
 if __name__ == '__main__':
