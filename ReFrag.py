@@ -84,20 +84,24 @@ def hyperscore(ions, proof):
     ## 1. Normalize intensity to 10^5
     norm = (ions.INT / ions.INT.max()) * 10E4
     ions["MSF_INT"] = norm
-    
     ## 2. Pick matched ions ##
     matched_ions = pd.merge(proof, ions, on="MZ")
-    
     ## 3. Adjust intensity
     matched_ions.MSF_INT = matched_ions.MSF_INT / 10E2
-    
     ## 4. Hyperscore ##
     matched_ions["SERIES"] = matched_ions.apply(lambda x: x.FRAGS[0], axis=1)
-    n_b = matched_ions.SERIES.value_counts()['b']
-    n_y = matched_ions.SERIES.value_counts()['y']
-    i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
-    i_y = matched_ions[matched_ions.SERIES=='y'].MSF_INT.sum()
-    
+    try:
+        n_b = matched_ions.SERIES.value_counts()['b']
+        i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
+    except KeyError:
+        n_b = 0
+        i_b = 0
+    try:
+        n_y = matched_ions.SERIES.value_counts()['y']
+        i_y = matched_ions[matched_ions.SERIES=='y'].MSF_INT.sum()
+    except KeyError:
+        n_y = 0
+        i_y = 0
     hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
     return(hs)
 
