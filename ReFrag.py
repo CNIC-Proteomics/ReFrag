@@ -323,7 +323,7 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
-def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass):
+def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass, ftol):
     ## DM ##
     parental = getTheoMH(sub.Charge, plainseq, mods, pos, True, True, mass)
     mim = sub.MH
@@ -370,6 +370,7 @@ def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass):
     proof = makeAblines(texp, minv, assign, ions)
     proof.INT = proof.INT * spec_correction
     proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
+    proof = proof[proof.PPM<=ftol]
     return(ions, proof, dm)
 
 def parallelFragging(query, parlist):
@@ -384,7 +385,7 @@ def parallelFragging(query, parlist):
                     index = ["FirstScan", "Charge", "MH", "Sequence"])
     ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
                                parlist[0], parlist[1], parlist[2],
-                               parlist[3], parlist[4])
+                               parlist[3], parlist[4], parlist[5])
     hscore = hyperscore(ions, proof)
     return([MH, dm, hscore])
 
@@ -395,6 +396,7 @@ def main(args):
     # Parameters
     chunks = int(mass._sections['Parameters']['batch_size'])
     min_dm = float(mass._sections['Parameters']['min_dm'])
+    ftol = float(mass._sections['Parameters']['f_tol'])
     # Read results file from MSFragger
     logging.info("Reading MSFragger file...")
     df = pd.read_csv(Path(args.infile), sep="\t")
@@ -407,7 +409,7 @@ def main(args):
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [msdata, index2, mode, min_dm, mass]
+    parlist = [msdata, index2, mode, min_dm, mass, ftol]
     logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
@@ -420,6 +422,7 @@ def main(args):
     df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
     df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+    # TODO: REFRAG ions matched
     df = df.drop('templist', axis = 1)
     logging.info("Writing output file...")
     outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
