@@ -102,7 +102,10 @@ def hyperscore(ions, proof):
     except KeyError:
         n_y = 0
         i_y = 0
-    hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
+    try:
+        hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y) #TODO: If only one series matches it's always 0?
+    except ValueError:
+        hs = 0
     return(hs)
 
 def insertMods(peptide, mods):
@@ -414,7 +417,7 @@ def main(args):
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [msdata, index2, mode, min_dm, mass, ftol]
+    parlist = [msdata, index2, mode, min_dm, mass, ftol] # TODO if we pass msdata it uses too much memory
     logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
