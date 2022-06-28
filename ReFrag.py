@@ -376,7 +376,7 @@ def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm):
     proof = makeAblines(texp, minv, assign, ions)
     proof.INT = proof.INT * spec_correction
     proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
-    return(ions, proof)
+    return(ions, proof, dm)
 
 def parallelFragging(query, parlist):
     m_proton = 1.007276
@@ -388,9 +388,9 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence],
                     index = ["FirstScan", "Charge", "MH", "Sequence"])
-    ions, proof = miniVseq(sub, plain_peptide, parlist[0], parlist[1], parlist[2], parlist[3])
+    ions, proof, dm = miniVseq(sub, plain_peptide, parlist[0], parlist[1], parlist[2], parlist[3])
     hscore = hyperscore(ions, proof)
-    return(hscore)
+    return([MH, dm, hscore])
 
 def main(args):
     '''
@@ -416,8 +416,13 @@ def main(args):
                                          itertools.repeat(parlist),
                                          chunksize=chunks),
                             total=len(rowSeries)))
-        
-        
+    df['templist'] = refrags
+    df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
+    df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
+    df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+    df = df.drop('templist', axis = 1)
+    outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
+    df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
     return
 
 if __name__ == '__main__':
@@ -450,8 +455,8 @@ if __name__ == '__main__':
             mass.write(newconfig)
 
     # logging debug level. By default, info level
-    log_file = outfile = args.infile[:-4] + 'ReFrag_log.txt'
-    log_file_debug = outfile = args.infile[:-4] + 'ReFrag_log_debug.txt'
+    log_file = args.infile[:-4] + 'ReFrag_log.txt'
+    log_file_debug = args.infile[:-4] + 'ReFrag_log_debug.txt'
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s - %(levelname)s - %(message)s',
