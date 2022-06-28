@@ -17,6 +17,7 @@ import os
 import pandas as pd
 from pathlib import Path
 import pyopenms
+import re
 import sys
 from tqdm import tqdm
 
@@ -96,7 +97,34 @@ def hyperscore(ions, proof):
     hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
     return(hs)
 
+def insertMods(peptide, mods):
+    mods = mods.split(sep=", ")
+    modlist = []
+    for m in mods:
+        #value = float(re.findall("\d+\.\d+", m)[0])
+        pos, value = re.findall('[^()]+', m)
+        value = float(value)
+        if len(re.findall(r'\d+', pos)) > 0:
+            pos = int(re.findall(r'\d+', pos)[0])
+        elif pos == "N-term":
+            pos = 1
+        elif pos == "C-term":
+            pos = len(peptide)
+        modlist.append([pos, value])
+    modlist = modlist[::-1] # Reverse list so it can be added without breaking pos
+    for pos, value in modlist:
+        peptide = peptide[:pos] + '[' + str(value) + ']' + peptide[pos:] 
+    return(peptide)
+
 def parallelFragging(query):
+    m_proton = 1.007276
+    scan = query.scannum
+    charge = query.charge
+    MH = query.precursor_neutral_mass + (m_proton*charge)
+    plain_peptide = query.peptide
+    sequence = insertMods(plain_peptide, query.modification_info)
+    retention_time = query.retention_time
+    
     return
 
 def main(args):
