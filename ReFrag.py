@@ -68,7 +68,7 @@ def readRaw(msdata):
         mode = "mzml"
         logging.info("Reading mzML file...")
         fr_ns = pyopenms.MSExperiment()
-        pyopenms.MzMLFile().load(msdata, fr_ns)
+        pyopenms.MzMLFile().load(str(msdata), fr_ns)
         index2 = 0
         tquery = getTquery(fr_ns, mode)
     elif os.path.splitext(msdata)[1].lower() == ".mgf":
