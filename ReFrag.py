@@ -27,42 +27,6 @@ from tqdm import tqdm
 pd.options.mode.chained_assignment = None  # default='warn'
 shutup.please()
 
-def getTquery(fr_ns, mode):
-    if mode == "mgf":
-        squery = fr_ns.loc[fr_ns[0].str.contains("SCANS=")]
-        squery = squery[0].str.replace("SCANS=","")
-        squery.reset_index(inplace=True, drop=True)
-        mquery = fr_ns.loc[fr_ns[0].str.contains("PEPMASS=")]
-        mquery = mquery[0].str.replace("PEPMASS=","")
-        mquery.reset_index(inplace=True, drop=True)
-        cquery = fr_ns.loc[fr_ns[0].str.contains("CHARGE=")]
-        cquery = cquery[0].str.replace("CHARGE=","")
-        cquery.reset_index(inplace=True, drop=True)
-        tquery = pd.concat([squery.rename('SCANS'),
-                            mquery.rename('PEPMASS'),
-                            cquery.rename('CHARGE')],
-                           axis=1)
-        try:
-            tquery[['MZ','INT']] = tquery.PEPMASS.str.split(" ",expand=True,)
-        except ValueError:
-            tquery['MZ'] = tquery.PEPMASS
-        tquery['CHARGE'] = tquery.CHARGE.str[:-1]
-        tquery = tquery.drop("PEPMASS", axis=1)
-        tquery = tquery.apply(pd.to_numeric)
-    elif mode == "mzml":
-        tquery = []
-        for s in fr_ns.getSpectra(): # TODO this is slow
-            if s.getMSLevel() == 2:
-                df = pd.DataFrame([int(s.getNativeID().split(' ')[-1][5:]), # Scan
-                          s.getPrecursors()[0].getCharge(), # Precursor Charge
-                          s.getPrecursors()[0].getMZ(), # Precursor MZ
-                          s.getPrecursors()[0].getIntensity()]).T # Precursor Intensity
-                df.columns = ["SCANS", "CHARGE", "MZ", "INT"]
-                tquery.append(df)
-        tquery = pd.concat(tquery)
-        tquery = tquery.apply(pd.to_numeric)
-    return tquery
-
 def readRaw(msdata):
     if os.path.splitext(msdata)[1].lower() == ".mzml":
         mode = "mzml"
@@ -121,13 +85,13 @@ def hyperscore(ions, proof): # TODO play with number of ions
     temp = matched_ions.copy()
     temp.drop_duplicates(subset='FRAGS', keep="first")
     try:
-        n_b = matched_ions.SERIES.value_counts()['b']
+        n_b = temp.SERIES.value_counts()['b']
         i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
     except KeyError:
         n_b = 0
         i_b = 0
     try:
-        n_y = matched_ions.SERIES.value_counts()['y']
+        n_y = temp.SERIES.value_counts()['y']
         i_y = matched_ions[matched_ions.SERIES=='y'].MSF_INT.sum()
     except KeyError:
         n_y = 0
