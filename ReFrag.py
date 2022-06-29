@@ -130,7 +130,7 @@ def insertMods(peptide, mods):
     for pos, value in modlist:
         peptide = peptide[:pos] + '[' + str(value) + ']' + peptide[pos:]
         omod.append(value)
-        opos.append(pos)
+        opos.append(pos-1)
     return(peptide, omod, opos)
 
 def getTheoMH(charge, sequence, mods, pos, nt, ct, mass):
