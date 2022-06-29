@@ -335,9 +335,7 @@ def makeAblines(texp, minv, assign, ions):
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol):
     ## DM ##
-    parental = getTheoMH(sub.Charge, plainseq, mods, pos, True, True, mass)
-    mim = sub.MH
-    dm = mim - parental
+    dm = sub.DM # TODO: replace with UNIMOD range
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
@@ -380,9 +378,10 @@ def parallelFragging(query, parlist):
     plain_peptide = query.peptide
     sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     spectrum = query.spectrum
+    dm = query.massdiff
     # Make a Vseq-style query
-    sub = pd.Series([scan, charge, MH, sequence, spectrum],
-                    index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum"])
+    sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
+                    index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
     ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
                                parlist[0], parlist[1])
     hscore = hyperscore(ions, proof)
