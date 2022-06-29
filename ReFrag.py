@@ -70,19 +70,44 @@ def readRaw(msdata):
         fr_ns = pyopenms.MSExperiment()
         pyopenms.MzMLFile().load(str(msdata), fr_ns)
         index2 = 0
-        tquery = getTquery(fr_ns, mode)
+        # tquery = getTquery(fr_ns, mode)
     elif os.path.splitext(msdata)[1].lower() == ".mgf":
         mode = "mgf"
         logging.info("Reading MGF file...")
         fr_ns = pd.read_csv(msdata, header=None)
         index2 = fr_ns.to_numpy() == 'END IONS'
-        tquery = getTquery(fr_ns, mode)
+        # tquery = getTquery(fr_ns, mode)
     else:
         logging.info("MS Data file extension not recognized!")
         sys.exit()
-    return(fr_ns, mode, index2, tquery)
+    return(fr_ns, mode, index2)
 
-def hyperscore(ions, proof):
+def locateScan(scan, mode, fr_ns, index2):
+    if mode == "mgf":
+        index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
+        index1 = np.where(index1)[0][0]
+        index3 = np.where(index2)[0]
+        index3 = index3[np.searchsorted(index3,[index1,],side='right')[0]]
+        
+        try:
+            ions = fr_ns.iloc[index1+1:index3,:]
+            ions[0] = ions[0].str.strip()
+            ions[['MZ','INT']] = ions[0].str.split(" ",expand=True,)
+            ions = ions.drop(ions.columns[0], axis=1)
+            ions = ions.apply(pd.to_numeric)
+        except ValueError:
+            ions = fr_ns.iloc[index1+4:index3,:]
+            ions[0] = ions[0].str.strip()
+            ions[['MZ','INT']] = ions[0].str.split(" ",expand=True,)
+            ions = ions.drop(ions.columns[0], axis=1)
+            ions = ions.apply(pd.to_numeric)
+    elif mode == "mzml":
+        s = fr_ns.getSpectrum(scan)
+        ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T
+        ions.columns = ["MZ", "INT"]
+    return(ions)
+
+def hyperscore(ions, proof): # TODO play with number of ions
     ## 1. Normalize intensity to 10^5
     norm = (ions.INT / ions.INT.max()) * 10E4
     ions["MSF_INT"] = norm
@@ -92,6 +117,10 @@ def hyperscore(ions, proof):
     matched_ions.MSF_INT = matched_ions.MSF_INT / 10E2
     ## 4. Hyperscore ##
     matched_ions["SERIES"] = matched_ions.apply(lambda x: x.FRAGS[0], axis=1)
+    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('+', '')
+    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('*', '')
+    temp = matched_ions.copy()
+    temp.drop_duplicates(subset='FRAGS', keep="first")
     try:
         n_b = matched_ions.SERIES.value_counts()['b']
         i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
@@ -161,36 +190,10 @@ def getTheoMH(charge, sequence, mods, pos, nt, ct, mass):
     MH = total_aas - (charge-1)*m_proton
     return(MH)
 
-def expSpectrum(fr_ns, scan, index2, mode):
+def expSpectrum(ions):
     '''
     Prepare experimental spectrum.
-    '''    
-    if mode == "mgf":
-        index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
-        index1 = np.where(index1)[0][0]
-        index3 = np.where(index2)[0]
-        index3 = index3[np.searchsorted(index3,[index1,],side='right')[0]]
-        
-        try:
-            ions = fr_ns.iloc[index1+1:index3,:]
-            ions[0] = ions[0].str.strip()
-            ions[['MZ','INT']] = ions[0].str.split(" ",expand=True,)
-            ions = ions.drop(ions.columns[0], axis=1)
-            ions = ions.apply(pd.to_numeric)
-        except ValueError:
-            ions = fr_ns.iloc[index1+4:index3,:]
-            ions[0] = ions[0].str.strip()
-            ions[['MZ','INT']] = ions[0].str.split(" ",expand=True,)
-            ions = ions.drop(ions.columns[0], axis=1)
-            ions = ions.apply(pd.to_numeric)
-    elif mode == "mzml":
-        for s in fr_ns.getSpectra():
-            # Keep only scans in range
-            if int(s.getNativeID().split(' ')[-1][5:]) == int(scan):
-                ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T
-                ions.columns = ["MZ", "INT"]
-                break # Scan numbers are unique
-        
+    '''        
     ions["ZERO"] = 0
     ions["CCU"] = ions.MZ - 0.01
     ions.reset_index(drop=True)
@@ -333,12 +336,12 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
-def miniVseq(sub, plainseq, mods, pos, fr_ns, index2, mode, min_dm, mass, ftol):
+def miniVseq(sub, plainseq, mods, pos, min_dm, mass, ftol):
     ## DM ##
     parental = getTheoMH(sub.Charge, plainseq, mods, pos, True, True, mass)
     mim = sub.MH
     dm = mim - parental
-    exp_spec, ions, spec_correction = expSpectrum(fr_ns, sub.FirstScan, index2, mode)
+    exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
     ## DM OPERATIONS ##
@@ -390,12 +393,12 @@ def parallelFragging(query, parlist):
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
     sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
+    spectrum = query.spectrum
     # Make a Vseq-style query
-    sub = pd.Series([scan, charge, MH, sequence],
-                    index = ["FirstScan", "Charge", "MH", "Sequence"])
+    sub = pd.Series([scan, charge, MH, sequence, spectrum],
+                    index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum"])
     ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
-                               parlist[0], parlist[1], parlist[2],
-                               parlist[3], parlist[4], parlist[5])
+                               parlist[0], parlist[1], parlist[2])
     hscore = hyperscore(ions, proof)
     proof.FRAGS = proof.FRAGS.str.replace('+', '')
     proof.FRAGS = proof.FRAGS.str.replace('*', '')
@@ -414,14 +417,16 @@ def main(args):
     df = pd.read_csv(Path(args.infile), sep="\t")
     logging.info("\t " + str(len(df)) + " lines read.")
     # Read raw file
-    msdata, mode, index2, tquery = readRaw(Path(args.rawfile))
+    msdata, mode, index2 = readRaw(Path(args.rawfile))
     # Prepare to parallelize
+    # TODO do all calculations with msdata first. we need to get: spectrum
+    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
     rowSeries = list(rowSeries)
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [msdata, index2, mode, min_dm, mass, ftol] # TODO if we pass msdata it uses too much memory
+    parlist = [min_dm, mass, ftol]
     logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
@@ -430,6 +435,7 @@ def main(args):
                                          itertools.repeat(parlist),
                                          chunksize=chunks),
                             total=len(rowSeries)))
+    df = df.drop('spectrum', axis = 1)
     df['templist'] = refrags
     df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
     df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
