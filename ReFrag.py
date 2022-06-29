@@ -88,16 +88,16 @@ def hyperscore(ions, proof): # TODO play with number of ions
         n_b = temp.SERIES.value_counts()['b']
         i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
     except KeyError:
-        n_b = 0
-        i_b = 0
+        n_b = 1 # So that hyperscore will not be 0 if one series is missing
+        i_b = 1
     try:
         n_y = temp.SERIES.value_counts()['y']
         i_y = matched_ions[matched_ions.SERIES=='y'].MSF_INT.sum()
     except KeyError:
-        n_y = 0
-        i_y = 0
+        n_y = 1
+        i_y = 1
     try:
-        hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y) #TODO: If only one series matches it's always 0?
+        hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
     except ValueError:
         hs = 0
     return(hs)
