@@ -288,7 +288,7 @@ def makeFrags(seq_len):
     frags.bydm3 = frags.by + "*+++"
     return(frags)
 
-def assignIons(theo_spec, dm_theo_spec, frags, dm, arg_dm, mass):
+def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     m_proton = mass.getfloat('Masses', 'm_proton')
     assign = pd.concat([frags.by, theo_spec.iloc[0]], axis=1)
     assign.columns = ['FRAGS', '+']
@@ -297,12 +297,10 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, arg_dm, mass):
     assign["*"] = dm_theo_spec.iloc[0]
     assign["*++"] = (dm_theo_spec.iloc[0]+m_proton)/2
     c_assign = pd.DataFrame(list(assign["+"]) + list(assign["++"]) + list(assign["+++"]))
-    if dm >= arg_dm:
-        c_assign = pd.concat([c_assign, pd.DataFrame(list(assign["*"])), pd.DataFrame(list(assign["*++"]))])
+    c_assign = pd.concat([c_assign, pd.DataFrame(list(assign["*"])), pd.DataFrame(list(assign["*++"]))])
     c_assign.columns = ["MZ"]
     c_assign_frags = pd.DataFrame(list(frags.by) + list(frags.by + "++") + list(frags.by + "+++"))
-    if dm >= arg_dm:
-        c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")), pd.DataFrame(list(frags.by + "*++"))])
+    c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")), pd.DataFrame(list(frags.by + "*++"))])
     c_assign["FRAGS"] = c_assign_frags
     c_assign["ION"] = c_assign.apply(lambda x: re.findall(r'\d+', x.FRAGS)[0], axis=1)
     c_assign["CHARGE"] = c_assign.apply(lambda x: x.FRAGS.count('+'), axis=1).replace(0, 1)
@@ -336,7 +334,7 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
-def miniVseq(sub, plainseq, mods, pos, min_dm, mass, ftol):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol):
     ## DM ##
     parental = getTheoMH(sub.Charge, plainseq, mods, pos, True, True, mass)
     mim = sub.MH
@@ -358,7 +356,7 @@ def miniVseq(sub, plainseq, mods, pos, min_dm, mass, ftol):
     dmterrors2.columns = frags.by2
     dmterrors3.columns = frags.by3
     ## ASSIGN IONS WITHIN SPECTRA ##
-    assign = assignIons(theo_spec, dm_theo_spec, frags, dm, min_dm, mass)
+    assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
     ## PPM ERRORS ##
     if sub.Charge == 2:
         ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
@@ -398,7 +396,7 @@ def parallelFragging(query, parlist):
     sub = pd.Series([scan, charge, MH, sequence, spectrum],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum"])
     ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
-                               parlist[0], parlist[1], parlist[2])
+                               parlist[0], parlist[1])
     hscore = hyperscore(ions, proof)
     proof.FRAGS = proof.FRAGS.str.replace('+', '')
     proof.FRAGS = proof.FRAGS.str.replace('*', '')
@@ -410,7 +408,6 @@ def main(args):
     '''
     # Parameters
     chunks = int(mass._sections['Parameters']['batch_size'])
-    min_dm = float(mass._sections['Parameters']['min_dm'])
     ftol = float(mass._sections['Parameters']['f_tol'])
     # Read results file from MSFragger
     logging.info("Reading MSFragger file...")
@@ -426,7 +423,7 @@ def main(args):
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [min_dm, mass, ftol]
+    parlist = [mass, ftol]
     logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
