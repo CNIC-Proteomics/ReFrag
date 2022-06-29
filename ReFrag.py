@@ -397,7 +397,9 @@ def parallelFragging(query, parlist):
                                parlist[0], parlist[1], parlist[2],
                                parlist[3], parlist[4], parlist[5])
     hscore = hyperscore(ions, proof)
-    return([MH, dm, sequence, len(proof), hscore])
+    proof.FRAGS = proof.FRAGS.str.replace('+', '')
+    proof.FRAGS = proof.FRAGS.str.replace('*', '')
+    return([MH, dm, sequence, proof.FRAGS.nunique(), hscore])
 
 def main(args):
     '''
