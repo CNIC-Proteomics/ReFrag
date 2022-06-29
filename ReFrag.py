@@ -88,7 +88,6 @@ def locateScan(scan, mode, fr_ns, index2):
         index1 = np.where(index1)[0][0]
         index3 = np.where(index2)[0]
         index3 = index3[np.searchsorted(index3,[index1,],side='right')[0]]
-        
         try:
             ions = fr_ns.iloc[index1+1:index3,:]
             ions[0] = ions[0].str.strip()
@@ -102,7 +101,7 @@ def locateScan(scan, mode, fr_ns, index2):
             ions = ions.drop(ions.columns[0], axis=1)
             ions = ions.apply(pd.to_numeric)
     elif mode == "mzml":
-        s = fr_ns.getSpectrum(scan)
+        s = fr_ns.getSpectrum(scan-1)
         ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T
         ions.columns = ["MZ", "INT"]
     return(ions)
