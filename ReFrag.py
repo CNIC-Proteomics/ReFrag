@@ -345,11 +345,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol):
     ## DM OPERATIONS ##
     dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass)
     dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
-    dmterrorsmin = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0)) # Parallel minima
-    dmfppm = dmterrorsmin[(dmterrorsmin < 300).sum(axis=1) >= 0.01*len(dmterrorsmin.columns)]
-    dmfppm_fake = pd.DataFrame(50, index=list(range(0,len(plainseq)*2)), columns=list(range(0,len(plainseq)*2)))
-    if dmfppm.empty: dmfppm = dmfppm_fake 
-    dmfppm = dmfppm.where(dmfppm < 50, 50) # No values greater than 50
     ## FRAGMENT NAMES ##
     frags = makeFrags(len(plainseq))
     dmterrors.columns = frags.by
@@ -371,12 +366,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol):
         sys.exit('ERROR: Invalid charge value!')
     ppmfinal["minv"] = ppmfinal.apply(lambda x: x.min() , axis = 1)
     minv = ppmfinal["minv"]
-    ppmfinal = ppmfinal.drop("minv", axis=1)
-    fppm = ppmfinal[(ppmfinal < 50).sum(axis=1) >= 0.001] 
-    fppm = fppm.T
-    if fppm.empty:
-        fppm = pd.DataFrame(50, index=list(range(0,len(plainseq)*2)), columns=list(range(0,len(plainseq)*2)))
-        fppm = fppm.T
     ## ABLINES ##
     proof = makeAblines(texp, minv, assign, ions)
     proof.INT = proof.INT * spec_correction
