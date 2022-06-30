@@ -5,8 +5,6 @@ Created on Mon Jun 27 16:55:52 2022
 @author: alaguillog
 """
 
-# \\tierra\SC\U_Proteomica\LABS\LAB_FSM\Centrosome_PTMs\RECOM\MSFRAGGER\JAL_NOa2_iTR_FrALL_test\JAL_NOa2_iTR_FrALL.tsv
-
 import argparse
 import concurrent.futures
 import configparser
@@ -34,13 +32,14 @@ def readRaw(msdata):
         fr_ns = pyopenms.MSExperiment()
         pyopenms.MzMLFile().load(str(msdata), fr_ns)
         index2 = 0
-        # tquery = getTquery(fr_ns, mode)
+        logging.info("\t" + str(fr_ns.getNrSpectra()) + " spectra read.")
     elif os.path.splitext(msdata)[1].lower() == ".mgf":
         mode = "mgf"
         logging.info("Reading MGF file...")
         fr_ns = pd.read_csv(msdata, header=None)
         index2 = fr_ns.to_numpy() == 'END IONS'
-        # tquery = getTquery(fr_ns, mode)
+        logging.info("\t" + str(sum(fr_ns[0].str[:4]=="SCAN")) + " spectra read.")
+        # logging.info("\t" + str(fr_ns[0].str.count('SCANS').sum()) + " spectra read.") # VERY SLOW
     else:
         logging.info("MS Data file extension not recognized!")
         sys.exit()
@@ -309,6 +308,7 @@ def findClosest(dm, dmdf, dmtol):
     return(closest)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
+    # TODO retry for every position in sequence as well
     ## DM ##
     dm_set = findClosest(sub.DM, dmdf, dmtol) # Contains experimental DM
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
@@ -396,14 +396,14 @@ def main(args):
     # Read results file from MSFragger
     logging.info("Reading MSFragger file...")
     df = pd.read_csv(Path(args.infile), sep="\t")
-    logging.info("\t " + str(len(df)) + " lines read.")
+    logging.info("\t" + str(len(df)) + " lines read.")
     # Read raw file
     msdata, mode, index2 = readRaw(Path(args.rawfile))
     # Read DM file
     logging.info("Reading DM file...")
     dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
     dmdf.columns = ["name", "mass"]
-    logging.info("\t " + str(len(dmdf)) + " theoretical DMs read.")
+    logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
     # Prepare to parallelize
     df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
@@ -429,10 +429,13 @@ def main(args):
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
     df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
     df = df.drop('templist', axis = 1)
+    refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
+    prefragged = round((refragged/len(df))*100,2)
+    logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
     logging.info("Writing output file...")
     outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
     df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
-    logging.info("Done...")
+    logging.info("Done.")
     return
 
 if __name__ == '__main__':
