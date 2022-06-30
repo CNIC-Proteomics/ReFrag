@@ -277,8 +277,7 @@ def makeAblines(texp, minv, assign, ions):
         matches = pd.DataFrame([[1,3],[2,4]])
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
-        return(proof)    
-    matches_ions = pd.DataFrame()
+        return(proof)
     matches_ions = pd.DataFrame(list(itertools.product(list(range(0, len(matches))), list(range(0, len(assign))))))
     matches_ions.columns = ["mi", "ci"]
     matches_ions["temp_ci"] = list(assign.iloc[matches_ions.ci,0])
@@ -289,12 +288,6 @@ def makeAblines(texp, minv, assign, ions):
     matches_ions = matches_ions[matches_ions.check<=51]
     matches_ions = matches_ions.drop(["mi", "ci", "temp_ci", "check"], axis = 1)
     matches_ions.columns = ["MZ","FRAGS","PPM"]
-    # for mi in list(range(0, len(matches))): # TODO: has to be faster for ReFrag reruns
-    #     for ci in list(range(0, len(assign))):
-    #         if abs(matches.iloc[mi,0]-assign.iloc[ci,0])/assign.iloc[ci,0]*1000000 <= 51:
-    #             asign = pd.Series([matches.iloc[mi,0], assign.iloc[ci,1], matches.iloc[mi,1]])
-    #             matches_ions = pd.concat([matches_ions, asign], ignore_index=True, axis=1)
-    # matches_ions = matches_ions.T
     if matches_ions.empty:
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
@@ -336,7 +329,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol):
     ppmfinal["minv"] = ppmfinal.apply(lambda x: x.min() , axis = 1)
     minv = ppmfinal["minv"]
     ## ABLINES ##
-    proof = makeAblines(texp, minv, assign, ions) # TODO: has to be faster for ReFrag reruns
+    proof = makeAblines(texp, minv, assign, ions)
     proof.INT = proof.INT * spec_correction
     proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
     proof = proof[proof.PPM<=ftol]
@@ -351,6 +344,7 @@ def parallelFragging(query, parlist):
     sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     spectrum = query.spectrum
     dm = query.massdiff
+    # TODO use calc neutral mass?
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
@@ -374,8 +368,10 @@ def main(args):
     logging.info("\t " + str(len(df)) + " lines read.")
     # Read raw file
     msdata, mode, index2 = readRaw(Path(args.rawfile))
+    # Read DM file
+    dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
+    dmdf.columns = ["name", "mass"]
     # Prepare to parallelize
-    # TODO do all calculations with msdata first. we need to get: spectrum
     df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
     rowSeries = list(rowSeries)
@@ -398,7 +394,6 @@ def main(args):
     df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
     df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
-    # TODO: REFRAG ions matched
     df = df.drop('templist', axis = 1)
     logging.info("Writing output file...")
     outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
@@ -422,6 +417,7 @@ if __name__ == '__main__':
     
     parser.add_argument('-i',  '--infile', required=True, help='MSFragger results file')
     parser.add_argument('-r',  '--rawfile', required=True, help='MS Data file (MGF or MZML)')
+    parser.add_argument('-d',  '--dmfile', required=True, help='DeltaMass file')
     parser.add_argument('-c', '--config', default=defaultconfig, help='Path to custom config.ini file')
     parser.add_argument('-w',  '--n_workers', type=int, default=4, help='Number of threads/n_workers (default: %(default)s)')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
