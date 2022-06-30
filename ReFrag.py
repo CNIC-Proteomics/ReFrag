@@ -298,9 +298,10 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
-def miniVseq(sub, plainseq, mods, pos, mass, ftol):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     ## DM ##
     dm = sub.DM # TODO: replace with UNIMOD range
+    closest_dm = findClosest(dm, dmdf, dmtol)
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
@@ -349,7 +350,8 @@ def parallelFragging(query, parlist):
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
     ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
-                               parlist[0], parlist[1])
+                               parlist[0], parlist[1], parlist[2],
+                               parlist[3])
     hscore = hyperscore(ions, proof)
     proof.FRAGS = proof.FRAGS.str.replace('+', '')
     proof.FRAGS = proof.FRAGS.str.replace('*', '')
@@ -362,6 +364,7 @@ def main(args):
     # Parameters
     chunks = int(mass._sections['Parameters']['batch_size'])
     ftol = float(mass._sections['Parameters']['f_tol'])
+    dmtol = float(mass._sections['Parameters']['dm_tol'])
     # Read results file from MSFragger
     logging.info("Reading MSFragger file...")
     df = pd.read_csv(Path(args.infile), sep="\t")
@@ -378,7 +381,7 @@ def main(args):
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [mass, ftol]
+    parlist = [mass, ftol, dmtol, dmdf]
     logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
