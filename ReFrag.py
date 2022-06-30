@@ -371,10 +371,19 @@ def parallelFragging(query, parlist):
     ions, proof, dm, name = miniVseq(sub, plain_peptide, mod, pos,
                                      parlist[0], parlist[1], parlist[2],
                                      parlist[3])
-    hscore = hyperscore(ions, proof) # TODO: calculate all hyperscores
-    proof.FRAGS = proof.FRAGS.str.replace('+', '')
-    proof.FRAGS = proof.FRAGS.str.replace('*', '')
-    return([MH, dm, sequence, proof.FRAGS.nunique(), hscore])
+    hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
+    for i in list(range(0, len(dm))):
+        hscore = hyperscore(ions[i], proof[i])
+        proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
+        proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
+        candidate = pd.DataFrame([name[i], dm[i], proof[i].FRAGS.nunique(), hscore]).T
+        candidate.columns = ['name', 'dm', 'matched_ions', 'hyperscore']
+        hyperscores = pd.concat([hyperscores, candidate])
+    best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
+    best.sort_values(by=['matched_ions'], inplace=True, ascending=True) # In case of tie
+    best.reset_index(drop=True, inplace=True)
+    best = best.head(1)
+    return([MH, best.dm, sequence, best.matched_ions, best.hyperscore, best['name']])
 
 def main(args):
     '''
@@ -416,6 +425,7 @@ def main(args):
     df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
     df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
+    df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
     df = df.drop('templist', axis = 1)
     logging.info("Writing output file...")
     outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
