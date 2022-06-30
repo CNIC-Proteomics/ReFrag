@@ -299,49 +299,61 @@ def makeAblines(texp, minv, assign, ions):
     return(proof)
 
 def findClosest(dm, dmdf, dmtol):
+    exp = pd.DataFrame(['EXPERIMENTAL', dm, 0]).T
+    exp.columns = ['name', 'mass', 'distance']
     dmdf["distance"] = abs(dmdf.mass - dm)
     closest = dmdf[dmdf.distance<=dmtol]
+    closest = pd.concat([closest, exp])
     closest.sort_values(by=['mass'], inplace=True, ascending=True)
     closest.reset_index(drop=True, inplace=True)
     return(closest)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     ## DM ##
-    dm = sub.DM # TODO: replace with UNIMOD range
-    closest_dm = findClosest(dm, dmdf, dmtol)
+    dm_set = findClosest(sub.DM, dmdf, dmtol) # Contains experimental DM
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
-    ## DM OPERATIONS ##
-    dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass)
-    dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
-    ## FRAGMENT NAMES ##
-    frags = makeFrags(len(plainseq))
-    dmterrors.columns = frags.by
-    dmterrors2.columns = frags.by2
-    dmterrors3.columns = frags.by3
-    ## ASSIGN IONS WITHIN SPECTRA ##
-    assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
-    ## PPM ERRORS ##
-    if sub.Charge == 2:
-        ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-        if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
-    elif sub.Charge < 2:
-        ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-        if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
-    elif sub.Charge >= 3:
-        ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-        if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
-    else:
-        sys.exit('ERROR: Invalid charge value!')
-    ppmfinal["minv"] = ppmfinal.apply(lambda x: x.min() , axis = 1)
-    minv = ppmfinal["minv"]
-    ## ABLINES ##
-    proof = makeAblines(texp, minv, assign, ions)
-    proof.INT = proof.INT * spec_correction
-    proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
-    proof = proof[proof.PPM<=ftol]
-    return(ions, proof, dm)
+    closest_ions = []
+    closest_proof = []
+    closest_dm = []
+    closest_name = []
+    for index, row in dm_set.iterrows():
+        dm = row.mass
+        ## DM OPERATIONS ##
+        dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass)
+        dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
+        ## FRAGMENT NAMES ##
+        frags = makeFrags(len(plainseq))
+        dmterrors.columns = frags.by
+        dmterrors2.columns = frags.by2
+        dmterrors3.columns = frags.by3
+        ## ASSIGN IONS WITHIN SPECTRA ##
+        assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
+        ## PPM ERRORS ##
+        if sub.Charge == 2:
+            ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
+            if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
+        elif sub.Charge < 2:
+            ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
+            if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
+        elif sub.Charge >= 3:
+            ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
+            if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
+        else:
+            sys.exit('ERROR: Invalid charge value!')
+        ppmfinal["minv"] = ppmfinal.apply(lambda x: x.min() , axis = 1)
+        minv = ppmfinal["minv"]
+        ## ABLINES ##
+        proof = makeAblines(texp, minv, assign, ions)
+        proof.INT = proof.INT * spec_correction
+        proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
+        proof = proof[proof.PPM<=ftol]
+        closest_ions.append(ions)
+        closest_proof.append(proof)
+        closest_dm.append(dm)
+        closest_name.append(row['name'])
+    return(closest_ions, closest_proof, closest_dm, closest_name)
 
 def parallelFragging(query, parlist):
     m_proton = 1.007276
@@ -356,10 +368,10 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
-    ions, proof, dm = miniVseq(sub, plain_peptide, mod, pos,
-                               parlist[0], parlist[1], parlist[2],
-                               parlist[3])
-    hscore = hyperscore(ions, proof)
+    ions, proof, dm, name = miniVseq(sub, plain_peptide, mod, pos,
+                                     parlist[0], parlist[1], parlist[2],
+                                     parlist[3])
+    hscore = hyperscore(ions, proof) # TODO: calculate all hyperscores
     proof.FRAGS = proof.FRAGS.str.replace('+', '')
     proof.FRAGS = proof.FRAGS.str.replace('*', '')
     return([MH, dm, sequence, proof.FRAGS.nunique(), hscore])
