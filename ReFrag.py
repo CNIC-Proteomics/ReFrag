@@ -47,8 +47,13 @@ def readRaw(msdata):
 
 def locateScan(scan, mode, fr_ns, index2):
     if mode == "mgf":
-        index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
-        index1 = np.where(index1)[0][0]
+        # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
+        try:
+            index1 = fr_ns.loc[fr_ns[0]=='SCANS='+str(scan)].index[0] + 1
+            # index1 = np.where(index1)[0][0]
+        except IndexError:
+            logging.info("\tERROR: Scan number " + str(scan) + " not found in MGF file.")
+            sys.exit()
         index3 = np.where(index2)[0]
         index3 = index3[np.searchsorted(index3,[index1,],side='right')[0]]
         try:
@@ -64,7 +69,11 @@ def locateScan(scan, mode, fr_ns, index2):
             ions = ions.drop(ions.columns[0], axis=1)
             ions = ions.apply(pd.to_numeric)
     elif mode == "mzml":
-        s = fr_ns.getSpectrum(scan-1)
+        try:
+            s = fr_ns.getSpectrum(scan-1)
+        except AssertionError or OverflowError:
+            logging.info("\tERROR: Scan number " + str(scan) + " not found in mzML file.")
+            sys.exit()
         ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T
         ions.columns = ["MZ", "INT"]
     return(ions)
@@ -405,6 +414,7 @@ def main(args):
     dmdf.columns = ["name", "mass"]
     logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
     # Prepare to parallelize
+    logging.info("Refragging...")
     df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
     rowSeries = list(rowSeries)
@@ -412,7 +422,6 @@ def main(args):
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
     parlist = [mass, ftol, dmtol, dmdf]
-    logging.info("Refragging...")
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
         refrags = list(tqdm(executor.map(parallelFragging,
