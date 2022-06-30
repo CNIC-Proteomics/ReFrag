@@ -298,6 +298,13 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
+def findClosest(dm, dmdf, dmtol):
+    dmdf["distance"] = abs(dmdf.mass - dm)
+    closest = dmdf[dmdf.distance<=dmtol]
+    closest.sort_values(by=['mass'], inplace=True, ascending=True)
+    closest.reset_index(drop=True, inplace=True)
+    return(closest)
+
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     ## DM ##
     dm = sub.DM # TODO: replace with UNIMOD range
