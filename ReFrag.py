@@ -383,7 +383,7 @@ def parallelFragging(query, parlist):
     best.sort_values(by=['matched_ions'], inplace=True, ascending=True) # In case of tie
     best.reset_index(drop=True, inplace=True)
     best = best.head(1)
-    return([MH, best.dm, sequence, best.matched_ions, best.hyperscore, best['name']])
+    return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0]])
 
 def main(args):
     '''
@@ -400,8 +400,10 @@ def main(args):
     # Read raw file
     msdata, mode, index2 = readRaw(Path(args.rawfile))
     # Read DM file
+    logging.info("Reading DM file...")
     dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
     dmdf.columns = ["name", "mass"]
+    logging.info("\t " + str(len(dmdf)) + " theoretical DMs read.")
     # Prepare to parallelize
     df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
