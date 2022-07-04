@@ -443,7 +443,10 @@ def main(args):
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
     df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
     df = df.drop('templist', axis = 1)
-    refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
+    try:
+        refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
+    except KeyError:
+        refragged = len(df)
     prefragged = round((refragged/len(df))*100,2)
     logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
     logging.info("Writing output file...")
