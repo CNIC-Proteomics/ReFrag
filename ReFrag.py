@@ -370,7 +370,12 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
-    sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
+    if math.isnan(query.modification_info):
+        sequence = plain_peptide
+        mod = []
+        pos = []
+    else:
+        sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     spectrum = query.spectrum
     dm = query.massdiff
     # TODO use calc neutral mass?
