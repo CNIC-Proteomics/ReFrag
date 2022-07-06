@@ -78,20 +78,26 @@ def locateScan(scan, mode, fr_ns, index2):
         ions.columns = ["MZ", "INT"]
     return(ions)
 
-def hyperscore(ions, proof): # TODO play with number of ions
+def hyperscore(ions, proof, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
     ## 1. Normalize intensity to 10^5
     norm = (ions.INT / ions.INT.max()) * 10E4
     ions["MSF_INT"] = norm
     ## 2. Pick matched ions ##
+    proof = proof[proof.PPM<=ftol]
     matched_ions = pd.merge(proof, ions, on="MZ")
+    if len(matched_ions) == 0:
+        hs = 0
+        return(hs)
     ## 3. Adjust intensity
     matched_ions.MSF_INT = matched_ions.MSF_INT / 10E2
-    ## 4. Hyperscore ##
+    ## 4. Hyperscore ## # Consider modified ions but not charged ions? unclear
     matched_ions["SERIES"] = matched_ions.apply(lambda x: x.FRAGS[0], axis=1)
-    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('+', '')
-    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('*', '')
+    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('+', '', regex=False)
+    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('*', '', regex=False)
+    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('#', '', regex=False)
     temp = matched_ions.copy()
-    temp.drop_duplicates(subset='FRAGS', keep="first")
+    # TRY use only charge less than 2maybe that's why only 3 and 4 have extra ions found.
+    # temp = temp.drop_duplicates(subset='FRAGS', keep="first") # Count each kind of fragment only once
     try:
         n_b = temp.SERIES.value_counts()['b']
         i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
@@ -107,6 +113,8 @@ def hyperscore(ions, proof): # TODO play with number of ions
     try:
         hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
     except ValueError:
+        hs = 0
+    if hs > 0:
         hs = 0
     return(hs)
 
@@ -167,7 +175,7 @@ def expSpectrum(ions):
     '''        
     ions["ZERO"] = 0
     ions["CCU"] = ions.MZ - 0.01
-    ions.reset_index(drop=True)
+    ions.reset_index(drop=True, inplace=True)
     
     bind = pd.DataFrame(list(itertools.chain.from_iterable(zip(list(ions['CCU']),list(ions['MZ'])))), columns=["MZ"])
     bind["REL_INT"] = list(itertools.chain.from_iterable(zip(list(ions['ZERO']),list(ions['INT']))))
@@ -204,7 +212,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
         yn = list(seq[i:])
         if i > 0: nt = False
         else: nt = True
-        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) + dm
+        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) + dm # TODO only add +dm to fragments up until n_pos
         outy[i:] = fragy
         
     ## B SERIES ##
@@ -213,7 +221,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
         bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
-        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen + dm
+        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
         outb[i:] = fragb
     
     ## FRAGMENT MATRIX ##
@@ -317,7 +325,7 @@ def findClosest(dm, dmdf, dmtol):
     return(closest)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
-    # TODO retry for every position in sequence as well
+    # TODO retry for every position in sequence as well (use allowed position info from UNIMOD?)
     ## DM ##
     dm_set = findClosest(sub.DM, dmdf, dmtol) # Contains experimental DM
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
@@ -330,7 +338,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     for index, row in dm_set.iterrows():
         dm = row.mass
         ## DM OPERATIONS ##
-        dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass)
+        dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), dm, mass) # TODO: DM position
         dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
         ## FRAGMENT NAMES ##
         frags = makeFrags(len(plainseq))
@@ -387,14 +395,14 @@ def parallelFragging(query, parlist):
                                      parlist[3])
     hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
     for i in list(range(0, len(dm))):
-        hscore = hyperscore(ions[i], proof[i])
+        hscore = hyperscore(ions[i], proof[i], parlist[2])
         proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
         proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
         candidate = pd.DataFrame([name[i], dm[i], proof[i].FRAGS.nunique(), hscore]).T
         candidate.columns = ['name', 'dm', 'matched_ions', 'hyperscore']
         hyperscores = pd.concat([hyperscores, candidate])
     best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
-    best.sort_values(by=['matched_ions'], inplace=True, ascending=True) # In case of tie
+    best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
     best.reset_index(drop=True, inplace=True)
     best = best.head(1)
     return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0]])
