@@ -405,7 +405,9 @@ def parallelFragging(query, parlist):
     best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
     best.reset_index(drop=True, inplace=True)
     best = best.head(1)
-    return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0]])
+    exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
+    return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
+            exp.matched_ions[0], exp.hyperscore[0]])
 
 def main(args):
     '''
@@ -445,6 +447,8 @@ def main(args):
     df = df.drop('spectrum', axis = 1)
     df['templist'] = refrags
     df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
+    df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
+    df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
     df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
     df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
     df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
