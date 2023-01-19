@@ -1,456 +1,456 @@
-Full Name	mono_mass
-Removal of initiator methionine from protein N-terminus	-131.040485
-Loss of C-terminal K from Heavy Chain of MAb	-128.094963
-Dehydroalanine (from Tyrosine)	-94.041865
-"Removal of initiator methionine from protein N-terminus, then acetylation of the new N-terminus"	-89.02992
-Enzymatic glycine removal leaving an amidated C-terminus	-58.005479
-Homoserine lactone	-48.003371
-Arginine oxidation to glutamic semialdehyde	-43.053433
-Dehydroalanine (from Cysteine)	-33.987721
-pyruvic acid from N-term cys	-33.003705
-Methionine oxidation to aspartic semialdehyde	-32.008456
-Proline oxidation to pyrrolidinone	-30.010565
-Decarboxylation	-30.010565
-Homoserine	-29.992806
-Pyrrolidone from Proline	-27.994915
-Formation of five membered aromatic heterocycle	-20.026215
-Loss of ammonia (15N)	-18.023584
-Dehydration	-18.010565
-oxoalanine	-17.992806
-Loss of ammonia	-17.026549
-reduction	-15.994915
-lactic acid from N-term Ser	-15.010899
-Aspartylurea	-10.031969
-carbamidomethylated Cys that undergoes beta-elimination and Michael addition of methylamine	-2.945522
-2-amino-3-oxo-butanoic_acid	-2.01565
-Lysine oxidation to aminoadipic semialdehyde	-1.031634
-Amidation	-0.984016
-Non-modified	0
-Deamidation	0.984016
-tryptophan oxidation to kynurenin	3.994915
-In Bachi as Formylaspargine (typo?)	4.97893
-Carbamidomethylated Cys that undergoes beta-elimination and Michael addition of ethylamine	11.070128
-formaldehyde adduct	12
-Phe->Cys substitution and carbamidomethylation	12.962234
-proline oxidation to pyroglutamic acid	13.979265
-Tryptophan oxidation to oxolactone	13.979265
-aldehyde and ketone modifications	13.979265
-Methylation	14.01565
-alpha-amino adipic acid	14.96328
-Deamidation followed by a methylation	14.999666
-Tyrosine oxidation to 2-aminotyrosine	15.010899
-thiocarboxylic acid	15.977156
-Oxidation or Hydroxylation	15.994915
-fluorination	17.990578
-Proline oxidation to 5-hydroxy-2-aminovaleric acid	18.010565
-Lys->Met substitution and sulfoxidation	18.940436
-tryptophan oxidation to hydroxykynurenin	19.989829
-glyoxal-derived AGE	21.98435
-cyano	24.995249
-ethyl amino	27.047285
-"Tryptophan oxidation to beta-unsaturated-2,4-bis-tryptophandione"	27.958529
-Formylation	27.994915
-di-Methylation	28.0313
-Ethylation	28.0313
-nitrosylation	28.990164
-deamidation followed by esterification with ethanol	29.015316
-Dimethylation of proline residue	29.039125
-quinone	29.974179
-hydroxymethyl	30.010565
-formaldehyde induced modifications	30.010565
-Lys->Cys substitution and carbamidomethylation	31.935685
-persulfide	31.972071
-dihydroxy	31.989829
-Leu->Met substitution and sulfoxidation	33.951335
-propargylamine	37.031634
-Azidophenylalanine	41.001397
-amidination of lysines or N-terminal amines with methyl acetimidate	41.026549
-Acetylation	42.010565
-Guanidination	42.021798
-amidino	42.021798
-tri-Methylation	42.04695
-Propyl	42.04695
-Carbamylation	43.005814
-Carboxyl modification with ethanolamine	43.042199
-Tryptophan oxidation to hydroxy-bis-tryptophandione	43.953444
-Carboxylation	43.989829
-S-Ethylcystine from Serine	44.008456
-Ethanolation	44.026215
-Oxidation to nitro	44.985078
-Beta-methylthiolation	45.987721
-cysteine oxidation to cysteic acid	47.984744
-MDA adduct +54	54.010565
-Alkene fragment of DSSO crosslinker	54.010565
-DST crosslinker cleaved by sodium periodate	55.989829
-Propionate labeling reagent light form (N-term & K)	56.026215
-"Diethylation, analogous to Dimethylation"	56.0626
-Iodoacetamide derivative	57.021464
-Iodoacetic acid derivative	58.005479
-"2,3-dihydro-2,2-dimethyl-7-benzofuranol N-methyl carbamate"	58.029289
-Reduced acrolein addition +58	58.041865
-aminoethylcysteine	59.019355
-"5-hydroxy-N6,N6,N6-trimethyl"	59.04969
-2-OH-ethyl thio-Ser	60.003371
-Iodoacetic acid derivative w/ 13C label	60.012189
-MDA adduct +62	62.01565
-SulfurDioxide	63.9619
-Chemical modification of the iodinated sites of thyroglobulin by Suzuki reaction	66.010565
-Dichlorination	67.922055
-Crotonylation	68.026215
-Piperidination	68.0626
-N-pyruvic acid 2-iminyl	70.005479
-Butyryl	70.041865
-Acrylamide adduct	71.037114
-Deoxyhypusine	71.073499
-Cys alkylation by dimethylaminoethyl halide	71.073499
-carboxyethyl	72.021129
-Ethoxyformylation	72.021129
-EDT	75.980527
-Cysteine mercaptoethanol	75.998285
-bromination	77.910511
-Methylphosphonylation	77.987066
-"2,5-dimethypyrrole"	78.04695
-selenyl	79.91652
-O-Sulfonation	79.956815
-Phosphorylation	79.966331
-methylglyoxal-derived argpyrimidine	80.026215
-Arginine replacement by Nitropyrimidyl ornithine	80.985078
-Bu fragment of BuUrBu crosslinker	85.052764
-Labeling transglutaminase substrate on glutamine side chain	85.089149
-Thiol fragment of DSSO crosslinker	85.982635
-Malonylation	86.000394
-Michael addition of hydroxymethylvinyl ketone to cysteine	86.036779
-transamidation of glycine ethyl ester to glutamine	86.036779
-2-hydroxyisobutyrylation	86.036779
-Cleaved and reduced DTBP crosslinker	87.01427
-glycidamide adduct	87.032028
-phosphorylation to amine thiol	87.050655
-hypusine	87.068414
-Cleaved and reduced DSP/DTSSP crosslinker	87.998285
-O-methyl amino phosphinate	92.997965
-O-Methylphosphorylation	93.981981
-aminotyrosine with sulfation	94.967714
-Intact BS2-G crosslinker	96.021129
-Reduced acrolein addition +96	96.057515
-maleimide	97.016378
-Acetyldeoxyhypusine	97.089149
-Acetone chemical artifact	98.073165
-N-isopropylcarboxamidomethyl	99.068414
-Succinic anhydride labeling reagent light form (N-term & K)	100.016044
-Methylmalonylation on Serine	100.016044
-Ub Bromide probe addition	100.063663
-Modification by hydroxylated mechloroethamine (HN-2)	101.084064
-Reaction with dimethylarsinous (AsIII) acid	103.960719
-Sulfenic acid fragment of DSSO crosslinker	103.9932
-S-pyridylethylation	105.057849
-reaction with methyl vinyl sulfone	106.00885
-o-toluene	106.041865
-N-dimethylphosphate	107.013615
-Azidohomoalanine (AHA) bound to propargylglycine-NH2 (alkyne)	107.077339
-S-Methyl Methyl phosphorothioate	107.979873
-O-Dimethylphosphorylation	107.997631
-O-Ethylphosphorylation	107.997631
-S-methyl amino phosphinate	108.975121
-4-methyl-delta-1-pyrroline-5-carboxyl	109.052764
-O-methylphosphothione	109.959137
-Nmethylmaleimide	111.032028
-BuUr fragment of BuUrBu crosslinker	111.032028
-DMPO spin-trap nitrone adduct	111.068414
-Ammonium-quenched monolink of BS2-G crosslinker	113.047679
-Acetylhypusine	113.084064
-Intact DST crosslinker	113.995309
-Glutarylation	114.031694
-Water-quenched monolink of BS2-G crosslinker	114.031694
-ubiquitinylation residue	114.042927
-Cleavage product of EGS protein crosslinks by hydroylamine treatment	115.026943
-S-(2-succinyl) cysteine	116.010959
-N-Homocysteine thiolactone	117.024835
-Dehydropyrrolizidine alkaloid (dehydroretronecine) on cysteines	118.065674
-Ubiquitination 2H4 lysine	118.068034
-pyridylacetyl	119.037114
-phenyl isocyanate	119.037114
-reaction with phenyl salicylate (PS)	120.021129
-Beta elimination of alkylated Cys followed by Michael addition of DTT	120.0245
-reaction with ethyl vinyl sulfone	120.0245
-O-Isopropylmethylphosphonylation	120.034017
-phosphorylation to pyridyl thiol	121.035005
-O-Isopropylphosphorylation	122.013281
-Intact DMP crosslinker	122.084398
-glycosylphosphatidylinositol	123.00853
-O-dimethylphosphothione	123.974787
-d5-phenyl isocyanate	124.068498
-N-ethylmaleimide on cysteines	125.047679
-Iodination	125.896648
-octanoyl	126.104465
-N-Succinimidyl-2-morpholine acetate	127.063329
-spermidine adduct	128.131349
-monoglutamyl	129.042593
-Nmethylmaleimidehydrolysis	129.042593
-S-(2-monomethylsuccinyl) cysteine	130.026609
-D5 N-ethylmaleimide on cysteines	130.079062
-Modification by hydroxylated tris-(2-chloroethyl)amine (HN-3)	131.094629
-Water quenched monolink of DST crosslinker	132.005873
-Hydroxyphenylglyoxal arginine	132.021129
-Chemical modification of the diiodinated sites of thyroglobulin by Suzuki reaction	132.021129
-Pentose	132.042259
-Propiophenone	132.057515
-modification of the lysine side chain from NH2 to guanidine with a H removed in favor of a benzyl group	132.068748
-S-homocysteinylation	133.019749
-iodoacetanilide derivative	133.052764
-3-methyl-2-pyridyl isocyanate	134.048013
-Tyrosine caged with 2-nitrobenzyl (ONB)	135.032028
-"O-ethyl, N-dimethyl phosphate"	135.044916
-sulfonation of N-terminus	135.983029
-Beta elimination of modified S or T followed by Michael addition of DTT	136.001656
-O-Diethylphosphorylation	136.028931
-Dehydrated 4-Oxononenal Michael adduct	136.088815
-Intact DSS/BS3 crosslinker	138.06808
-Dehydrated 4-hydroxynonenal	138.104465
-13C labelled iodoacetanilide derivative	139.072893
-Ammonia quenched monolink of DMP crosslinker	139.110947
-Water quenched monolink of DMP crosslinker	140.094963
-N-ethylmaleimide on cysteine sulfenic acid	141.042593
-Diphthamide	142.110613
-Nethylmaleimidehydrolysis	143.058243
-S-(2-dimethylsuccinyl) cysteine	144.042259
-3-(carbamidomethylthio)propanoyl	145.019749
-hydroxycinnamyl	146.036779
-Fucose	146.057909
-glycosyl-L-hydroxyproline	148.037173
-D5 N-ethylmaleimide+water on cysteines	148.089627
-Benzyl isothiocyanate	149.02992
-S-guanylation-2	150.041585
-O-diethylphosphothione	152.006087
-Shimadzu NBS-12C	152.988449
-glycerophospho	154.00311
-methylglyoxal-derived tetrahydropyrimidine	154.026609
-Side reaction of PG with Side chain of aspartic or glutamic acid	154.074228
-4-Oxononenal (ONE)	154.09938
-Free monolink of DMP crosslinker	154.110613
-lipid	154.135765
-Ammonium-quenched monolink of DSS/BS3 crosslinker	155.094629
-Dibromo	155.821022
-Water-quenched monolink of DSS/BS3 crosslinker	156.078644
-4-hydroxynonenal (HNE)	156.11503
-N-ethylmaleimideSulfur	157.019749
-Intact DSSO crosslinker	158.003765
-reduced 4-Hydroxynonenal	158.13068
-Shimadzu NBS-13C	159.008578
-Addition of N-formyl met	159.035399
-membrane protein extraction	159.035399
-5-glutamyl serotonin	159.068414
-pyrophosphorylation of Ser/Thr	159.932662
-Heavy Sulfanilic Acid (SA) C13	161.024228
-Hexosamine	161.068808
-Hexose	162.052824
-A fixed +1 charge tag attached to the N-terminus of peptides	162.079313
-O-pinacolylmethylphosphonylation	162.080967
-Phenethyl isothiocyanate	163.04557
-Intact DFDNB crosslinker	163.985807
-O-Diisopropylphosphorylation	164.060231
-"Chemical reaction with 2,4-dinitro-1-chloro benzene (DNCB)"	166.001457
-3-phosphoglyceryl	167.982375
-reaction with phenyl vinyl sulfone	168.0245
-Photo-induced histidine adduct	169.048741
-o-toluyl-phosphorylation	170.013281
-Menadione quinone derivative	170.036779
-6-aminoquinolyl-N-hydroxysuccinimidyl carbamate	170.048013
-APTA-d0	171.149738
-Intact DTBP crosslinker	172.01289
-Menadione hydroquinone derivative	172.05243
-Ubiquitin vinylmethylester	173.092617
-Intact DSP/DTSSP crosslinker	173.980921
-Thiadiazolydation of Cys	174.025169
-N-ethylmaleimideSulfurWater	175.030314
-Ammonia-quenched monolink of DSSO crosslinker	175.030314
-"naphthalene-2,3-dicarboxaldehyde"	175.042199
-Water-quenched monolink of DSSO crosslinker	176.01433
-hexuronic acid	176.032088
-D5 N-ethylmaleimide on selenocysteines	178.023511
-Gluconoylation	178.047738
-derivatization by N-term modification using 3-Sulfobenzoic succinimidyl ester	183.983029
-"Cys modification by (1-oxyl-2,2,5,5-tetramethyl-3-pyrroline-3-methyl)methanesulfonate (MTSL)"	184.07961
-EAPTA d0	184.157563
-spermine adduct	185.189198
-Lipoyl	188.032956
-Monobromobimane derivative	190.074228
-Water quenched monolink of DSP/DTSSP crosslinker	191.991486
-Heptose	192.063388
-Intact BuUrBu crosslinker	196.084792
-Ub amide probe addition	196.108602
-desthiobiotin modification of lysine	196.121178
-glycerylphosphorylethanolamine	197.04531
-"2,4-Dinitrobenzenesulfenyl"	198.981352
-oxidized Arginine biotinylated with biotin hydrazide	199.066699
-Mercury Mercaptan	201.970617
-N-Acetylhexosamine	203.079373
-O-Dichloroethylphosphate	203.950987
-Farnesylation	204.187801
-"(cis,cis-delta 5, delta 8)-tetradecadienoyl"	206.167065
-(cis-delta 5)-tetradecaenoyl	208.182715
-Myristoylation	210.198366
-tri nitro benzene	210.986535
-phosphate-ribosylation	212.00859
-Ammonia quenched monolink of BuUrBu crosslinker	213.111341
-Water quenched monolink of BuUrBu crosslinker	214.095357
-4-sulfophenyl isothiocyanate	214.971084
-Tris-quenched monolink of BS2-G crosslinker	217.095023
-Intact SMCC cross-link	219.089543
-Intact or monolink BMOE crosslinker	220.048407
-Glycosylation with KDO	220.058303
-hydroxyfarnesyl	220.182715
-4-sulfophenyl isothiocyanate (Heavy C13)	220.991213
-Native Tandem Mass Tag??	224.152478
-Cys modified with dipy ligand	225.090212
-Iminobiotinylation	225.093583
-Intact EGS cross-linker	226.047738
-Biotinylation	226.077598
-"[3-(2,5)-Dioxopyrrolidin-1-yloxycarbonyl)-propyl]dimethyloctylammonium"	227.224915
-"2,4-diacetamido-2,4,6-trideoxyglucopyranose"	228.111007
-Pyridoxal phosphate	229.014009
-PLP bound to lysine reduced by sodium borohydride (NaBH4) to create amine linkage	231.02966
-"propyl-1,2-dideoxy-2\'-methyl-alpha-D-glucopyranoso-[2,1-d]-Delta2\'-thiazoline"	232.064354
-5-dimethylaminonaphthalene-1-sulfonyl	233.051049
-Super Heavy Tandem Mass Tag	235.176741
-palmitoleyl	236.214016
-Water quenched monolink of SMCC	237.100108
-Palmitoylation	238.229666
-oxidized Threonine biotinylated with biotin hydrazide	240.104482
-lapachenole photochemically added to cysteine	240.11503
-oxidized Lysine biotinylated with biotin hydrazide	241.088497
-phosphoglycosyl-D-mannose-1-phosphoryl	242.019154
-addition of GGE	243.085521
-Water quenched monolink of EGS cross-linker	244.058303
-di-Iodination	251.793296
-Nitroso Sulfamethoxazole Sulphenamide thiol adduct	252.044287
-Mass Defect Tag on lysine e-amino	253.010225
-Phosphogluconoylation	258.014069
-diglutamyl	258.085186
-oxidized proline biotinylated with biotin hydrazide	258.115047
-Tris-quenched monolink of DSS/BS3 crosslinker	259.141973
-1-methyl-3-benzoyl-4-hydroxy-4-phenylpiperidine	263.131014
-Pent(2)	264.084518
-"3,4-didehydroretinylidene"	264.187801
-"3-methyl-5-(methylamino)-1,3-diphenylpentan-1-one"	265.146664
-Adduct of phenylglyoxal with Arg	266.057909
-"2-ethyl-3-hydroxy-1,3-diphenylpentan-1-one"	266.13068
-retinal	266.203451
-Nitroso Sulfamethoxazole Sulfinamide thiol adduct	267.031377
-Modified GMBS X linker	267.158292
-Nitroso Sulfamethoxazole semimercaptal thiol adduct	268.039202
-Geranyl-geranyl	272.250401
-N-Acetylmuramic acid	275.100502
-Cresyl-Saligenin-phosphorylation	276.055146
-Tris-quenched monolink of DSSO crosslinker	279.077658
-bis(hydroxphenylglyoxal) arginine	282.052824
-O3S1HexNAc1	283.036187
-N-acetylglucosamine-1-phosphoryl	283.045704
-(-)-dehydroepigallocatechin	287.055563
-Levuglandinyl - arginine lactam adduct	290.176961
-N-acetyl neuraminic acid	291.095417
-Hex Pent	294.095082
-"cis-14-hydroxy-10,13-dioxo-7-heptadecenoic ester"	294.183109
-Native TMTpro Tandem Mass Tag	295.189592
-biotin hydrazide labeled acrolein addition +298	298.146347
-Levuglandinyl-lysine anhyropyrrole adduct	298.19328
-Native cysteine-reactive Tandem Mass Tag??	299.166748
-Cytidine monophosphate	305.041287
-glutathione disulfide	305.068156
-uridine phosphodiester	306.025302
-Levuglandinyl - arginine hydroxylactam adduct	306.171876
-N-glycoyl neuraminic acid	307.090331
-Hex1dHex1	308.110732
-Side reaction of PGPG with Side chain of aspartic or glutamic acid	308.148455
-adduction of aflatoxin B1 Dialdehyde to lysine	310.047738
-Oxidized arginine biotinylated with biotin-LC-hydrazide	310.135113
-was PentylamineBiotin	311.166748
-"Oxidized arginine biotinylated with biotin-LC-hydrazide, reduced"	312.150763
-Levuglandinyl-lysine anhydrolactam adduct	314.188195
-Thio Ether Formation - BTP Adduct	316.138088
-Levuglandinyl-lysine pyrrole adduct	316.203845
-Tris quenched monolink of BuUrBu crosslinker	317.158686
-carbobenzoxy-L-glutaminyl-glycine	320.100836
-Monolink of SMCC terminated with 3-(dimethylamino)-1-propylamine	321.205242
-(Iodo)-uracil MP	322.020217
-Lactosylation	324.105647
-Native iodoacetyl Tandem Mass Tag??	324.216141
-Nitroalkylation by Nitro Linoleic Acid	325.225309
-biotinoyl-iodoacetyl-ethylenediamine	326.141261
-Nitroalkylation by Nitro Oleic Acid	327.240959
-AMP	329.05252
-Sixplex iodoacetyl Tandem Mass Tag??	329.226595
-Ubiquitin D (FAT10) leaving after chymotrypsin digestion Cys-Ile-Gly-Gly	330.136176
-Levuglandinyl - lysine lactam adduct	332.19876
-andrographolide with the loss of H2O	332.19876
-Pent HexNAc	335.121631
-Hex HexA	338.084912
-NHS-LC-Biotin	339.161662
-Phosphopantetheine	340.085794
-glucosylgalactosyl hydroxylysine	340.100562
-hydrogenase diiron subcluster	342.786916
-S-guanylation	343.031785
-phospho-guanosine	345.047435
-Levuglandinyl - lysine hydroxylactam adduct	348.193674
-HexNAc1dHex1	349.137281
-Oxidized lysine biotinylated with biotin-LC-hydrazide	352.156911
-"Oxidized lysine biotinylated with biotin-LC-hydrazide, reduced"	354.172562
-Biotin polyethyleneoxide amine	356.188212
-Biotin-Phenol	361.146012
-nucleophilic addtion to cytopiloyne	362.136553
-Diaminopimelic acid-DSP monolinked	364.076278
-Hex1HexNAc1	365.132196
-cholesterol ester	368.344302
-Oxidized Proline biotinylated with biotin-LC-hydrazide	369.183461
-"Oxidized proline biotinylated with biotin-LC-hydrazide, reduced"	371.199111
-"2,3,4,6-tetra-O-Acetyl-1-allyl-alpha-D-galactopyranoside modification of cysteine"	372.142033
-tri-Iodination	377.689944
-nucleophilic addition to cytopiloyne+H2O	380.147118
-covalent linkage of maleimidyl coumarin probe (Molecular Probes D-10253)	383.148121
-Ubiquitination	383.228103
-(3-aminopropyl)(L-aspartyl-1-amino)phosphoryl-5-adenosine	386.110369
-"5-Iodoacetamidofluorescein (Molecular Probe, Eugene, OR)"	387.074287
-triglutamyl	387.127779
-EZ-Link Sulfo-NHS-SS-Biotin	389.090154
-LeumethylArgGlyGly	397.243753
-Hex(2) O(3) S	404.062462
-H1O3P1Hex2	404.071978
-HexNAc2	406.158745
-LeudimethylArgGlyGly	411.259403
-Bodipy modifications onto cysteine	414.167478
-"Biotinyl-iodoacetamidyl-3,6-dioxaoctanediamine"	414.193691
-dipyrrolylmethanemethyl	418.137616
-fluorescein-5-thiosemicarbazide	421.073241
-Hex Pent(2)	426.137341
-fluorescein-5-maleimide	427.069202
-Pierce EZ-Link Biotin-HPDP	428.191582
-BisANS with loss of both sulfonates	437.201774
-O3-(riboflavin phosphoryl)	438.094051
-Hex:1 Pent:2 Me:1	440.152991
-desthiobiotin fluorophosphonate	443.291294
-Hex HexNAc Sulf	445.089011
-Hex HexNAc Phos	445.098527
-6-N-biotinylaminohexyl isopropyl phosphate	447.195679
-was Biotin-maleimide	449.17329
-Iodoacetamide derivative of stilbene (reaction product with thiol)	452.034807
-Biot_LC_LC	452.245726
-Hex NeuAc ---OR--- HexNAc Kdn	453.14824
-Puromycin	453.212452
-flavin mononucleotide	454.088965
-beta-Funaltrexamine	454.210387
-(-)-epigallocatechin-3-gallate	456.069261
-S-(4a-FMN)	456.104615
-Hex NeuGc	469.143155
-SUMOylation by Giardia lamblia	469.228496
-triiodo	469.716159
-Hex2dHex1	470.163556
-Modification of cystein by withaferin	470.266839
-fluorescein-hexanoate-NHS hydrolysis	471.131802
-Biotin_PEG4	473.219571
-High molecular absorption maleimide label for proteins	474.250515
-HexNAc(2) Sulf	486.11556
-Hex3	486.158471
-was Biotin-PEO4-hydrazide	487.246455
-EDT-iodo-PEO-biotin	490.174218
-Fluorescein-tyramine adduct by peroxidase activity	493.116152
-HexNAc NeuAc	494.174789
-HexNAc1dHex2	495.19519
+Full Name	mono_mass	site
+Removal of initiator methionine from protein N-terminus	-131.040485	['M']
+Loss of C-terminal K from Heavy Chain of MAb	-128.094963	['K']
+Dehydroalanine (from Tyrosine)	-94.041865	['Y']
+"Removal of initiator methionine from protein N-terminus, then acetylation of the new N-terminus"	-89.02992	['M']
+Enzymatic glycine removal leaving an amidated C-terminus	-58.005479	['G']
+Homoserine lactone	-48.003371	['M']
+Arginine oxidation to glutamic semialdehyde	-43.053433	['R']
+Dehydroalanine (from Cysteine)	-33.987721	['C']
+pyruvic acid from N-term cys	-33.003705	['C']
+Methionine oxidation to aspartic semialdehyde	-32.008456	['M']
+Proline oxidation to pyrrolidinone	-30.010565	['P']
+Decarboxylation	-30.010565	['P']
+Homoserine	-29.992806	['M']
+Pyrrolidone from Proline	-27.994915	['P']
+Formation of five membered aromatic heterocycle	-20.026215	"['C', 'S']"
+Loss of ammonia (15N)	-18.023584	"['S', 'C', 'T']"
+Dehydration	-18.010565	"['D', 'Y', 'T', 'S', 'N', 'Q', 'C']"
+oxoalanine	-17.992806	['C']
+Loss of ammonia	-17.026549	"['C', 'S', 'T', 'N']"
+reduction	-15.994915	"['T', 'D', 'S']"
+lactic acid from N-term Ser	-15.010899	['S']
+Aspartylurea	-10.031969	['H']
+carbamidomethylated Cys that undergoes beta-elimination and Michael addition of methylamine	-2.945522	['C']
+2-amino-3-oxo-butanoic_acid	-2.01565	"['S', 'Y', 'T', 'K']"
+Lysine oxidation to aminoadipic semialdehyde	-1.031634	['K']
+Amidation	-0.984016	"['C-term', 'C-term']"
+Non-modified	0	['NM']
+Deamidation	0.984016	"['Q', 'R', 'N', 'F']"
+tryptophan oxidation to kynurenin	3.994915	['W']
+In Bachi as Formylaspargine (typo?)	4.97893	['H']
+Carbamidomethylated Cys that undergoes beta-elimination and Michael addition of ethylamine	11.070128	['C']
+formaldehyde adduct	12	"['W', 'Y', 'H', 'R', 'K', 'N-term', 'C', 'F']"
+Phe->Cys substitution and carbamidomethylation	12.962234	['F']
+proline oxidation to pyroglutamic acid	13.979265	['P']
+Tryptophan oxidation to oxolactone	13.979265	['P']
+aldehyde and ketone modifications	13.979265	['P']
+Methylation	14.01565	"['E', 'D', 'C-term', 'N-term', 'L', 'I', 'R', 'Q', 'N-term', 'N', 'K', 'H', 'C', 'S', 'T']"
+alpha-amino adipic acid	14.96328	['K']
+Deamidation followed by a methylation	14.999666	"['Q', 'N']"
+Tyrosine oxidation to 2-aminotyrosine	15.010899	['Y']
+thiocarboxylic acid	15.977156	['G']
+Oxidation or Hydroxylation	15.994915	"['T', 'E', 'S', 'Q', 'L', 'I', 'U', 'G', 'W', 'C', 'H', 'V', 'R', 'M', 'Y', 'F', 'P', 'N', 'K', 'D']"
+fluorination	17.990578	"['Y', 'W', 'F', 'A']"
+Proline oxidation to 5-hydroxy-2-aminovaleric acid	18.010565	['P']
+Lys->Met substitution and sulfoxidation	18.940436	['K']
+tryptophan oxidation to hydroxykynurenin	19.989829	['W']
+glyoxal-derived AGE	21.98435	['R']
+cyano	24.995249	['C']
+ethyl amino	27.047285	"['S', 'T']"
+"Tryptophan oxidation to beta-unsaturated-2,4-bis-tryptophandione"	27.958529	['W']
+Formylation	27.994915	"['N-term', 'T', 'K', 'N-term', 'S']"
+di-Methylation	28.0313	"['N-term', 'P', 'N', 'N-term', 'K', 'R']"
+Ethylation	28.0313	"['N-term', 'P', 'N', 'N-term', 'K', 'R']"
+nitrosylation	28.990164	"['C', 'Y']"
+deamidation followed by esterification with ethanol	29.015316	"['Q', 'N']"
+Dimethylation of proline residue	29.039125	['P']
+quinone	29.974179	"['W', 'Y']"
+hydroxymethyl	30.010565	['N']
+formaldehyde induced modifications	30.010565	['N']
+Lys->Cys substitution and carbamidomethylation	31.935685	['K']
+persulfide	31.972071	"['D', 'C', 'W']"
+dihydroxy	31.989829	"['U', 'C', 'W', 'Y', 'F', 'M', 'K', 'R', 'P', 'E', 'I', 'L', 'V']"
+Leu->Met substitution and sulfoxidation	33.951335	['L']
+propargylamine	37.031634	"['D', 'C-term', 'E']"
+Azidophenylalanine	41.001397	['F']
+amidination of lysines or N-terminal amines with methyl acetimidate	41.026549	"['N-term', 'K']"
+Acetylation	42.010565	"['T', 'N-term', 'S', 'C', 'N-term', 'K', 'Y', 'H', 'R']"
+Guanidination	42.021798	"['K', 'N-term']"
+amidino	42.021798	"['K', 'N-term']"
+tri-Methylation	42.04695	"['A', 'R', 'K']"
+Propyl	42.04695	"['A', 'R', 'K']"
+Carbamylation	43.005814	"['Y', 'T', 'S', 'M', 'C', 'R', 'N-term', 'K', 'N-term']"
+Carboxyl modification with ethanolamine	43.042199	"['D', 'C-term', 'E', 'C']"
+Tryptophan oxidation to hydroxy-bis-tryptophandione	43.953444	['W']
+Carboxylation	43.989829	"['E', 'D', 'K', 'W', 'M']"
+S-Ethylcystine from Serine	44.008456	['S']
+Ethanolation	44.026215	"['K', 'C', 'R']"
+Oxidation to nitro	44.985078	"['Y', 'W', 'F']"
+Beta-methylthiolation	45.987721	"['C', 'N', 'D', 'K', 'N-term']"
+cysteine oxidation to cysteic acid	47.984744	"['Y', 'W', 'C', 'F']"
+MDA adduct +54	54.010565	"['K', 'R']"
+Alkene fragment of DSSO crosslinker	54.010565	"['K', 'R']"
+DST crosslinker cleaved by sodium periodate	55.989829	"['N-term', 'K']"
+Propionate labeling reagent light form (N-term & K)	56.026215	"['N-term', 'K', 'S', 'T', 'N-term']"
+"Diethylation, analogous to Dimethylation"	56.0626	"['N-term', 'K']"
+Iodoacetamide derivative	57.021464	"['Y', 'T', 'S', 'E', 'D', 'H', 'N-term', 'K', 'C', 'U', 'M']"
+Iodoacetic acid derivative	58.005479	"['N-term', 'K', 'C', 'W', 'U']"
+"2,3-dihydro-2,2-dimethyl-7-benzofuranol N-methyl carbamate"	58.029289	['S']
+Reduced acrolein addition +58	58.041865	"['N-term', 'K', 'H', 'C']"
+aminoethylcysteine	59.019355	"['T', 'S']"
+"5-hydroxy-N6,N6,N6-trimethyl"	59.04969	['K']
+2-OH-ethyl thio-Ser	60.003371	"['S', 'T']"
+Iodoacetic acid derivative w/ 13C label	60.012189	['C']
+MDA adduct +62	62.01565	['K']
+SulfurDioxide	63.9619	['C']
+Chemical modification of the iodinated sites of thyroglobulin by Suzuki reaction	66.010565	['Y']
+Dichlorination	67.922055	"['C', 'Y']"
+Crotonylation	68.026215	['K']
+Piperidination	68.0626	"['N-term', 'K']"
+N-pyruvic acid 2-iminyl	70.005479	"['K', 'V', 'C']"
+Butyryl	70.041865	['K']
+Acrylamide adduct	71.037114	"['C', 'K', 'N-term']"
+Deoxyhypusine	71.073499	"['Q', 'K']"
+Cys alkylation by dimethylaminoethyl halide	71.073499	"['Q', 'K']"
+carboxyethyl	72.021129	"['K', 'H']"
+Ethoxyformylation	72.021129	"['K', 'H']"
+EDT	75.980527	"['T', 'S']"
+Cysteine mercaptoethanol	75.998285	['C']
+bromination	77.910511	"['F', 'H', 'W', 'Y']"
+Methylphosphonylation	77.987066	"['Y', 'T', 'S']"
+"2,5-dimethypyrrole"	78.04695	['K']
+selenyl	79.91652	['C']
+O-Sulfonation	79.956815	"['S', 'T', 'Y', 'C']"
+Phosphorylation	79.966331	"['E', 'R', 'K', 'H', 'C', 'D', 'Y', 'T', 'S']"
+methylglyoxal-derived argpyrimidine	80.026215	['R']
+Arginine replacement by Nitropyrimidyl ornithine	80.985078	['R']
+Bu fragment of BuUrBu crosslinker	85.052764	"['K', 'N-term']"
+Labeling transglutaminase substrate on glutamine side chain	85.089149	['Q']
+Thiol fragment of DSSO crosslinker	85.982635	"['K', 'N-term']"
+Malonylation	86.000394	"['C', 'S', 'K']"
+Michael addition of hydroxymethylvinyl ketone to cysteine	86.036779	['C']
+transamidation of glycine ethyl ester to glutamine	86.036779	['C']
+2-hydroxyisobutyrylation	86.036779	['C']
+Cleaved and reduced DTBP crosslinker	87.01427	"['N-term', 'K']"
+glycidamide adduct	87.032028	"['K', 'N-term']"
+phosphorylation to amine thiol	87.050655	"['T', 'S']"
+hypusine	87.068414	['K']
+Cleaved and reduced DSP/DTSSP crosslinker	87.998285	"['N-term', 'K']"
+O-methyl amino phosphinate	92.997965	"['Y', 'T', 'S', 'K', 'H', 'C']"
+O-Methylphosphorylation	93.981981	"['Y', 'T', 'S']"
+aminotyrosine with sulfation	94.967714	['Y']
+Intact BS2-G crosslinker	96.021129	"['N-term', 'K']"
+Reduced acrolein addition +96	96.057515	"['N-term', 'K']"
+maleimide	97.016378	"['K', 'C']"
+Acetyldeoxyhypusine	97.089149	['K']
+Acetone chemical artifact	98.073165	"['K', 'H', 'N-term']"
+N-isopropylcarboxamidomethyl	99.068414	['C']
+Succinic anhydride labeling reagent light form (N-term & K)	100.016044	"['N-term', 'N-term', 'K']"
+Methylmalonylation on Serine	100.016044	"['N-term', 'N-term', 'K']"
+Ub Bromide probe addition	100.063663	['C']
+Modification by hydroxylated mechloroethamine (HN-2)	101.084064	"['H', 'K', 'C']"
+Reaction with dimethylarsinous (AsIII) acid	103.960719	['C']
+Sulfenic acid fragment of DSSO crosslinker	103.9932	"['K', 'N-term']"
+S-pyridylethylation	105.057849	['C']
+reaction with methyl vinyl sulfone	106.00885	"['K', 'H', 'C']"
+o-toluene	106.041865	"['H', 'K']"
+N-dimethylphosphate	107.013615	['S']
+Azidohomoalanine (AHA) bound to propargylglycine-NH2 (alkyne)	107.077339	['M']
+S-Methyl Methyl phosphorothioate	107.979873	['S']
+O-Dimethylphosphorylation	107.997631	"['Y', 'T', 'S']"
+O-Ethylphosphorylation	107.997631	"['Y', 'T', 'S']"
+S-methyl amino phosphinate	108.975121	"['Y', 'T', 'S', 'K', 'H', 'C']"
+4-methyl-delta-1-pyrroline-5-carboxyl	109.052764	['K']
+O-methylphosphothione	109.959137	"['S', 'K', 'H', 'C', 'T', 'Y']"
+Nmethylmaleimide	111.032028	"['K', 'C']"
+BuUr fragment of BuUrBu crosslinker	111.032028	"['K', 'C']"
+DMPO spin-trap nitrone adduct	111.068414	"['H', 'Y', 'C']"
+Ammonium-quenched monolink of BS2-G crosslinker	113.047679	"['N-term', 'K']"
+Acetylhypusine	113.084064	['K']
+Intact DST crosslinker	113.995309	"['K', 'N-term']"
+Glutarylation	114.031694	['K']
+Water-quenched monolink of BS2-G crosslinker	114.031694	['K']
+ubiquitinylation residue	114.042927	"['C', 'T', 'S', 'K', 'N-term']"
+Cleavage product of EGS protein crosslinks by hydroylamine treatment	115.026943	"['N-term', 'K']"
+S-(2-succinyl) cysteine	116.010959	['C']
+N-Homocysteine thiolactone	117.024835	['K']
+Dehydropyrrolizidine alkaloid (dehydroretronecine) on cysteines	118.065674	['C']
+Ubiquitination 2H4 lysine	118.068034	['K']
+pyridylacetyl	119.037114	"['N-term', 'K']"
+phenyl isocyanate	119.037114	"['N-term', 'K']"
+reaction with phenyl salicylate (PS)	120.021129	"['H', 'C', 'K']"
+Beta elimination of alkylated Cys followed by Michael addition of DTT	120.0245	['C']
+reaction with ethyl vinyl sulfone	120.0245	['C']
+O-Isopropylmethylphosphonylation	120.034017	"['Y', 'T', 'S']"
+phosphorylation to pyridyl thiol	121.035005	"['T', 'S']"
+O-Isopropylphosphorylation	122.013281	"['Y', 'T', 'S']"
+Intact DMP crosslinker	122.084398	"['K', 'N-term']"
+glycosylphosphatidylinositol	123.00853	['C-term']
+O-dimethylphosphothione	123.974787	"['S', 'K', 'H', 'C', 'Y', 'T']"
+d5-phenyl isocyanate	124.068498	['N-term']
+N-ethylmaleimide on cysteines	125.047679	['C']
+Iodination	125.896648	"['H', 'Y']"
+octanoyl	126.104465	"['T', 'S', 'C']"
+N-Succinimidyl-2-morpholine acetate	127.063329	"['N-term', 'K']"
+spermidine adduct	128.131349	['Q']
+monoglutamyl	129.042593	"['E', 'C-term']"
+Nmethylmaleimidehydrolysis	129.042593	"['E', 'C-term']"
+S-(2-monomethylsuccinyl) cysteine	130.026609	['C']
+D5 N-ethylmaleimide on cysteines	130.079062	['C']
+Modification by hydroxylated tris-(2-chloroethyl)amine (HN-3)	131.094629	"['C', 'H', 'K']"
+Water quenched monolink of DST crosslinker	132.005873	"['N-term', 'K']"
+Hydroxyphenylglyoxal arginine	132.021129	['R']
+Chemical modification of the diiodinated sites of thyroglobulin by Suzuki reaction	132.021129	['R']
+Pentose	132.042259	"['T', 'S']"
+Propiophenone	132.057515	"['C', 'W', 'T', 'S', 'R', 'K', 'H']"
+modification of the lysine side chain from NH2 to guanidine with a H removed in favor of a benzyl group	132.068748	['K']
+S-homocysteinylation	133.019749	['C']
+iodoacetanilide derivative	133.052764	"['K', 'C', 'N-term']"
+3-methyl-2-pyridyl isocyanate	134.048013	['N-term']
+Tyrosine caged with 2-nitrobenzyl (ONB)	135.032028	['Y']
+"O-ethyl, N-dimethyl phosphate"	135.044916	['S']
+sulfonation of N-terminus	135.983029	['N-term']
+Beta elimination of modified S or T followed by Michael addition of DTT	136.001656	"['T', 'S']"
+O-Diethylphosphorylation	136.028931	"['N-term', 'H', 'C', 'K', 'Y', 'T', 'S']"
+Dehydrated 4-Oxononenal Michael adduct	136.088815	"['K', 'H', 'C']"
+Intact DSS/BS3 crosslinker	138.06808	"['K', 'N-term']"
+Dehydrated 4-hydroxynonenal	138.104465	"['K', 'H', 'C']"
+13C labelled iodoacetanilide derivative	139.072893	"['K', 'C', 'N-term']"
+Ammonia quenched monolink of DMP crosslinker	139.110947	"['K', 'N-term']"
+Water quenched monolink of DMP crosslinker	140.094963	"['N-term', 'K']"
+N-ethylmaleimide on cysteine sulfenic acid	141.042593	['C']
+Diphthamide	142.110613	['H']
+Nethylmaleimidehydrolysis	143.058243	"['K', 'C']"
+S-(2-dimethylsuccinyl) cysteine	144.042259	['C']
+3-(carbamidomethylthio)propanoyl	145.019749	"['N-term', 'K']"
+hydroxycinnamyl	146.036779	['C']
+Fucose	146.057909	"['N', 'T', 'S']"
+glycosyl-L-hydroxyproline	148.037173	['P']
+D5 N-ethylmaleimide+water on cysteines	148.089627	['C']
+Benzyl isothiocyanate	149.02992	"['N-term', 'K', 'C']"
+S-guanylation-2	150.041585	"['C', 'S']"
+O-diethylphosphothione	152.006087	"['Y', 'T', 'S', 'K', 'H', 'C']"
+Shimadzu NBS-12C	152.988449	['W']
+glycerophospho	154.00311	['S']
+methylglyoxal-derived tetrahydropyrimidine	154.026609	['R']
+Side reaction of PG with Side chain of aspartic or glutamic acid	154.074228	"['D', 'E']"
+4-Oxononenal (ONE)	154.09938	"['K', 'H', 'C']"
+Free monolink of DMP crosslinker	154.110613	"['N-term', 'K']"
+lipid	154.135765	"['T', 'S']"
+Ammonium-quenched monolink of DSS/BS3 crosslinker	155.094629	"['N-term', 'K']"
+Dibromo	155.821022	['Y']
+Water-quenched monolink of DSS/BS3 crosslinker	156.078644	"['K', 'N-term']"
+4-hydroxynonenal (HNE)	156.11503	"['K', 'H', 'C', 'A', 'L']"
+N-ethylmaleimideSulfur	157.019749	['C']
+Intact DSSO crosslinker	158.003765	"['K', 'N-term']"
+reduced 4-Hydroxynonenal	158.13068	"['K', 'H', 'C']"
+Shimadzu NBS-13C	159.008578	['W']
+Addition of N-formyl met	159.035399	['N-term']
+membrane protein extraction	159.035399	['N-term']
+5-glutamyl serotonin	159.068414	['Q']
+pyrophosphorylation of Ser/Thr	159.932662	"['T', 'S']"
+Heavy Sulfanilic Acid (SA) C13	161.024228	"['E', 'D', 'C-term']"
+Hexosamine	161.068808	"['W', 'T', 'S', 'N', 'K']"
+Hexose	162.052824	"['C', 'W', 'T', 'S', 'N-term', 'N', 'R', 'K', 'Y']"
+A fixed +1 charge tag attached to the N-terminus of peptides	162.079313	['N-term']
+O-pinacolylmethylphosphonylation	162.080967	"['T', 'S', 'K', 'Y', 'H']"
+Phenethyl isothiocyanate	163.04557	"['N-term', 'K', 'C']"
+Intact DFDNB crosslinker	163.985807	"['N', 'Q', 'R', 'K']"
+O-Diisopropylphosphorylation	164.060231	"['K', 'Y', 'T', 'S', 'N-term']"
+"Chemical reaction with 2,4-dinitro-1-chloro benzene (DNCB)"	166.001457	"['Y', 'H', 'K', 'C']"
+3-phosphoglyceryl	167.982375	['K']
+reaction with phenyl vinyl sulfone	168.0245	['C']
+Photo-induced histidine adduct	169.048741	['H']
+o-toluyl-phosphorylation	170.013281	"['R', 'S', 'T', 'Y', 'K', 'H']"
+Menadione quinone derivative	170.036779	"['K', 'C']"
+6-aminoquinolyl-N-hydroxysuccinimidyl carbamate	170.048013	"['N-term', 'K']"
+APTA-d0	171.149738	['C']
+Intact DTBP crosslinker	172.01289	"['K', 'N-term']"
+Menadione hydroquinone derivative	172.05243	"['K', 'C']"
+Ubiquitin vinylmethylester	173.092617	['C']
+Intact DSP/DTSSP crosslinker	173.980921	"['K', 'N-term']"
+Thiadiazolydation of Cys	174.025169	['C']
+N-ethylmaleimideSulfurWater	175.030314	['C']
+Ammonia-quenched monolink of DSSO crosslinker	175.030314	['C']
+"naphthalene-2,3-dicarboxaldehyde"	175.042199	"['N-term', 'K']"
+Water-quenched monolink of DSSO crosslinker	176.01433	"['K', 'N-term']"
+hexuronic acid	176.032088	"['T', 'S', 'N-term']"
+D5 N-ethylmaleimide on selenocysteines	178.023511	['C']
+Gluconoylation	178.047738	"['N-term', 'K']"
+derivatization by N-term modification using 3-Sulfobenzoic succinimidyl ester	183.983029	['N-term']
+"Cys modification by (1-oxyl-2,2,5,5-tetramethyl-3-pyrroline-3-methyl)methanesulfonate (MTSL)"	184.07961	['C']
+EAPTA d0	184.157563	['C']
+spermine adduct	185.189198	['Q']
+Lipoyl	188.032956	['K']
+Monobromobimane derivative	190.074228	['C']
+Water quenched monolink of DSP/DTSSP crosslinker	191.991486	"['N-term', 'K']"
+Heptose	192.063388	"['T', 'S', 'R', 'Q', 'N', 'K']"
+Intact BuUrBu crosslinker	196.084792	"['N-term', 'K']"
+Ub amide probe addition	196.108602	['C']
+desthiobiotin modification of lysine	196.121178	['K']
+glycerylphosphorylethanolamine	197.04531	['E']
+"2,4-Dinitrobenzenesulfenyl"	198.981352	"['C', 'W']"
+oxidized Arginine biotinylated with biotin hydrazide	199.066699	['R']
+Mercury Mercaptan	201.970617	['C']
+N-Acetylhexosamine	203.079373	"['C', 'T', 'S', 'N']"
+O-Dichloroethylphosphate	203.950987	"['Y', 'T', 'S', 'K', 'H', 'C']"
+Farnesylation	204.187801	['C']
+"(cis,cis-delta 5, delta 8)-tetradecadienoyl"	206.167065	['G']
+(cis-delta 5)-tetradecaenoyl	208.182715	['G']
+Myristoylation	210.198366	"['C', 'K', 'G']"
+tri nitro benzene	210.986535	"['N-term', 'K']"
+phosphate-ribosylation	212.00859	"['E', 'R', 'D']"
+Ammonia quenched monolink of BuUrBu crosslinker	213.111341	"['K', 'N-term']"
+Water quenched monolink of BuUrBu crosslinker	214.095357	"['N-term', 'K']"
+4-sulfophenyl isothiocyanate	214.971084	"['K', 'N-term']"
+Tris-quenched monolink of BS2-G crosslinker	217.095023	"['N-term', 'K']"
+Intact SMCC cross-link	219.089543	"['C', 'K', 'N-term']"
+Intact or monolink BMOE crosslinker	220.048407	['C']
+Glycosylation with KDO	220.058303	"['T', 'S']"
+hydroxyfarnesyl	220.182715	['C']
+4-sulfophenyl isothiocyanate (Heavy C13)	220.991213	"['N-term', 'K']"
+Native Tandem Mass Tag??	224.152478	"['N-term', 'N-term', 'K', 'H', 'S', 'T']"
+Cys modified with dipy ligand	225.090212	['C']
+Iminobiotinylation	225.093583	"['N-term', 'K']"
+Intact EGS cross-linker	226.047738	"['K', 'N-term']"
+Biotinylation	226.077598	"['N-term', 'K']"
+"[3-(2,5)-Dioxopyrrolidin-1-yloxycarbonyl)-propyl]dimethyloctylammonium"	227.224915	"['N-term', 'K']"
+"2,4-diacetamido-2,4,6-trideoxyglucopyranose"	228.111007	['N']
+Pyridoxal phosphate	229.014009	['K']
+PLP bound to lysine reduced by sodium borohydride (NaBH4) to create amine linkage	231.02966	['K']
+"propyl-1,2-dideoxy-2\'-methyl-alpha-D-glucopyranoso-[2,1-d]-Delta2\'-thiazoline"	232.064354	['C']
+5-dimethylaminonaphthalene-1-sulfonyl	233.051049	"['N-term', 'K']"
+Super Heavy Tandem Mass Tag	235.176741	"['N-term', 'N-term', 'K']"
+palmitoleyl	236.214016	"['C', 'S', 'T']"
+Water quenched monolink of SMCC	237.100108	"['C', 'K', 'N-term']"
+Palmitoylation	238.229666	"['T', 'S', 'K', 'C', 'N-term']"
+oxidized Threonine biotinylated with biotin hydrazide	240.104482	['T']
+lapachenole photochemically added to cysteine	240.11503	['C']
+oxidized Lysine biotinylated with biotin hydrazide	241.088497	['K']
+phosphoglycosyl-D-mannose-1-phosphoryl	242.019154	"['T', 'S']"
+addition of GGE	243.085521	['K']
+Water quenched monolink of EGS cross-linker	244.058303	"['N-term', 'K']"
+di-Iodination	251.793296	"['Y', 'H']"
+Nitroso Sulfamethoxazole Sulphenamide thiol adduct	252.044287	['C']
+Mass Defect Tag on lysine e-amino	253.010225	"['W', 'Y', 'N-term', 'K', 'H']"
+Phosphogluconoylation	258.014069	"['N-term', 'K']"
+diglutamyl	258.085186	"['E', 'C-term']"
+oxidized proline biotinylated with biotin hydrazide	258.115047	['P']
+Tris-quenched monolink of DSS/BS3 crosslinker	259.141973	"['K', 'N-term']"
+1-methyl-3-benzoyl-4-hydroxy-4-phenylpiperidine	263.131014	"['C', 'M']"
+Pent(2)	264.084518	"['T', 'S']"
+"3,4-didehydroretinylidene"	264.187801	['K']
+"3-methyl-5-(methylamino)-1,3-diphenylpentan-1-one"	265.146664	['C']
+Adduct of phenylglyoxal with Arg	266.057909	['R']
+"2-ethyl-3-hydroxy-1,3-diphenylpentan-1-one"	266.13068	"['M', 'C']"
+retinal	266.203451	['K']
+Nitroso Sulfamethoxazole Sulfinamide thiol adduct	267.031377	['C']
+Modified GMBS X linker	267.158292	['C']
+Nitroso Sulfamethoxazole semimercaptal thiol adduct	268.039202	['C']
+Geranyl-geranyl	272.250401	['C']
+N-Acetylmuramic acid	275.100502	['A']
+Cresyl-Saligenin-phosphorylation	276.055146	"['R', 'S', 'T', 'Y', 'K', 'H']"
+Tris-quenched monolink of DSSO crosslinker	279.077658	"['K', 'N-term']"
+bis(hydroxphenylglyoxal) arginine	282.052824	['R']
+O3S1HexNAc1	283.036187	"['T', 'S']"
+N-acetylglucosamine-1-phosphoryl	283.045704	"['T', 'S']"
+(-)-dehydroepigallocatechin	287.055563	['C']
+Levuglandinyl - arginine lactam adduct	290.176961	['R']
+N-acetyl neuraminic acid	291.095417	"['T', 'S', 'N']"
+Hex Pent	294.095082	"['T', 'S']"
+"cis-14-hydroxy-10,13-dioxo-7-heptadecenoic ester"	294.183109	['D']
+Native TMTpro Tandem Mass Tag	295.189592	"['S', 'H', 'N-term', 'N-term', 'K', 'T']"
+biotin hydrazide labeled acrolein addition +298	298.146347	"['H', 'K', 'N-term', 'C']"
+Levuglandinyl-lysine anhyropyrrole adduct	298.19328	"['N-term', 'K']"
+Native cysteine-reactive Tandem Mass Tag??	299.166748	['C']
+Cytidine monophosphate	305.041287	"['Y', 'T', 'S']"
+glutathione disulfide	305.068156	['C']
+uridine phosphodiester	306.025302	"['H', 'Y']"
+Levuglandinyl - arginine hydroxylactam adduct	306.171876	['R']
+N-glycoyl neuraminic acid	307.090331	"['T', 'S', 'N']"
+Hex1dHex1	308.110732	"['T', 'S']"
+Side reaction of PGPG with Side chain of aspartic or glutamic acid	308.148455	"['D', 'E']"
+adduction of aflatoxin B1 Dialdehyde to lysine	310.047738	['K']
+Oxidized arginine biotinylated with biotin-LC-hydrazide	310.135113	['R']
+was PentylamineBiotin	311.166748	['Q']
+"Oxidized arginine biotinylated with biotin-LC-hydrazide, reduced"	312.150763	['R']
+Levuglandinyl-lysine anhydrolactam adduct	314.188195	"['N-term', 'K']"
+Thio Ether Formation - BTP Adduct	316.138088	['C']
+Levuglandinyl-lysine pyrrole adduct	316.203845	"['C', 'N-term', 'K']"
+Tris quenched monolink of BuUrBu crosslinker	317.158686	"['N-term', 'K']"
+carbobenzoxy-L-glutaminyl-glycine	320.100836	['K']
+Monolink of SMCC terminated with 3-(dimethylamino)-1-propylamine	321.205242	['C']
+(Iodo)-uracil MP	322.020217	"['Y', 'W', 'F']"
+Lactosylation	324.105647	"['R', 'K', 'S', 'T']"
+Native iodoacetyl Tandem Mass Tag??	324.216141	"['K', 'H', 'E', 'D', 'C']"
+Nitroalkylation by Nitro Linoleic Acid	325.225309	"['C', 'H']"
+biotinoyl-iodoacetyl-ethylenediamine	326.141261	['C']
+Nitroalkylation by Nitro Oleic Acid	327.240959	"['C', 'H']"
+AMP	329.05252	"['H', 'T', 'K', 'Y', 'S']"
+Sixplex iodoacetyl Tandem Mass Tag??	329.226595	"['K', 'H', 'E', 'D', 'C']"
+Ubiquitin D (FAT10) leaving after chymotrypsin digestion Cys-Ile-Gly-Gly	330.136176	['K']
+Levuglandinyl - lysine lactam adduct	332.19876	"['N-term', 'K']"
+andrographolide with the loss of H2O	332.19876	"['N-term', 'K']"
+Pent HexNAc	335.121631	"['T', 'S']"
+Hex HexA	338.084912	"['T', 'S']"
+NHS-LC-Biotin	339.161662	"['N-term', 'K']"
+Phosphopantetheine	340.085794	['S']
+glucosylgalactosyl hydroxylysine	340.100562	['K']
+hydrogenase diiron subcluster	342.786916	['C']
+S-guanylation	343.031785	"['S', 'C']"
+phospho-guanosine	345.047435	"['H', 'K']"
+Levuglandinyl - lysine hydroxylactam adduct	348.193674	"['N-term', 'K']"
+HexNAc1dHex1	349.137281	"['T', 'S', 'N']"
+Oxidized lysine biotinylated with biotin-LC-hydrazide	352.156911	['K']
+"Oxidized lysine biotinylated with biotin-LC-hydrazide, reduced"	354.172562	['K']
+Biotin polyethyleneoxide amine	356.188212	"['D', 'C-term', 'E']"
+Biotin-Phenol	361.146012	['Y']
+nucleophilic addtion to cytopiloyne	362.136553	"['Y', 'S', 'R', 'P', 'N-term', 'K', 'C']"
+Diaminopimelic acid-DSP monolinked	364.076278	"['K', 'E', 'A']"
+Hex1HexNAc1	365.132196	"['N', 'T', 'S']"
+cholesterol ester	368.344302	['C-term']
+Oxidized Proline biotinylated with biotin-LC-hydrazide	369.183461	['P']
+"Oxidized proline biotinylated with biotin-LC-hydrazide, reduced"	371.199111	['P']
+"2,3,4,6-tetra-O-Acetyl-1-allyl-alpha-D-galactopyranoside modification of cysteine"	372.142033	['C']
+tri-Iodination	377.689944	['Y']
+nucleophilic addition to cytopiloyne+H2O	380.147118	"['Y', 'T', 'S', 'R', 'N-term', 'K', 'C']"
+covalent linkage of maleimidyl coumarin probe (Molecular Probes D-10253)	383.148121	['C']
+Ubiquitination	383.228103	['K']
+(3-aminopropyl)(L-aspartyl-1-amino)phosphoryl-5-adenosine	386.110369	['C-term']
+"5-Iodoacetamidofluorescein (Molecular Probe, Eugene, OR)"	387.074287	['C']
+triglutamyl	387.127779	"['C-term', 'E']"
+EZ-Link Sulfo-NHS-SS-Biotin	389.090154	"['K', 'N-term']"
+LeumethylArgGlyGly	397.243753	['K']
+Hex(2) O(3) S	404.062462	"['T', 'S']"
+H1O3P1Hex2	404.071978	"['N', 'T', 'S']"
+HexNAc2	406.158745	"['T', 'S', 'N']"
+LeudimethylArgGlyGly	411.259403	['K']
+Bodipy modifications onto cysteine	414.167478	['C']
+"Biotinyl-iodoacetamidyl-3,6-dioxaoctanediamine"	414.193691	['C']
+dipyrrolylmethanemethyl	418.137616	['C']
+fluorescein-5-thiosemicarbazide	421.073241	"['S', 'R', 'P', 'K', 'C']"
+Hex Pent(2)	426.137341	"['T', 'S']"
+fluorescein-5-maleimide	427.069202	['C']
+Pierce EZ-Link Biotin-HPDP	428.191582	['C']
+BisANS with loss of both sulfonates	437.201774	"['S', 'T', 'K']"
+O3-(riboflavin phosphoryl)	438.094051	"['S', 'T']"
+Hex:1 Pent:2 Me:1	440.152991	"['T', 'S']"
+desthiobiotin fluorophosphonate	443.291294	"['S', 'Y']"
+Hex HexNAc Sulf	445.089011	"['T', 'S']"
+Hex HexNAc Phos	445.098527	"['T', 'S']"
+6-N-biotinylaminohexyl isopropyl phosphate	447.195679	"['T', 'Y', 'S']"
+was Biotin-maleimide	449.17329	['C']
+Iodoacetamide derivative of stilbene (reaction product with thiol)	452.034807	['C']
+Biot_LC_LC	452.245726	"['N-term', 'K']"
+Hex NeuAc ---OR--- HexNAc Kdn	453.14824	"['T', 'S']"
+Puromycin	453.212452	['C-term']
+flavin mononucleotide	454.088965	"['H', 'C']"
+beta-Funaltrexamine	454.210387	"['C', 'K']"
+(-)-epigallocatechin-3-gallate	456.069261	['C']
+S-(4a-FMN)	456.104615	['C']
+Hex NeuGc	469.143155	"['T', 'S']"
+SUMOylation by Giardia lamblia	469.228496	['K']
+triiodo	469.716159	['Y']
+Hex2dHex1	470.163556	"['T', 'S']"
+Modification of cystein by withaferin	470.266839	['C']
+fluorescein-hexanoate-NHS hydrolysis	471.131802	['K']
+Biotin_PEG4	473.219571	"['N-term', 'K']"
+High molecular absorption maleimide label for proteins	474.250515	['C']
+HexNAc(2) Sulf	486.11556	"['S', 'T']"
+Hex3	486.158471	"['T', 'S', 'N']"
+was Biotin-PEO4-hydrazide	487.246455	['C-term']
+EDT-iodo-PEO-biotin	490.174218	"['T', 'S']"
+Fluorescein-tyramine adduct by peroxidase activity	493.116152	['Y']
+HexNAc NeuAc	494.174789	"['T', 'S']"
+HexNAc1dHex2	495.19519	['N']

@@ -5,6 +5,7 @@ Created on Mon Jun 27 16:55:52 2022
 @author: alaguillog
 """
 
+from ast import literal_eval
 import argparse
 import concurrent.futures
 import configparser
@@ -314,9 +315,9 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
     return(proof)
 
-def findClosest(dm, dmdf, dmtol):
-    exp = pd.DataFrame(['EXPERIMENTAL', dm, 0]).T
-    exp.columns = ['name', 'mass', 'distance']
+def findClosest(dm, dmdf, dmtol, pos):
+    exp = pd.DataFrame(['EXPERIMENTAL', dm, [pos], 0]).T
+    exp.columns = ['name', 'mass', 'site', 'distance']
     dmdf["distance"] = abs(dmdf.mass - dm)
     closest = dmdf[dmdf.distance<=dmtol]
     closest = pd.concat([closest, exp])
@@ -324,10 +325,24 @@ def findClosest(dm, dmdf, dmtol):
     closest.reset_index(drop=True, inplace=True)
     return(closest)
 
+def findPos(pos, dm_set, plainseq):
+    def _where(sites, plainseq):
+        sites = sites.site
+        subpos = [pos]
+        for s in sites: # TODO: only once per unique AA
+            subpos = subpos + list(np.where(np.array(list(plainseq)) == str(s))[0])
+        subpos.sort()
+        return(subpos)
+    dm_set['idx'] = dm_set.apply(_where, plainseq=plainseq, axis=1)
+    return(dm_set)
+
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     # TODO retry for every position in sequence as well (use allowed position info from UNIMOD?)
+    # KEEP IN MIND EXP POS IS ALWAYS A NUMBER
     ## DM ##
-    dm_set = findClosest(sub.DM, dmdf, dmtol) # Contains experimental DM
+    exp_pos = pos[mods.index(sub.DM)]
+    dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
+    dm_set = findPos(exp_pos, dm_set, plainseq)
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
@@ -426,11 +441,14 @@ def main(args):
     # Read DM file
     logging.info("Reading DM file...")
     dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
-    dmdf.columns = ["name", "mass"]
+    dmdf.columns = ["name", "mass", "site"]
+    dmdf.site = dmdf.site.apply(literal_eval)
+    dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
+    # TODO handle "Anywhere" site keyword
     logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
     # Prepare to parallelize
     logging.info("Refragging...")
-    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
+    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1) # TODO delete msdata
     indices, rowSeries = zip(*df.iterrows())
     rowSeries = list(rowSeries)
     tqdm.pandas(position=0, leave=True)
