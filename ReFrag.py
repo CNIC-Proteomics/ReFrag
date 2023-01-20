@@ -199,7 +199,7 @@ def expSpectrum(ions):
     # spec["CORR_INT"] = spec.apply(lambda x: max(ions.INT)-13 if x["CORR_INT"]>max(ions.INT) else x["CORR_INT"], axis=1)
     return(spec, ions, spec_correction)
 
-def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
+def theoSpectrum(seq, mods, pos, len_ions, mass):
     '''
     Prepare theoretical fragment matrix.
 
@@ -213,7 +213,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
         yn = list(seq[i:])
         if i > 0: nt = False
         else: nt = True
-        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) + dm # TODO only add +dm to fragments up until n_pos
+        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) # TODO only add +dm to fragments up until n_pos
         outy[i:] = fragy
         
     ## B SERIES ##
@@ -222,7 +222,7 @@ def theoSpectrum(seq, mods, pos, len_ions, dm, mass):
         bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
-        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
+        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen # TODO only add +dm to fragments up until n_pos
         outb[i:] = fragb
     
     ## FRAGMENT MATRIX ##
@@ -350,7 +350,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(exp_pos, dm_set, plainseq)
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
-    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), 0, mass)
+    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
     closest_ions = []
     closest_proof = []
@@ -359,9 +359,11 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     closest_pos = []
     for index, row in dm_set.iterrows():
         dm = row.mass
-        for dm_pos in row.site:
+        for dm_pos in row.idx:
             ## DM OPERATIONS ##
-            dm_theo_spec = theoSpectrum(plainseq, mods, dm_pos, len(ions), dm, mass)
+            mods.append(dm)
+            pos.append(dm_pos)
+            dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
