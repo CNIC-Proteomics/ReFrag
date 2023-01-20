@@ -85,7 +85,9 @@ def hyperscore(ions, proof, ftol=50): # TODO play with number of ions # if modif
     ions["MSF_INT"] = norm
     ## 2. Pick matched ions ##
     proof = proof[proof.PPM<=ftol]
-    matched_ions = pd.merge(proof, ions, on="MZ")
+    proof.set_index('MZ')
+    ions.set_index('MZ')
+    matched_ions = proof.join(ions, lsuffix='_x', rsuffix='_y', how='left')
     if len(matched_ions) == 0:
         hs = 0
         return(hs)
