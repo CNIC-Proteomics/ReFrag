@@ -115,7 +115,7 @@ def hyperscore(ions, proof, ftol=50): # TODO play with number of ions # if modif
         hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
     except ValueError:
         hs = 0
-    if hs > 0:
+    if hs < 0:
         hs = 0
     return(hs)
 
@@ -428,6 +428,8 @@ def parallelFragging(query, parlist):
                                       parlist[0], parlist[1], parlist[2],
                                       parlist[3])
     hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
+    # hyperscores = [testHy(i, ions, proof, parlist, name, dm, position) for i in list(range(0, len(dm)))]
+    # hyperscores = map(lambda i: testHy(i, ions, proof, parlist, name, dm, position), list(range(0, len(dm))))
     for i in list(range(0, len(dm))):
         hscore = hyperscore(ions[i], proof[i], parlist[2])
         proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
