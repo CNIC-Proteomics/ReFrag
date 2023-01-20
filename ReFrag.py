@@ -199,7 +199,7 @@ def expSpectrum(ions):
     # spec["CORR_INT"] = spec.apply(lambda x: max(ions.INT)-13 if x["CORR_INT"]>max(ions.INT) else x["CORR_INT"], axis=1)
     return(spec, ions, spec_correction)
 
-def theoSpectrum(seq, mods, pos, len_ions, mass):
+def theoSpectrum(seq, mods, pos, len_ions, mass, dm=0):
     '''
     Prepare theoretical fragment matrix.
 
@@ -213,7 +213,7 @@ def theoSpectrum(seq, mods, pos, len_ions, mass):
         yn = list(seq[i:])
         if i > 0: nt = False
         else: nt = True
-        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) # TODO only add +dm to fragments up until n_pos
+        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) + dm # TODO only add +dm to fragments up until n_pos
         outy[i:] = fragy
         
     ## B SERIES ##
@@ -222,7 +222,7 @@ def theoSpectrum(seq, mods, pos, len_ions, mass):
         bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
-        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen # TODO only add +dm to fragments up until n_pos
+        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
         outb[i:] = fragb
     
     ## FRAGMENT MATRIX ##
@@ -325,30 +325,35 @@ def findClosest(dm, dmdf, dmtol, pos):
     closest.reset_index(drop=True, inplace=True)
     return(closest)
 
-def findPos(pos, dm_set, plainseq):
+def findPos(dm_set, plainseq):
     def _where(sites, plainseq):
         sites = sites.site
-        subpos = [pos]
+        subpos = []
         for s in sites:
             if s == 'Anywhere':
                 subpos = list(range(0, len(plainseq)))
                 break
-            elif s == 'NM':
-                subpos = 0
+            elif s == 'NM' or s == 'exp':
+                subpos = [-1]
                 break
+            elif s == 'N-term':
+                subpos = [0]
+            elif s == 'C-term':
+                subpos = [len(plainseq) - 1]
             else:
                 subpos = subpos + list(np.where(np.array(list(plainseq)) == str(s))[0])
         subpos = list(dict.fromkeys(subpos))
         subpos.sort()
         return(subpos)
     dm_set['idx'] = dm_set.apply(_where, plainseq=plainseq, axis=1)
+    dm_set = dm_set[dm_set.idx.apply(lambda x: len(x)) > 0]
     return(dm_set)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
     ## DM ##
-    exp_pos = pos[mods.index(sub.DM)]
+    exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
-    dm_set = findPos(exp_pos, dm_set, plainseq)
+    dm_set = findPos(dm_set, plainseq)
     exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
@@ -361,9 +366,12 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
         dm = row.mass
         for dm_pos in row.idx:
             ## DM OPERATIONS ##
-            mods.append(dm)
-            pos.append(dm_pos)
-            dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
+            if dm_pos == -1:
+                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass, dm)
+            else:
+                mods.append(dm)
+                pos.append(dm_pos)
+                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
@@ -404,7 +412,7 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
-    if math.isnan(query.modification_info):
+    if pd.isnull(query.modification_info): 
         sequence = plain_peptide
         mod = []
         pos = []
