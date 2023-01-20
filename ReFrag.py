@@ -424,16 +424,16 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
-    ions, proof, dm, name = miniVseq(sub, plain_peptide, mod, pos,
-                                     parlist[0], parlist[1], parlist[2],
-                                     parlist[3])
+    ions, proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
+                                      parlist[0], parlist[1], parlist[2],
+                                      parlist[3])
     hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
     for i in list(range(0, len(dm))):
         hscore = hyperscore(ions[i], proof[i], parlist[2])
         proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
         proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
-        candidate = pd.DataFrame([name[i], dm[i], proof[i].FRAGS.nunique(), hscore]).T
-        candidate.columns = ['name', 'dm', 'matched_ions', 'hyperscore']
+        candidate = pd.DataFrame([name[i], dm[i], position[i], proof[i].FRAGS.nunique(), hscore]).T
+        candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore']
         hyperscores = pd.concat([hyperscores, candidate])
     best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
     best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
@@ -441,7 +441,7 @@ def parallelFragging(query, parlist):
     best = best.head(1)
     exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
     return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
-            exp.matched_ions[0], exp.hyperscore[0]])
+            exp.matched_ions[0], exp.hyperscore[0], best.site[0]])
 
 def main(args):
     '''
@@ -486,6 +486,7 @@ def main(args):
     df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
     df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
     df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
+    df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
     df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
     df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
     df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
