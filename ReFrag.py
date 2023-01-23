@@ -85,9 +85,7 @@ def hyperscore(ions, proof, ftol=50): # TODO play with number of ions # if modif
     ions["MSF_INT"] = norm
     ## 2. Pick matched ions ##
     proof = proof[proof.PPM<=ftol]
-    proof.set_index('MZ')
-    ions.set_index('MZ')
-    matched_ions = proof.join(ions, lsuffix='_x', rsuffix='_y', how='left')
+    matched_ions = proof.join(ions.set_index('MZ'), lsuffix='_x', rsuffix='_y', how='left')
     if len(matched_ions) == 0:
         hs = 0
         return(hs)
@@ -311,7 +309,7 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
         return(proof, False)
-    proof = pd.merge(matches_ions, ions[['MZ','INT']], how="left", on="MZ")
+    proof = matches_ions.set_index('MZ').join(ions[['MZ','INT']].set_index('MZ'), lsuffix='_x', rsuffix='_y', how='left', on='MZ')
     if len(proof)==0:
         mzcycle = itertools.cycle([ions.MZ.iloc[0], ions.MZ.iloc[1]])
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
@@ -470,7 +468,7 @@ def main(args):
     logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
     # Prepare to parallelize
     logging.info("Refragging...")
-    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1) # TODO delete msdata
+    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
     rowSeries = list(rowSeries)
     tqdm.pandas(position=0, leave=True)
