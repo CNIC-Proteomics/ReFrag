@@ -357,7 +357,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     dm_set = findPos(dm_set, plainseq)
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
-    # closest_ions = []
     closest_proof = []
     closest_dm = []
     closest_name = []
@@ -399,20 +398,11 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             proof.INT = proof.INT * spec_correction
             proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
             proof = proof[proof.PPM<=ftol]
-            # closest_ions.append(ions)
             closest_proof.append(proof)
             closest_dm.append(dm)
             closest_name.append(row['name'])
             closest_pos.append(dm_pos)
     return(closest_proof, closest_dm, closest_name, closest_pos)
-
-# def testHy(i, ions, proof, parlist, name, dm, position):
-#     hscore = hyperscore(ions[i], proof[i], parlist[2])
-#     proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
-#     proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
-#     candidate = pd.DataFrame([name[i], dm[i], position[i], proof[i].FRAGS.nunique(), hscore]).T
-#     candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore']
-#     return(candidate)
 
 def parallelFragging(query, parlist):
     m_proton = 1.007276
@@ -436,9 +426,6 @@ def parallelFragging(query, parlist):
     proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
                                          parlist[0], parlist[1], parlist[2],
                                          parlist[3], exp_spec, exp_ions, spec_correction)
-    # hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
-    # hyperscores = [testHy(i, ions, proof, parlist, name, dm, position) for i in list(range(0, len(dm)))]
-    # hyperscores = map(lambda i: testHy(i, ions, proof, parlist, name, dm, position), list(range(0, len(dm))))
     hyperscores = []
     check = []
     hss = []
@@ -457,18 +444,14 @@ def parallelFragging(query, parlist):
             hss = hss + [hscore]
             ufrags = ufrags + [frags]
         hyperscores = hyperscores + [[name[i], dm[i], position[i], frags, hscore]]
-        # candidate = pd.DataFrame([name[i], dm[i], position[i], frags, hscore]).T # TODO very slow
-        # candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'] # TODO very slow
-        # hyperscores = pd.concat([hyperscores, candidate]) # TODO very slow
     hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
     best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
     best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
     best.reset_index(drop=True, inplace=True)
     best = best.head(1)
     exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
-    # print(str(query.scannum) + " " + len(exp) + " " + len(best))
     return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
-            int(exp.matched_ions), float(exp.hyperscore), best.site[0]]) #TODO site is not saving
+            int(exp.matched_ions), float(exp.hyperscore), best.site[0]])
 
 def main(args):
     '''
