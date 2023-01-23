@@ -349,15 +349,16 @@ def findPos(dm_set, plainseq):
     dm_set = dm_set[dm_set.idx.apply(lambda x: len(x)) > 0]
     return(dm_set)
 
-def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
+             exp_spec, ions, spec_correction):
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum)
+    # exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum) # TODO: ions is always the same, get this out of miniVseq and calculate only once
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
-    closest_ions = []
+    # closest_ions = []
     closest_proof = []
     closest_dm = []
     closest_name = []
@@ -399,12 +400,20 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf):
             proof.INT = proof.INT * spec_correction
             proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
             proof = proof[proof.PPM<=ftol]
-            closest_ions.append(ions)
+            # closest_ions.append(ions)
             closest_proof.append(proof)
             closest_dm.append(dm)
             closest_name.append(row['name'])
             closest_pos.append(dm_pos)
-    return(closest_ions, closest_proof, closest_dm, closest_name, closest_pos)
+    return(closest_proof, closest_dm, closest_name, closest_pos)
+
+# def testHy(i, ions, proof, parlist, name, dm, position):
+#     hscore = hyperscore(ions[i], proof[i], parlist[2])
+#     proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
+#     proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
+#     candidate = pd.DataFrame([name[i], dm[i], position[i], proof[i].FRAGS.nunique(), hscore]).T
+#     candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore']
+#     return(candidate)
 
 def parallelFragging(query, parlist):
     m_proton = 1.007276
@@ -424,17 +433,30 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
-    ions, proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
-                                      parlist[0], parlist[1], parlist[2],
-                                      parlist[3])
+    exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
+    proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
+                                         parlist[0], parlist[1], parlist[2],
+                                         parlist[3], exp_spec, exp_ions, spec_correction)
     hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
     # hyperscores = [testHy(i, ions, proof, parlist, name, dm, position) for i in list(range(0, len(dm)))]
     # hyperscores = map(lambda i: testHy(i, ions, proof, parlist, name, dm, position), list(range(0, len(dm))))
-    for i in list(range(0, len(dm))):
-        hscore = hyperscore(ions[i], proof[i], parlist[2])
-        proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
-        proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
-        candidate = pd.DataFrame([name[i], dm[i], position[i], proof[i].FRAGS.nunique(), hscore]).T
+    check = []
+    hss = []
+    ufrags = []
+    for i in list(range(0, len(dm))): # TODO many scores are the same check if proof is the same and don't calculate
+        total = sum(list(proof[i].index)) + proof[i].INT.sum() # proof[i].MZ.sum(), MZ is now index
+        if total in check:
+            hscore = hss[check.index(total)]
+            frags = ufrags[check.index(total)]
+        else:
+            hscore = hyperscore(exp_ions, proof[i], parlist[2])
+            proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
+            proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
+            frags = proof[i].FRAGS.nunique()
+            check = check + [total]
+            hss = hss + [hscore]
+            ufrags = ufrags + [frags]
+        candidate = pd.DataFrame([name[i], dm[i], position[i], frags, hscore]).T
         candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore']
         hyperscores = pd.concat([hyperscores, candidate])
     best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
