@@ -355,7 +355,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    # exp_spec, ions, spec_correction = expSpectrum(sub.Spectrum) # TODO: ions is always the same, get this out of miniVseq and calculate only once
     theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
     # closest_ions = []
@@ -437,13 +436,14 @@ def parallelFragging(query, parlist):
     proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
                                          parlist[0], parlist[1], parlist[2],
                                          parlist[3], exp_spec, exp_ions, spec_correction)
-    hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
+    # hyperscores = pd.DataFrame(columns=['name', 'dm', 'matched_ions', 'hyperscore'])
     # hyperscores = [testHy(i, ions, proof, parlist, name, dm, position) for i in list(range(0, len(dm)))]
     # hyperscores = map(lambda i: testHy(i, ions, proof, parlist, name, dm, position), list(range(0, len(dm))))
+    hyperscores = []
     check = []
     hss = []
     ufrags = []
-    for i in list(range(0, len(dm))): # TODO many scores are the same check if proof is the same and don't calculate
+    for i in list(range(0, len(dm))):
         total = sum(list(proof[i].index)) + proof[i].INT.sum() # proof[i].MZ.sum(), MZ is now index
         if total in check:
             hscore = hss[check.index(total)]
@@ -456,16 +456,19 @@ def parallelFragging(query, parlist):
             check = check + [total]
             hss = hss + [hscore]
             ufrags = ufrags + [frags]
-        candidate = pd.DataFrame([name[i], dm[i], position[i], frags, hscore]).T
-        candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore']
-        hyperscores = pd.concat([hyperscores, candidate])
+        hyperscores = hyperscores + [[name[i], dm[i], position[i], frags, hscore]]
+        # candidate = pd.DataFrame([name[i], dm[i], position[i], frags, hscore]).T # TODO very slow
+        # candidate.columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'] # TODO very slow
+        # hyperscores = pd.concat([hyperscores, candidate]) # TODO very slow
+    hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
     best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
     best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
     best.reset_index(drop=True, inplace=True)
     best = best.head(1)
     exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
+    # print(str(query.scannum) + " " + len(exp) + " " + len(best))
     return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
-            exp.matched_ions[0], exp.hyperscore[0], best.site[0]])
+            int(exp.matched_ions), float(exp.hyperscore), best.site[0]]) #TODO site is not saving
 
 def main(args):
     '''
