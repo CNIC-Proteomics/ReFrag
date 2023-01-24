@@ -259,13 +259,14 @@ def makeFrags(seq_len):
     Name all fragments.
     '''
     frags = pd.DataFrame(np.nan, index=list(range(0,seq_len*2)),
-                         columns=["by", "by2", "by3", "bydm", "bydm2", "bydm3"])
+                         columns=["by", "by2", "by3", "bydm", "bydm2", "bydm3", "ion"])
     frags.by = ["b" + str(i) for i in list(range(1,seq_len+1))] + ["y" + str(i) for i in list(range(1,seq_len+1))[::-1]]
     frags.by2 = frags.by + "++"
     frags.by3 = frags.by + "+++"
     frags.bydm = frags.by + "*"
     frags.bydm2 = frags.by + "*++"
     frags.bydm3 = frags.by + "*+++"
+    frags.ion = [i for i in list(range(1,seq_len+1))] + [i for i in list(range(1,seq_len+1))[::-1]]
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
@@ -282,8 +283,9 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     c_assign_frags = pd.DataFrame(list(frags.by) + list(frags.by + "++") + list(frags.by + "+++"))
     c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")), pd.DataFrame(list(frags.by + "*++"))])
     c_assign["FRAGS"] = c_assign_frags
-    c_assign["ION"] = c_assign.apply(lambda x: re.findall(r'\d+', x.FRAGS)[0], axis=1)
-    c_assign["CHARGE"] = c_assign.apply(lambda x: x.FRAGS.count('+'), axis=1).replace(0, 1)
+    c_assign_ions = pd.DataFrame(list(frags.ion)*3)
+    c_assign["ION"] = c_assign_ions
+    c_assign["CHARGE"] = c_assign.apply(lambda x: x.FRAGS.count('+'), axis=1).replace(0, 1) # SLOW
     return(c_assign)
 
 def makeAblines(texp, minv, assign, ions):
