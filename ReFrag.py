@@ -266,7 +266,7 @@ def makeFrags(seq_len):
     frags.bydm = frags.by + "*"
     frags.bydm2 = frags.by + "*++"
     frags.bydm3 = frags.by + "*+++"
-    frags.ion = [i for i in list(range(1,seq_len+1))] + [i for i in list(range(1,seq_len+1))[::-1]]
+    #frags.ion = [i for i in list(range(1,seq_len+1))] + [i for i in list(range(1,seq_len+1))[::-1]]
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
@@ -285,8 +285,9 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")),
                                 pd.DataFrame(list(frags.by + "*++"))])
     c_assign["FRAGS"] = c_assign_frags
-    c_assign_ions = pd.DataFrame(list(frags.ion)*3)
-    c_assign["ION"] = c_assign_ions
+    # c_assign["ION"] = pd.DataFrame(list(frags.ion)*5)
+    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign)+1))] + [i for i in list(range(1,len(assign)+1))[::-1]])
+    c_assign["ION"] = [next(c_assign_ions) for i in range(c_assign.shape[0])]
     c_assign["CHARGE"] = pd.DataFrame([1]*len(assign) + [2]*len(assign) + [3]*len(assign) +
                                       [1]*len(assign) + [2]*len(assign))
     return(c_assign)
@@ -396,7 +397,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
             else:
                 sys.exit('ERROR: Invalid charge value!')
-            ppmfinal["minv"] = ppmfinal.apply(lambda x: x.min() , axis = 1)
+            ppmfinal["minv"] = ppmfinal.min(axis=1)
             minv = ppmfinal["minv"]
             ## ABLINES ##
             proof = makeAblines(texp, minv, assign, ions)
