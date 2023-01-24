@@ -278,14 +278,17 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     assign["*"] = dm_theo_spec.iloc[0]
     assign["*++"] = (dm_theo_spec.iloc[0]+m_proton)/2
     c_assign = pd.DataFrame(list(assign["+"]) + list(assign["++"]) + list(assign["+++"]))
-    c_assign = pd.concat([c_assign, pd.DataFrame(list(assign["*"])), pd.DataFrame(list(assign["*++"]))])
+    c_assign = pd.concat([c_assign, pd.DataFrame(list(assign["*"])),
+                          pd.DataFrame(list(assign["*++"]))])
     c_assign.columns = ["MZ"]
     c_assign_frags = pd.DataFrame(list(frags.by) + list(frags.by + "++") + list(frags.by + "+++"))
-    c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")), pd.DataFrame(list(frags.by + "*++"))])
+    c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")),
+                                pd.DataFrame(list(frags.by + "*++"))])
     c_assign["FRAGS"] = c_assign_frags
     c_assign_ions = pd.DataFrame(list(frags.ion)*3)
     c_assign["ION"] = c_assign_ions
-    c_assign["CHARGE"] = c_assign.apply(lambda x: x.FRAGS.count('+'), axis=1).replace(0, 1) # SLOW
+    c_assign["CHARGE"] = pd.DataFrame([1]*len(assign) + [2]*len(assign) + [3]*len(assign) +
+                                      [1]*len(assign) + [2]*len(assign))
     return(c_assign)
 
 def makeAblines(texp, minv, assign, ions):
