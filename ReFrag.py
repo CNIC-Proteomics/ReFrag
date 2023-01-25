@@ -142,15 +142,13 @@ def insertMods(peptide, mods):
         opos.append(pos-1)
     return(peptide, omod, opos)
 
-def getTheoMH(charge, sequence, mods, pos, nt, ct, mass):
+def getTheoMH(charge, sequence, mods, pos, nt, ct, mass,
+              m_proton, m_hydrogen, m_oxygen):
     '''    
     Calculate theoretical MH using the PSM sequence.
     '''
     AAs = dict(mass._sections['Aminoacids'])
     MODs = dict(mass._sections['Fixed Modifications'])
-    m_proton = mass.getfloat('Masses', 'm_proton')
-    m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
-    m_oxygen = mass.getfloat('Masses', 'm_oxygen')
     total_aas = 2*m_hydrogen + m_oxygen
     total_aas += charge*m_proton
     #total_aas += float(MODs['nt']) + float(MODs['ct'])
@@ -165,8 +163,8 @@ def getTheoMH(charge, sequence, mods, pos, nt, ct, mass):
             total_aas += float(MODs[aa.lower()])
         # if aa.islower():
         #     total_aas += float(MODs['isolab'])
-        if i in pos:
-            total_aas += float(mods[pos.index(i)])
+        # if i in pos:
+        #     total_aas += float(mods[pos.index(i)]) TODO: add mod mass outside
     MH = total_aas - (charge-1)*m_proton
     return(MH)
 
@@ -199,13 +197,12 @@ def expSpectrum(ions):
     # spec["CORR_INT"] = spec.apply(lambda x: max(ions.INT)-13 if x["CORR_INT"]>max(ions.INT) else x["CORR_INT"], axis=1)
     return(spec, ions, spec_correction)
 
-def theoSpectrum(seq, mods, pos, len_ions, mass, dm=0):
+def theoSpectrum(seq, mods, pos, len_ions, mass,
+                 m_proton, m_hydrogen, m_oxygen, dm=0):
     '''
     Prepare theoretical fragment matrix.
 
     '''
-    m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
-    m_oxygen = mass.getfloat('Masses', 'm_oxygen')
     ## Y SERIES ##
     #ipar = list(range(1,len(seq)))
     outy = pd.DataFrame(np.nan, index=list(range(1,len(seq)+1)), columns=list(range(1,len_ions+1)))
@@ -213,7 +210,7 @@ def theoSpectrum(seq, mods, pos, len_ions, mass, dm=0):
         yn = list(seq[i:])
         if i > 0: nt = False
         else: nt = True
-        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass) + dm # TODO only add +dm to fragments up until n_pos
+        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass,m_proton,m_hydrogen,m_oxygen) + dm # TODO only add +dm to fragments up until n_pos
         outy[i:] = fragy
         
     ## B SERIES ##
@@ -222,7 +219,7 @@ def theoSpectrum(seq, mods, pos, len_ions, mass, dm=0):
         bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
-        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
+        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass,m_proton,m_hydrogen,m_oxygen) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
         outb[i:] = fragb
     
     ## FRAGMENT MATRIX ##
@@ -232,6 +229,45 @@ def theoSpectrum(seq, mods, pos, len_ions, mass, dm=0):
     spec.columns = range(spec.columns.size)
     spec.reset_index(inplace=True, drop=True)
     return(spec)
+
+def theoSpectrum2(seq, mods, pos, len_ions, mass,
+                  m_proton, m_hydrogen, m_oxygen, dm=0):
+    ## Y SERIES ##
+    outy = []
+    for i in range(0,len(seq)):
+        yn = list(seq[i:])
+        if i > 0: nt = False
+        else: nt = True
+        fragy = getTheoMH(0,yn,nt,True,mass,
+                          m_proton,m_hydrogen,m_oxygen) + dm
+        outy += [fragy]
+    ## B SERIES ##
+    outb = []
+    for i in range(0,len(seq)):
+        bn = list(seq[::-1][i:])
+        if i > 0: ct = False
+        else: ct = True
+        fragb = getTheoMH(0,bn,True,ct,mass,
+                          m_proton,m_hydrogen,m_oxygen) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
+        outb += [fragb]
+    ## FRAGMENT MATRIX ##
+    spec = [outb[::-1], outy[::-1]]
+    ## ADD FIXED MODS ##
+    for i in mods:
+        # bpos = range(0, pos[mods.index(i)]+1)
+        # ypos = range(len(seq)-pos[mods.index(i)]-1, len(seq))
+        bpos = pos[mods.index(i)]+1
+        ypos = len(seq)-pos[mods.index(i)]-1
+        spec[0] = [b + i for b in spec[0][:bpos]] + spec[0][bpos:]
+        spec[1] = spec[1][:ypos] + [y + i for y in spec[1][ypos:]]
+    return(spec)
+
+def addMods(spec, dm):
+    ## ADD MODS TO SITES ##
+    bpos = []
+    ypos = []
+    return spec
+    
 
 def errorMatrix(mz, theo_spec, mass):
     '''
@@ -271,7 +307,7 @@ def makeFrags(seq_len):
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     m_proton = mass.getfloat('Masses', 'm_proton')
-    assign = pd.concat([frags.by, theo_spec.iloc[0]], axis=1)
+    assign = pd.concat([frags.by, theo_spec.iloc[0]], axis=1) # SLOW
     assign.columns = ['FRAGS', '+']
     assign["++"] = (theo_spec.iloc[0]+m_proton)/2
     assign["+++"] = (theo_spec.iloc[0]+2*m_proton)/3
@@ -356,27 +392,31 @@ def findPos(dm_set, plainseq):
     return(dm_set)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
-             exp_spec, ions, spec_correction):
+             exp_spec, ions, spec_correction, m_proton, m_hydrogen, m_oxygen):
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
+    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
+                             m_proton, m_hydrogen, m_oxygen)
     terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
-    closest_proof = []
+    closest_proof = [] # TODO: when can we skip calculating this (identical to previous proof)
     closest_dm = []
     closest_name = []
     closest_pos = []
     for index, row in dm_set.iterrows():
         dm = row.mass
         for dm_pos in row.idx:
-            ## DM OPERATIONS ##
+            ## DM OPERATIONS ## TODO: 30% of time is spent in this step
+            # TODO only generate nonmod fragments once!! then add the required modified fragments each time in each position
             if dm_pos == -1:
-                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass, dm)
+                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
+                                            m_proton, m_hydrogen, m_oxygen, dm) 
             else:
                 mods.append(dm)
                 pos.append(dm_pos)
-                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass)
+                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
+                                            m_proton, m_hydrogen, m_oxygen) # TODO check dm is being added correctly
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
@@ -384,7 +424,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             dmterrors2.columns = frags.by2
             dmterrors3.columns = frags.by3
             ## ASSIGN IONS WITHIN SPECTRA ##
-            assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
+            assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO Compare here and exit if found
             ## PPM ERRORS ##
             if sub.Charge == 2:
                 ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
@@ -399,7 +439,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 sys.exit('ERROR: Invalid charge value!')
             ppmfinal["minv"] = ppmfinal.min(axis=1)
             minv = ppmfinal["minv"]
-            ## ABLINES ##
+            ## ABLINES ## TODO: 20% of time
             proof = makeAblines(texp, minv, assign, ions)
             proof.INT = proof.INT * spec_correction
             proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
@@ -411,7 +451,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     return(closest_proof, closest_dm, closest_name, closest_pos)
 
 def parallelFragging(query, parlist):
-    m_proton = 1.007276
+    m_proton = parlist[4]
     scan = query.scannum
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
@@ -431,7 +471,8 @@ def parallelFragging(query, parlist):
     exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
     proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
                                          parlist[0], parlist[1], parlist[2],
-                                         parlist[3], exp_spec, exp_ions, spec_correction)
+                                         parlist[3], exp_spec, exp_ions, spec_correction,
+                                         parlist[4], parlist[5], parlist[6])
     hyperscores = []
     check = []
     hss = []
@@ -446,10 +487,10 @@ def parallelFragging(query, parlist):
             proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
             proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
             frags = proof[i].FRAGS.nunique()
-            check = check + [total]
-            hss = hss + [hscore]
-            ufrags = ufrags + [frags]
-        hyperscores = hyperscores + [[name[i], dm[i], position[i], frags, hscore]]
+            check += [total]
+            hss += [hscore]
+            ufrags += [frags]
+        hyperscores += [[name[i], dm[i], position[i], frags, hscore]]
     hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
     best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
     best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
@@ -467,6 +508,9 @@ def main(args):
     chunks = int(mass._sections['Parameters']['batch_size'])
     ftol = float(mass._sections['Parameters']['f_tol'])
     dmtol = float(mass._sections['Parameters']['dm_tol'])
+    m_proton = mass.getfloat('Masses', 'm_proton')
+    m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
+    m_oxygen = mass.getfloat('Masses', 'm_oxygen')
     # Read results file from MSFragger
     logging.info("Reading MSFragger file...")
     df = pd.read_csv(Path(args.infile), sep="\t")
@@ -488,7 +532,7 @@ def main(args):
     tqdm.pandas(position=0, leave=True)
     if len(df) <= chunks:
         chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [mass, ftol, dmtol, dmdf]
+    parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen]
     logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
         refrags = list(tqdm(executor.map(parallelFragging,
