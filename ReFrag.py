@@ -198,8 +198,7 @@ def expSpectrum(ions):
     # spec["CORR_INT"] = spec.apply(lambda x: max(ions.INT)-13 if x["CORR_INT"]>max(ions.INT) else x["CORR_INT"], axis=1)
     return(spec, ions, spec_correction)
 
-def theoSpectrum(seq, mods, pos, len_ions, mass,
-                 m_proton, m_hydrogen, m_oxygen, dm=0):
+def theoSpectrum(seq, mods, pos, mass,  m_proton, m_hydrogen, m_oxygen, dm=0):
     ## Y SERIES ##
     outy = []
     for i in range(0,len(seq)):
@@ -228,6 +227,7 @@ def theoSpectrum(seq, mods, pos, len_ions, mass,
         ypos = len(seq)-pos[i]-1
         spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
         spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
+    spec = spec[0] + spec[1][::-1]
     return(spec)
 
 def addMod(spec, dm, pos, len_seq):
@@ -238,11 +238,11 @@ def addMod(spec, dm, pos, len_seq):
     spec[1] = spec[1][:ypos] + [y + dm for y in spec[1][ypos:]]
     return spec
     
-def errorMatrix(mz, theo_spec, mass):
+def errorMatrix(mz, theo_spec, m_proton):
     '''
     Prepare ppm-error and experimental mass matrices.
     '''
-    m_proton = mass.getfloat('Masses', 'm_proton')
+    theo_spec = pd.DataFrame(np.tile(pd.DataFrame(theo_spec), len(mz))).T
     exp = pd.DataFrame(np.tile(pd.DataFrame(mz), (1, len(theo_spec.columns)))) 
     
     ## EXPERIMENTAL MASSES FOR CHARGE 2 ##
@@ -366,9 +366,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
-                             m_proton, m_hydrogen, m_oxygen)
-    terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, mass)
+    theo_spec = theoSpectrum(plainseq, mods, pos, mass, m_proton, m_hydrogen, m_oxygen)
+    terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, m_proton)
     closest_proof = [] # TODO: when can we skip calculating this (identical to previous proof)
     closest_dm = []
     closest_name = []
@@ -386,7 +385,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 pos.append(dm_pos)
                 dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
                                             m_proton, m_hydrogen, m_oxygen) # TODO check dm is being added correctly
-            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, mass)
+            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, m_proton)
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
             dmterrors.columns = frags.by
