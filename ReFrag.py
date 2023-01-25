@@ -275,13 +275,15 @@ def makeFrags(seq_len):
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
+    theo_spec = pd.Series(theo_spec[0] + theo_spec[1][::-1])
+    dm_theo_spec = pd.Series(dm_theo_spec[0] + dm_theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
-    assign = pd.concat([frags.by, theo_spec.iloc[0]], axis=1) # SLOW
+    assign = pd.concat([frags.by, theo_spec], axis=1) # SLOW
     assign.columns = ['FRAGS', '+']
-    assign["++"] = (theo_spec.iloc[0]+m_proton)/2
-    assign["+++"] = (theo_spec.iloc[0]+2*m_proton)/3
-    assign["*"] = dm_theo_spec.iloc[0]
-    assign["*++"] = (dm_theo_spec.iloc[0]+m_proton)/2
+    assign["++"] = (theo_spec+m_proton)/2
+    assign["+++"] = (theo_spec+2*m_proton)/3
+    assign["*"] = dm_theo_spec
+    assign["*++"] = (dm_theo_spec+m_proton)/2
     c_assign = pd.DataFrame(list(assign["+"]) + list(assign["++"]) + list(assign["+++"]))
     c_assign = pd.concat([c_assign, pd.DataFrame(list(assign["*"])),
                           pd.DataFrame(list(assign["*++"]))])
