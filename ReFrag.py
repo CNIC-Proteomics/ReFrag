@@ -262,13 +262,14 @@ def theoSpectrum2(seq, mods, pos, len_ions, mass,
         spec[1] = spec[1][:ypos] + [y + i for y in spec[1][ypos:]]
     return(spec)
 
-def addMods(spec, dm):
-    ## ADD MODS TO SITES ##
-    bpos = []
-    ypos = []
+def addMod(spec, dm, pos, len_seq):
+    ## ADD MOD TO SITES ##
+    bpos = pos+1
+    ypos = len_seq-pos-1
+    spec[0] = [b + dm for b in spec[0][:bpos]] + spec[0][bpos:]
+    spec[1] = spec[1][:ypos] + [y + dm for y in spec[1][ypos:]]
     return spec
     
-
 def errorMatrix(mz, theo_spec, mass):
     '''
     Prepare ppm-error and experimental mass matrices.
