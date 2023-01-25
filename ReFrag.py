@@ -142,15 +142,16 @@ def insertMods(peptide, mods):
         opos.append(pos-1)
     return(peptide, omod, opos)
 
-def getTheoMH(charge, sequence, mods, pos, nt, ct, mass,
+def getTheoMH(sequence, nt, ct, mass,
               m_proton, m_hydrogen, m_oxygen):
     '''    
     Calculate theoretical MH using the PSM sequence.
     '''
     AAs = dict(mass._sections['Aminoacids'])
     MODs = dict(mass._sections['Fixed Modifications'])
-    total_aas = 2*m_hydrogen + m_oxygen
-    total_aas += charge*m_proton
+    # total_aas = 2*m_hydrogen + m_oxygen
+    total_aas = m_proton
+    # total_aas += charge*m_proton
     #total_aas += float(MODs['nt']) + float(MODs['ct'])
     if nt:
         total_aas += float(MODs['nt'])
@@ -165,8 +166,8 @@ def getTheoMH(charge, sequence, mods, pos, nt, ct, mass,
         #     total_aas += float(MODs['isolab'])
         # if i in pos:
         #     total_aas += float(mods[pos.index(i)]) TODO: add mod mass outside
-    MH = total_aas - (charge-1)*m_proton
-    return(MH)
+    # MH = total_aas - m_proton
+    return(total_aas)
 
 def expSpectrum(ions):
     '''
@@ -199,47 +200,14 @@ def expSpectrum(ions):
 
 def theoSpectrum(seq, mods, pos, len_ions, mass,
                  m_proton, m_hydrogen, m_oxygen, dm=0):
-    '''
-    Prepare theoretical fragment matrix.
-
-    '''
-    ## Y SERIES ##
-    #ipar = list(range(1,len(seq)))
-    outy = pd.DataFrame(np.nan, index=list(range(1,len(seq)+1)), columns=list(range(1,len_ions+1)))
-    for i in range(0,len(seq)):
-        yn = list(seq[i:])
-        if i > 0: nt = False
-        else: nt = True
-        fragy = getTheoMH(0,yn,mods,pos,nt,True,mass,m_proton,m_hydrogen,m_oxygen) + dm # TODO only add +dm to fragments up until n_pos
-        outy[i:] = fragy
-        
-    ## B SERIES ##
-    outb = pd.DataFrame(np.nan, index=list(range(1,len(seq)+1)), columns=list(range(1,len_ions+1)))
-    for i in range(0,len(seq)):
-        bn = list(seq[::-1][i:])
-        if i > 0: ct = False
-        else: ct = True
-        fragb = getTheoMH(0,bn,mods,pos,True,ct,mass,m_proton,m_hydrogen,m_oxygen) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
-        outb[i:] = fragb
-    
-    ## FRAGMENT MATRIX ##
-    yions = outy.T
-    bions = outb.iloc[::-1].T
-    spec = pd.concat([bions, yions], axis=1)
-    spec.columns = range(spec.columns.size)
-    spec.reset_index(inplace=True, drop=True)
-    return(spec)
-
-def theoSpectrum2(seq, mods, pos, len_ions, mass,
-                  m_proton, m_hydrogen, m_oxygen, dm=0):
     ## Y SERIES ##
     outy = []
     for i in range(0,len(seq)):
         yn = list(seq[i:])
         if i > 0: nt = False
         else: nt = True
-        fragy = getTheoMH(0,yn,nt,True,mass,
-                          m_proton,m_hydrogen,m_oxygen) + dm
+        fragy = getTheoMH(yn,nt,True,mass,
+                          m_proton,m_hydrogen,m_oxygen) + 2*m_hydrogen + m_oxygen + dm
         outy += [fragy]
     ## B SERIES ##
     outb = []
@@ -247,19 +215,19 @@ def theoSpectrum2(seq, mods, pos, len_ions, mass,
         bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
-        fragb = getTheoMH(0,bn,True,ct,mass,
-                          m_proton,m_hydrogen,m_oxygen) - 2*m_hydrogen - m_oxygen + dm # TODO only add +dm to fragments up until n_pos
+        fragb = getTheoMH(bn,True,ct,mass,
+                          m_proton,m_hydrogen,m_oxygen) + dm # TODO only add +dm to fragments up until n_pos
         outb += [fragb]
     ## FRAGMENT MATRIX ##
     spec = [outb[::-1], outy[::-1]]
     ## ADD FIXED MODS ##
-    for i in mods:
+    for i, m in enumerate(mods):
         # bpos = range(0, pos[mods.index(i)]+1)
         # ypos = range(len(seq)-pos[mods.index(i)]-1, len(seq))
-        bpos = pos[mods.index(i)]+1
-        ypos = len(seq)-pos[mods.index(i)]-1
-        spec[0] = [b + i for b in spec[0][:bpos]] + spec[0][bpos:]
-        spec[1] = spec[1][:ypos] + [y + i for y in spec[1][ypos:]]
+        bpos = pos[i]
+        ypos = len(seq)-pos[i]-1
+        spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
+        spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
     return(spec)
 
 def addMod(spec, dm, pos, len_seq):
