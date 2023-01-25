@@ -464,6 +464,10 @@ def parallelFragging(query, parlist):
     best.reset_index(drop=True, inplace=True)
     best = best.head(1)
     exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
+    exp = exp[exp.hyperscore==exp.hyperscore.max()]
+    exp.sort_values(by=['matched_ions'], inplace=True, ascending=True)
+    exp.reset_index(drop=True, inplace=True)
+    exp = exp.head(1)
     return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
             int(exp.matched_ions), float(exp.hyperscore), best.site[0]])
 
