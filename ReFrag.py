@@ -385,15 +385,15 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 pos.append(dm_pos)
                 dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
                                             m_proton, m_hydrogen, m_oxygen) # TODO check dm is being added correctly
-            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, m_proton)
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
-            dmterrors.columns = frags.by
-            dmterrors2.columns = frags.by2
-            dmterrors3.columns = frags.by3
             ## ASSIGN IONS WITHIN SPECTRA ##
             assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO Compare here and exit if found
             ## PPM ERRORS ##
+            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, m_proton)
+            dmterrors.columns = frags.by
+            dmterrors2.columns = frags.by2
+            dmterrors3.columns = frags.by3
             if sub.Charge == 2:
                 ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
