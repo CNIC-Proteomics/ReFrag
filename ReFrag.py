@@ -227,14 +227,13 @@ def theoSpectrum(seq, mods, pos, mass,  m_proton, m_hydrogen, m_oxygen, dm=0):
         ypos = len(seq)-pos[i]-1
         spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
         spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
-    spec = spec[0] + spec[1][::-1]
     return(spec)
 
 def addMod(spec, dm, pos, len_seq):
     ## ADD MOD TO SITES ##
-    bpos = pos+1
-    ypos = len_seq-pos-1
-    spec[0] = [b + dm for b in spec[0][:bpos]] + spec[0][bpos:]
+    bpos = pos
+    ypos = len_seq-pos
+    spec[0] = spec[0][:bpos] + [b + dm for b in spec[0][bpos:]]
     spec[1] = spec[1][:ypos] + [y + dm for y in spec[1][ypos:]]
     return spec
     
@@ -242,6 +241,7 @@ def errorMatrix(mz, theo_spec, m_proton):
     '''
     Prepare ppm-error and experimental mass matrices.
     '''
+    theo_spec = theo_spec[0] + theo_spec[1][::-1]
     theo_spec = pd.DataFrame(np.tile(pd.DataFrame(theo_spec), len(mz))).T
     exp = pd.DataFrame(np.tile(pd.DataFrame(mz), (1, len(theo_spec.columns)))) 
     
@@ -341,10 +341,10 @@ def findPos(dm_set, plainseq):
         sites = sites.site
         subpos = []
         for s in sites:
-            if s == 'Anywhere':
+            if s == 'Anywhere' or s == 'exp':
                 subpos = list(range(0, len(plainseq)))
                 break
-            elif s == 'NM' or s == 'exp':
+            elif s == 'NM':
                 subpos = [-1]
                 break
             elif s == 'N-term':
@@ -376,15 +376,12 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
         dm = row.mass
         for dm_pos in row.idx:
             ## DM OPERATIONS ## TODO: 30% of time is spent in this step
-            # TODO only generate nonmod fragments once!! then add the required modified fragments each time in each position
-            if dm_pos == -1:
-                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
-                                            m_proton, m_hydrogen, m_oxygen, dm) 
+            if dm_pos == -1: # Non-modified
+                dm_theo_spec = theo_spec.copy()
+                # dm_theo_spec = [x+dm for x in dm_theo_spec[0]] + [x+dm for x in dm_theo_spec[1]]
             else:
-                mods.append(dm)
-                pos.append(dm_pos)
-                dm_theo_spec = theoSpectrum(plainseq, mods, pos, len(ions), mass,
-                                            m_proton, m_hydrogen, m_oxygen) # TODO check dm is being added correctly
+                dm_theo_spec = theo_spec.copy()
+                dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
             ## ASSIGN IONS WITHIN SPECTRA ##
