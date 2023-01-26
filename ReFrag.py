@@ -307,6 +307,7 @@ def makeAblines(texp, minv, assign, ions):
         matches = pd.DataFrame([[1,3],[2,4]])
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
+        proof = proof.set_index('MZ')
         return(proof)
     matches_ions = pd.DataFrame(np.repeat(list(matches[0]), len(assign)))
     matches_ions.columns = ["temp_mi"]
@@ -320,7 +321,8 @@ def makeAblines(texp, minv, assign, ions):
     if matches_ions.empty:
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
-        return(proof, False)
+        proof = proof.set_index('MZ')
+        return(proof)
     proof = matches_ions.set_index('MZ').join(ions[['MZ','INT']].set_index('MZ'))
     if len(proof)==0:
         mzcycle = itertools.cycle([ions.MZ.iloc[0], ions.MZ.iloc[1]])
