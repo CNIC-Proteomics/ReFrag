@@ -308,24 +308,11 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
         return(proof)
-    # TODO slow
-    # TODO texp is equal to ions.MZ
-    # matches_ions = pd.DataFrame(np.repeat(list(range(0, len(matches))), len(assign)))
-    # np.tile(np.array(range(0, len(assign))), (len(assign)*len(matches)))
-    
     matches_ions = pd.DataFrame(np.repeat(list(matches[0]), len(assign)))
     matches_ions.columns = ["temp_mi"]
     matches_ions["temp_ci1"] = np.tile(np.array(assign.FRAGS), len(matches))
     matches_ions["temp_mi1"] = np.repeat(list(matches["minv"]), len(assign))
     matches_ions["temp_ci"] = np.tile(np.array(assign.MZ), len(matches))
-    
-    # matches_ions = pd.DataFrame(list(itertools.product(list(range(0, len(matches))), list(range(0, len(assign))))))
-    # matches_ions.columns = ["mi", "ci"]
-    # matches_ions["temp_ci"] = list(assign.iloc[matches_ions.ci,0])
-    # matches_ions["temp_mi"] = list(matches.iloc[matches_ions.mi,0])
-    # matches_ions["temp_ci1"] = list(assign.iloc[matches_ions.ci,1])
-    # matches_ions["temp_mi1"] = list(matches.iloc[matches_ions.mi,1])
-    # up to here
     matches_ions["check"] = abs(matches_ions.temp_mi-matches_ions.temp_ci)/matches_ions.temp_ci*1000000
     matches_ions = matches_ions[matches_ions.check<=51] # TODO ppm parameter
     matches_ions = matches_ions.drop(["temp_ci", "check"], axis = 1)
@@ -334,7 +321,7 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
         return(proof, False)
-    proof = matches_ions.set_index('MZ').join(ions[['MZ','INT']].set_index('MZ'), lsuffix='_x', rsuffix='_y', how='left', on='MZ')
+    proof = matches_ions.set_index('MZ').join(ions[['MZ','INT']].set_index('MZ'))
     if len(proof)==0:
         mzcycle = itertools.cycle([ions.MZ.iloc[0], ions.MZ.iloc[1]])
         proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
@@ -434,9 +421,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 ppmfinal["minv"] = ppmfinal.min(axis=1)
                 minv = ppmfinal["minv"]
                 ## ABLINES ##
-                proof = makeAblines(texp, minv, assign, ions) # TODO: STILL SLOW 60% of time
-                # TODO texp is always the same in all rows?
-                # TODO should it be dmtexp? # NO they are always equal
+                proof = makeAblines(texp, minv, assign, ions)
                 proof.INT = proof.INT * spec_correction
                 proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
                 proof = proof[proof.PPM<=ftol]
