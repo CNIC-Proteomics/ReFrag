@@ -308,15 +308,27 @@ def makeAblines(texp, minv, assign, ions):
         proof = pd.DataFrame([[0,0,0,0]])
         proof.columns = ["MZ","FRAGS","PPM","INT"]
         return(proof)
-    matches_ions = pd.DataFrame(list(itertools.product(list(range(0, len(matches))), list(range(0, len(assign))))))
-    matches_ions.columns = ["mi", "ci"]
-    matches_ions["temp_ci"] = list(assign.iloc[matches_ions.ci,0])
-    matches_ions["temp_mi"] = list(matches.iloc[matches_ions.mi,0])
-    matches_ions["temp_ci1"] = list(assign.iloc[matches_ions.ci,1])
-    matches_ions["temp_mi1"] = list(matches.iloc[matches_ions.mi,1])
+    # TODO slow
+    # TODO texp is equal to ions.MZ
+    # matches_ions = pd.DataFrame(np.repeat(list(range(0, len(matches))), len(assign)))
+    # np.tile(np.array(range(0, len(assign))), (len(assign)*len(matches)))
+    
+    matches_ions = pd.DataFrame(np.repeat(list(matches[0]), len(assign)))
+    matches_ions.columns = ["temp_mi"]
+    matches_ions["temp_ci1"] = np.tile(np.array(assign.FRAGS), len(matches))
+    matches_ions["temp_mi1"] = np.repeat(list(matches["minv"]), len(assign))
+    matches_ions["temp_ci"] = np.tile(np.array(assign.MZ), len(matches))
+    
+    # matches_ions = pd.DataFrame(list(itertools.product(list(range(0, len(matches))), list(range(0, len(assign))))))
+    # matches_ions.columns = ["mi", "ci"]
+    # matches_ions["temp_ci"] = list(assign.iloc[matches_ions.ci,0])
+    # matches_ions["temp_mi"] = list(matches.iloc[matches_ions.mi,0])
+    # matches_ions["temp_ci1"] = list(assign.iloc[matches_ions.ci,1])
+    # matches_ions["temp_mi1"] = list(matches.iloc[matches_ions.mi,1])
+    # up to here
     matches_ions["check"] = abs(matches_ions.temp_mi-matches_ions.temp_ci)/matches_ions.temp_ci*1000000
-    matches_ions = matches_ions[matches_ions.check<=51]
-    matches_ions = matches_ions.drop(["mi", "ci", "temp_ci", "check"], axis = 1)
+    matches_ions = matches_ions[matches_ions.check<=51] # TODO ppm parameter
+    matches_ions = matches_ions.drop(["temp_ci", "check"], axis = 1)
     matches_ions.columns = ["MZ","FRAGS","PPM"]
     if matches_ions.empty:
         proof = pd.DataFrame([[0,0,0,0]])
@@ -390,7 +402,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
             ## ASSIGN IONS WITHIN SPECTRA ##
-            assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
+            assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO: STILL SLOW
+            # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
             ## MATCHED IONS CHECK ##
             check = list(assign.MZ)
             if check in assigndblist:
@@ -421,7 +434,9 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 ppmfinal["minv"] = ppmfinal.min(axis=1)
                 minv = ppmfinal["minv"]
                 ## ABLINES ##
-                proof = makeAblines(texp, minv, assign, ions) # TODO: 60% of time
+                proof = makeAblines(texp, minv, assign, ions) # TODO: STILL SLOW 60% of time
+                # TODO texp is always the same in all rows?
+                # TODO should it be dmtexp? # NO they are always equal
                 proof.INT = proof.INT * spec_correction
                 proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
                 proof = proof[proof.PPM<=ftol]
