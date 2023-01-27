@@ -366,8 +366,8 @@ def findPos(dm_set, plainseq):
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
              exp_spec, ions, spec_correction, m_proton, m_hydrogen, m_oxygen):
     ## ASSIGNDB ##
-    assigndblist = []
-    assigndb = []
+    # assigndblist = []
+    # assigndb = []
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
@@ -394,43 +394,43 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO: STILL SLOW
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
             ## MATCHED IONS CHECK ##
-            check = list(assign.MZ)
-            if check in assigndblist:
-                found = assigndblist.index(check)
-                closest_proof.append(closest_proof[found])
-                closest_dm.append(closest_dm[found])
-                closest_name.append(closest_name[found])
-                closest_pos.append(closest_name[found])
+            # check = list(assign.MZ)
+            # if check in assigndblist:
+            #     found = assigndblist.index(check)
+            #     closest_proof.append(closest_proof[found])
+            #     closest_dm.append(closest_dm[found])
+            #     closest_name.append(closest_name[found])
+            #     closest_pos.append(closest_name[found])
+            # else:
+            #     assigndb += [assign]
+            #     assigndblist += [list(assign.MZ)]
+            ## PPM ERRORS ##
+            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, m_proton)
+            dmterrors.columns = frags.by
+            dmterrors2.columns = frags.by2
+            dmterrors3.columns = frags.by3
+            if sub.Charge == 2:
+                ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
+                if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
+            elif sub.Charge < 2:
+                ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
+                if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
+            elif sub.Charge >= 3:
+                ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
+                if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
             else:
-                assigndb += [assign]
-                assigndblist += [list(assign.MZ)]
-                ## PPM ERRORS ##
-                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, m_proton)
-                dmterrors.columns = frags.by
-                dmterrors2.columns = frags.by2
-                dmterrors3.columns = frags.by3
-                if sub.Charge == 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
-                elif sub.Charge < 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
-                elif sub.Charge >= 3:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
-                else:
-                    sys.exit('ERROR: Invalid charge value!')
-                ppmfinal["minv"] = ppmfinal.min(axis=1)
-                minv = ppmfinal["minv"]
-                ## ABLINES ##
-                proof = makeAblines(texp, minv, assign, ions)
-                proof.INT = proof.INT * spec_correction
-                proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
-                proof = proof[proof.PPM<=ftol]
-                closest_proof.append(proof)
-                closest_dm.append(dm)
-                closest_name.append(row['name'])
-                closest_pos.append(dm_pos)
+                sys.exit('ERROR: Invalid charge value!')
+            ppmfinal["minv"] = ppmfinal.min(axis=1)
+            minv = ppmfinal["minv"]
+            ## ABLINES ##
+            proof = makeAblines(texp, minv, assign, ions)
+            proof.INT = proof.INT * spec_correction
+            proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
+            proof = proof[proof.PPM<=ftol]
+            closest_proof.append(proof)
+            closest_dm.append(dm)
+            closest_name.append(row['name'])
+            closest_pos.append(dm_pos)
     return(closest_proof, closest_dm, closest_name, closest_pos)
 
 def parallelFragging(query, parlist):
