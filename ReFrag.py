@@ -46,7 +46,7 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
-def locateScan(scan, mode, fr_ns, index2):
+def locateScan(scan, mode, fr_ns, spectra, index2):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
         try:
@@ -71,12 +71,16 @@ def locateScan(scan, mode, fr_ns, index2):
             ions = ions.apply(pd.to_numeric)
     elif mode == "mzml":
         try:
-            s = fr_ns.getSpectrum(scan-1)
+            s = spectra[scan-1]
         except AssertionError or OverflowError:
             logging.info("\tERROR: Scan number " + str(scan) + " not found in mzML file.")
             sys.exit()
-        ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T
-        ions.columns = ["MZ", "INT"]
+        # ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T # TODO making a df is slow. work with array
+        # ions.columns = ["MZ", "INT"]
+        ###
+        peaks = s.get_peaks()
+        ions = np.array([peaks[0], peaks[1]])
+        ###
     return(ions)
 
 def hyperscore(ions, proof, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
@@ -514,7 +518,8 @@ def main(args):
     # Prepare to parallelize
     logging.info("Refragging...")
     logging.info("\t" + "Locating scans...")
-    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, index2), axis=1)
+    spectra = msdata.getSpectra()
+    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, spectra, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
     rowSeries = list(rowSeries)
     tqdm.pandas(position=0, leave=True)
