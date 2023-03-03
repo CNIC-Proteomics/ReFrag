@@ -176,30 +176,30 @@ def getTheoMH(sequence, nt, ct, mass,
 def expSpectrum(ions):
     '''
     Prepare experimental spectrum.
-    '''        
-    ions["ZERO"] = 0
-    ions["CCU"] = ions.MZ - 0.01
-    ions.reset_index(drop=True, inplace=True)
+    '''
+    #ions[0] is mz
+    #ions[1] is int
+    ions_ZERO = list([0]*len(ions[0]))
+    ions_CCU = ions[0] - 0.01
     
-    bind = pd.DataFrame(list(itertools.chain.from_iterable(zip(list(ions['CCU']),list(ions['MZ'])))), columns=["MZ"])
-    bind["REL_INT"] = list(itertools.chain.from_iterable(zip(list(ions['ZERO']),list(ions['INT']))))
-    bind["ZERO"] = 0
-    bind["CCU"] = bind.MZ + 0.01
+    bind = np.array([list(itertools.chain.from_iterable(zip(ions_CCU,ions[0]))),
+                     list(itertools.chain.from_iterable(zip(ions_ZERO,ions[1]))),
+                     list([0]*len(ions[0])*2),
+                     list(np.array(list(itertools.chain.from_iterable(zip(ions_CCU,ions[0])))) + 0.01)
+                     ])
     
-    spec = pd.DataFrame(list(itertools.chain.from_iterable(zip(list(bind['MZ']),list(bind['CCU'])))), columns=["MZ"])
-    spec["REL_INT"] = list(itertools.chain.from_iterable(zip(list(bind['REL_INT']),list(bind['ZERO']))))
+    spec = np.array([list(itertools.chain.from_iterable(zip(list(bind[0]),list(bind[3])))),
+                     list(itertools.chain.from_iterable(zip(list(bind[1]),list(bind[2]))))])
     
-    median_rel_int = statistics.median(ions.INT)
-    std_rel_int = np.std(ions.INT, ddof = 1)
-    ions["NORM_REL_INT"] = (ions.INT - median_rel_int) / std_rel_int
-    ions["P_REL_INT"] = scipy.stats.norm.cdf(ions.NORM_REL_INT) #, 0, 1)
-    normspec = ions.loc[ions.P_REL_INT>0.81]
+    median_rel_int = statistics.median(ions[1])
+    std_rel_int = np.std(ions[1], ddof = 1)
+    ions_NORM_REL_INT = (ions[1] - median_rel_int) / std_rel_int
+    ions_P_REL_INT = scipy.stats.norm.cdf(ions_NORM_REL_INT) #, 0, 1)
+    ions = np.array([ions[0], ions[1], ions_ZERO, ions_CCU, ions_NORM_REL_INT, ions_P_REL_INT])
+    normspec = ions[1][ions[5]>0.81]
     if len(ions) > 0 and len(normspec) > 0:
-        spec_correction = max(ions.INT)/statistics.mean(normspec.INT)
+        spec_correction = max(ions[1])/statistics.mean(normspec)
     else: spec_correction = 0
-    # spec["CORR_INT"] = spec.REL_INT*spec_correction
-    # spec.loc[spec['CORR_INT'].idxmax()]['CORR_INT'] = max(spec.REL_INT)
-    # spec["CORR_INT"] = spec.apply(lambda x: max(ions.INT)-13 if x["CORR_INT"]>max(ions.INT) else x["CORR_INT"], axis=1)
     return(spec, ions, spec_correction)
 
 def theoSpectrum(seq, mods, pos, mass,  m_proton, m_hydrogen, m_oxygen, dm=0):
