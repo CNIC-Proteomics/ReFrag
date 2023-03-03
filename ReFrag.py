@@ -245,22 +245,20 @@ def errorMatrix(mz, theo_spec, m_proton):
     '''
     Prepare ppm-error and experimental mass matrices.
     '''
+
     theo_spec = theo_spec[0] + theo_spec[1][::-1]
-    theo_spec = pd.DataFrame(np.tile(pd.DataFrame(theo_spec), len(mz))).T
-    exp = pd.DataFrame(np.tile(pd.DataFrame(mz), (1, len(theo_spec.columns)))) 
+    theo_spec = np.array([theo_spec]*len(mz))
+    exp = np.transpose(np.array([mz]*len(theo_spec[0])))
     
     ## EXPERIMENTAL MASSES FOR CHARGE 2 ##
-    mzs2 = pd.DataFrame(mz)*2 - m_proton
-    mzs2 = pd.DataFrame(np.tile(pd.DataFrame(mzs2), (1, len(exp.columns)))) 
-    
+    mzs2 = np.transpose([np.array(mz)*2-m_proton]*(len(exp[0])))
     ## EXPERIMENTAL MASSES FOR CHARGE 3 ##
-    mzs3 = pd.DataFrame(mz)*3 - m_proton*2
-    mzs3 = pd.DataFrame(np.tile(pd.DataFrame(mzs3), (1, len(exp.columns)))) 
-    
+    mzs3 = np.transpose([np.array(mz)*3 - m_proton*2]*(len(exp[0])))
     ## PPM ERRORS ##
-    terrors = (((exp - theo_spec)/theo_spec)*1000000).abs()
-    terrors2 =(((mzs2 - theo_spec)/theo_spec)*1000000).abs()
-    terrors3 = (((mzs3 - theo_spec)/theo_spec)*1000000).abs()
+    terrors = np.absolute(np.divide(np.subtract(exp, theo_spec), theo_spec)*1000000)
+    terrors2 = np.absolute(np.divide(np.subtract(mzs2, theo_spec), theo_spec)*1000000)
+    terrors3 = np.absolute(np.divide(np.subtract(mzs3, theo_spec), theo_spec)*1000000)
+
     return(terrors, terrors2, terrors3, exp)
 
 def makeFrags(seq_len):
@@ -377,7 +375,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
     theo_spec = theoSpectrum(plainseq, mods, pos, mass, m_proton, m_hydrogen, m_oxygen)
-    terrors, terrors2, terrors3, texp = errorMatrix(ions.MZ, theo_spec, m_proton)
+    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton) # TODO df->array
     closest_proof = []
     closest_dm = []
     closest_name = []
@@ -409,7 +407,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             #     assigndb += [assign]
             #     assigndblist += [list(assign.MZ)]
             ## PPM ERRORS ##
-            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions.MZ, dm_theo_spec, m_proton)
+            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
             dmterrors.columns = frags.by
             dmterrors2.columns = frags.by2
             dmterrors3.columns = frags.by3
@@ -427,9 +425,9 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ppmfinal["minv"] = ppmfinal.min(axis=1)
             minv = ppmfinal["minv"]
             ## ABLINES ##
-            proof = makeAblines(texp, minv, assign, ions)
+            proof = makeAblines(texp, minv, assign, ions) # TODO df->array
             proof.INT = proof.INT * spec_correction
-            proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3
+            proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3 # TODO df->array
             proof = proof[proof.PPM<=ftol]
             closest_proof.append(proof)
             closest_dm.append(dm)
@@ -458,7 +456,7 @@ def parallelFragging(query, parlist):
     exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
     proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
                                          parlist[0], parlist[1], parlist[2],
-                                         parlist[3], exp_spec, exp_ions, spec_correction,
+                                         parlist[3], exp_spec, exp_ions, spec_correction, # TODO df->array
                                          parlist[4], parlist[5], parlist[6])
     hyperscores = []
     check = []
@@ -470,7 +468,7 @@ def parallelFragging(query, parlist):
             hscore = hss[check.index(total)]
             frags = ufrags[check.index(total)]
         else:
-            hscore = hyperscore(exp_ions, proof[i], parlist[2])
+            hscore = hyperscore(exp_ions, proof[i], parlist[2]) # TODO df->array
             proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
             proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
             frags = proof[i].FRAGS.nunique()
