@@ -261,19 +261,16 @@ def errorMatrix(mz, theo_spec, m_proton):
 
     return(terrors, terrors2, terrors3, exp)
 
-def makeFrags(seq_len):
+def makeFrags(seq_len): # TODO: SLOW
     '''
     Name all fragments.
     '''
-    frags = pd.DataFrame(np.nan, index=list(range(0,seq_len*2)),
-                         columns=["by", "by2", "by3", "bydm", "bydm2", "bydm3", "ion"])
-    frags.by = ["b" + str(i) for i in list(range(1,seq_len+1))] + ["y" + str(i) for i in list(range(1,seq_len+1))[::-1]]
-    frags.by2 = frags.by + "++"
-    frags.by3 = frags.by + "+++"
-    frags.bydm = frags.by + "*"
-    frags.bydm2 = frags.by + "*++"
-    frags.bydm3 = frags.by + "*+++"
-    #frags.ion = [i for i in list(range(1,seq_len+1))] + [i for i in list(range(1,seq_len+1))[::-1]]
+    frags = np.array([["b" + str(i) for i in list(range(1,seq_len+1))] + ["y" + str(i) for i in list(range(1,seq_len+1))[::-1]],
+                      ["b" + str(i) + "++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "++" for i in list(range(1,seq_len+1))[::-1]],
+                      ["b" + str(i) + "+++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "+++" for i in list(range(1,seq_len+1))[::-1]],
+                      ["b" + str(i) + "*" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "*" for i in list(range(1,seq_len+1))[::-1]],
+                      ["b" + str(i) + "*++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(1,seq_len+1))[::-1]],
+                      ["b" + str(i) + "*+++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(1,seq_len+1))[::-1]]])
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
