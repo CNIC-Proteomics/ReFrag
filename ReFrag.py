@@ -274,28 +274,21 @@ def makeFrags(seq_len): # TODO: SLOW
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
-    theo_spec = pd.Series(theo_spec[0] + theo_spec[1][::-1])
-    dm_theo_spec = pd.Series(dm_theo_spec[0] + dm_theo_spec[1][::-1])
+    
+    theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
+    dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
-    assign = pd.concat([frags.by, theo_spec], axis=1) # SLOW
-    assign.columns = ['FRAGS', '+']
-    assign["++"] = (theo_spec+m_proton)/2
-    assign["+++"] = (theo_spec+2*m_proton)/3
-    assign["*"] = dm_theo_spec
-    assign["*++"] = (dm_theo_spec+m_proton)/2
-    c_assign = pd.DataFrame(list(assign["+"]) + list(assign["++"]) + list(assign["+++"]))
-    c_assign = pd.concat([c_assign, pd.DataFrame(list(assign["*"])),
-                          pd.DataFrame(list(assign["*++"]))])
-    c_assign.columns = ["MZ"]
-    c_assign_frags = pd.DataFrame(list(frags.by) + list(frags.by + "++") + list(frags.by + "+++"))
-    c_assign_frags = pd.concat([c_assign_frags, pd.DataFrame(list(frags.by + "*")),
-                                pd.DataFrame(list(frags.by + "*++"))])
-    c_assign["FRAGS"] = c_assign_frags
-    # c_assign["ION"] = pd.DataFrame(list(frags.ion)*5)
-    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign)+1))] + [i for i in list(range(1,len(assign)+1))[::-1]])
-    c_assign["ION"] = [next(c_assign_ions) for i in range(c_assign.shape[0])]
-    c_assign["CHARGE"] = pd.DataFrame([1]*len(assign) + [2]*len(assign) + [3]*len(assign) +
-                                      [1]*len(assign) + [2]*len(assign))
+    
+    assign = np.array([frags[0],
+                       theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3,
+                       dm_theo_spec, (dm_theo_spec+m_proton)/2])
+    
+    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
+    c_assign = np.array([assign[1:].flatten(),
+                         frags[:5].flatten(),
+                         [next(c_assign_ions) for i in range(len(assign[1:].flatten()))],
+                         [1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
+
     return(c_assign)
 
 def makeAblines(texp, minv, assign, ions):
