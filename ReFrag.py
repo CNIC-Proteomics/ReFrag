@@ -258,7 +258,9 @@ def errorMatrix(mz, theo_spec, m_proton):
     terrors = np.absolute(np.divide(np.subtract(exp, theo_spec), theo_spec)*1000000)
     terrors2 = np.absolute(np.divide(np.subtract(mzs2, theo_spec), theo_spec)*1000000)
     terrors3 = np.absolute(np.divide(np.subtract(mzs3, theo_spec), theo_spec)*1000000)
-
+    
+    exp = [i[0] for i in exp]
+    
     return(terrors, terrors2, terrors3, exp)
 
 def makeFrags(seq_len): # TODO: SLOW
@@ -279,47 +281,51 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
     
-    assign = np.array([frags[0],
+    assign = np.array([#frags[0],
                        theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3,
                        dm_theo_spec, (dm_theo_spec+m_proton)/2])
     
     c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
-    c_assign = np.array([assign[1:].flatten(),
-                         frags[:5].flatten(),
-                         [next(c_assign_ions) for i in range(len(assign[1:].flatten()))],
-                         [1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
+    c_assign = np.array([assign[0:].flatten(),
+                         #frags[:5].flatten(),
+                         [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
+                         #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
 
     return(c_assign)
 
 def makeAblines(texp, minv, assign, ions):
-    masses = pd.concat([texp[0], minv], axis = 1)
-    matches = masses[(masses < 51).sum(axis=1) >= 0.001]
-    matches.reset_index(inplace=True, drop=True)
-    if len(matches) <= 0:
-        matches = pd.DataFrame([[1,3],[2,4]])
-        proof = pd.DataFrame([[0,0,0,0]])
-        proof.columns = ["MZ","FRAGS","PPM","INT"]
-        proof = proof.set_index('MZ')
+    ###
+    masses = np.array([texp, minv])
+    matches = np.array([masses[0][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)],
+                        masses[1][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)]])
+    if len(matches[0]) <= 0:
+        proof = np.array([[0,0,0]])
+        pfrags = [0]
+        return(proof, pfrags)
+    temp_mi = np.repeat(list(matches[0]), len(assign[0]))
+    temp_ci1 = np.tile(np.array(assign[1]), len(matches[0]))
+    temp_mi1 = np.repeat(list(matches[1]), len(assign[0]))
+    temp_ci = np.tile(np.array(assign[0]), len(matches[0]))
+    check = abs(temp_mi-temp_ci)/temp_ci*1000000
+    # matches_ions = np.array([temp_mi[check<=51],
+    #                          temp_ci1[check<=51],
+    #                          temp_mi1[check<=51]])
+    if len(check) <= 0:
+        proof = np.array([[0,0,0,0]])
         return(proof)
-    matches_ions = pd.DataFrame(np.repeat(list(matches[0]), len(assign)))
-    matches_ions.columns = ["temp_mi"]
-    matches_ions["temp_ci1"] = np.tile(np.array(assign.FRAGS), len(matches))
-    matches_ions["temp_mi1"] = np.repeat(list(matches["minv"]), len(assign))
-    matches_ions["temp_ci"] = np.tile(np.array(assign.MZ), len(matches))
-    matches_ions["check"] = abs(matches_ions.temp_mi-matches_ions.temp_ci)/matches_ions.temp_ci*1000000
-    matches_ions = matches_ions[matches_ions.check<=51] # TODO ppm parameter
-    matches_ions = matches_ions.drop(["temp_ci", "check"], axis = 1)
-    matches_ions.columns = ["MZ","FRAGS","PPM"]
-    if matches_ions.empty:
-        proof = pd.DataFrame([[0,0,0,0]])
-        proof.columns = ["MZ","FRAGS","PPM","INT"]
-        proof = proof.set_index('MZ')
-        return(proof)
-    proof = matches_ions.set_index('MZ').join(ions[['MZ','INT']].set_index('MZ'))
-    if len(proof)==0:
-        mzcycle = itertools.cycle([ions.MZ.iloc[0], ions.MZ.iloc[1]])
-        proof = pd.concat([matches_ions, pd.Series([next(mzcycle) for count in range(len(matches_ions))], name="INT")], axis=1)
-    return(proof)
+    temp_mi = temp_mi[check<=51]
+    ions[1][np.isin(ions[0], temp_mi)]
+    proof = np.array([temp_mi,
+                      temp_mi1[check<=51],
+                      np.repeat(ions[1][np.isin(ions[0], temp_mi)], np.unique(temp_mi, return_counts=True)[1])])
+    pfrags = temp_ci1[check<=51]
+    if len(proof[0]) == 0:
+        mzcycle = itertools.cycle([ions[0][0], ions[0][1]])
+        proof = np.array([temp_mi,
+                          temp_mi1[check<=51],
+                          [next(mzcycle) for i in range(len(temp_mi))]])
+        pfrags = temp_ci1[check<=51]
+    return(proof, pfrags)
 
 def findClosest(dm, dmdf, dmtol, pos):
     exp = pd.DataFrame(['EXPERIMENTAL', dm, [pos], 0]).T
@@ -398,9 +404,9 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             #     assigndblist += [list(assign.MZ)]
             ## PPM ERRORS ##
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
-            dmterrors.columns = frags.by
-            dmterrors2.columns = frags.by2
-            dmterrors3.columns = frags.by3
+            # dmterrors.columns = frags.by
+            # dmterrors2.columns = frags.by2
+            # dmterrors3.columns = frags.by3
             if sub.Charge == 2:
                 ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
@@ -412,12 +418,12 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
             else:
                 sys.exit('ERROR: Invalid charge value!')
-            ppmfinal["minv"] = ppmfinal.min(axis=1)
-            minv = ppmfinal["minv"]
+            ppmfinal["minv"] = ppmfinal.min(axis=1) # TODO df->array
+            minv = list(ppmfinal["minv"])
             ## ABLINES ##
-            proof = makeAblines(texp, minv, assign, ions) # TODO df->array
+            proof = makeAblines(texp, minv, assign, ions)
             proof.INT = proof.INT * spec_correction
-            proof.INT[proof.INT > max(exp_spec.REL_INT)] = max(exp_spec.REL_INT) - 3 # TODO df->array
+            proof.INT[proof.INT > max(exp_spec[1])] = max(exp_spec[1]) - 3 # TODO df->array
             proof = proof[proof.PPM<=ftol]
             closest_proof.append(proof)
             closest_dm.append(dm)
@@ -452,32 +458,33 @@ def parallelFragging(query, parlist):
     check = []
     hss = []
     ufrags = []
-    for i in list(range(0, len(dm))):
-        total = sum(list(proof[i].index)) + proof[i].INT.sum() # proof[i].MZ.sum(), MZ is now index
-        if total in check:
-            hscore = hss[check.index(total)]
-            frags = ufrags[check.index(total)]
-        else:
-            hscore = hyperscore(exp_ions, proof[i], parlist[2]) # TODO df->array
-            proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
-            proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
-            frags = proof[i].FRAGS.nunique()
-            check += [total]
-            hss += [hscore]
-            ufrags += [frags]
-        hyperscores += [[name[i], dm[i], position[i], frags, hscore]]
-    hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
-    best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
-    best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
-    best.reset_index(drop=True, inplace=True)
-    best = best.head(1)
-    exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
-    exp = exp[exp.hyperscore==exp.hyperscore.max()]
-    exp.sort_values(by=['matched_ions'], inplace=True, ascending=True)
-    exp.reset_index(drop=True, inplace=True)
-    exp = exp.head(1)
-    return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
-            int(exp.matched_ions), float(exp.hyperscore), best.site[0]])
+    # for i in list(range(0, len(dm))):
+    #     total = sum(list(proof[i].index)) + proof[i].INT.sum() # proof[i].MZ.sum(), MZ is now index
+    #     if total in check:
+    #         hscore = hss[check.index(total)]
+    #         frags = ufrags[check.index(total)]
+    #     else:
+    #         hscore = hyperscore(exp_ions, proof[i], parlist[2]) # TODO df->array
+    #         proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
+    #         proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
+    #         frags = proof[i].FRAGS.nunique()
+    #         check += [total]
+    #         hss += [hscore]
+    #         ufrags += [frags]
+    #     hyperscores += [[name[i], dm[i], position[i], frags, hscore]]
+    # hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
+    # best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
+    # best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
+    # best.reset_index(drop=True, inplace=True)
+    # best = best.head(1)
+    # exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
+    # exp = exp[exp.hyperscore==exp.hyperscore.max()]
+    # exp.sort_values(by=['matched_ions'], inplace=True, ascending=True)
+    # exp.reset_index(drop=True, inplace=True)
+    # exp = exp.head(1)
+    # return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
+    #         int(exp.matched_ions), float(exp.hyperscore), best.site[0]])
+    return(0)
 
 def main(args):
     '''
@@ -523,25 +530,25 @@ def main(args):
                             total=len(rowSeries)))
     df = df.drop('spectrum', axis = 1)
     df['templist'] = refrags
-    df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
-    df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
-    df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
-    df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
-    df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
-    df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
-    df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
-    df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
-    df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
-    df = df.drop('templist', axis = 1)
-    try:
-        refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
-    except KeyError:
-        refragged = len(df)
-    prefragged = round((refragged/len(df))*100,2)
-    logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
-    logging.info("Writing output file...")
-    outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
-    df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
+    # df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
+    # df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
+    # df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
+    # df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
+    # df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
+    # df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+    # df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
+    # df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
+    # df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
+    # df = df.drop('templist', axis = 1)
+    # try:
+    #     refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
+    # except KeyError:
+    #     refragged = len(df)
+    # prefragged = round((refragged/len(df))*100,2)
+    # logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
+    # logging.info("Writing output file...")
+    # outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
+    # df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
     logging.info("Done.")
     return
 
