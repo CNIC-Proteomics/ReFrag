@@ -291,9 +291,9 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
                          [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
                          #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
 
-    return(c_assign)
+    return(c_assign, frags[:5].flatten())
 
-def makeAblines(texp, minv, assign, ions):
+def makeAblines(texp, minv, assign, afrags, ions):
     ###
     masses = np.array([texp, minv])
     matches = np.array([masses[0][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)],
@@ -303,7 +303,7 @@ def makeAblines(texp, minv, assign, ions):
         pfrags = [0]
         return(proof, pfrags)
     temp_mi = np.repeat(list(matches[0]), len(assign[0]))
-    temp_ci1 = np.tile(np.array(assign[1]), len(matches[0]))
+    temp_ci1 = np.tile(afrags, len(matches[0]))
     temp_mi1 = np.repeat(list(matches[1]), len(assign[0]))
     temp_ci = np.tile(np.array(assign[0]), len(matches[0]))
     check = abs(temp_mi-temp_ci)/temp_ci*1000000
@@ -389,7 +389,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
             ## ASSIGN IONS WITHIN SPECTRA ##
-            assign = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO: STILL SLOW
+            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO: STILL SLOW
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
             ## MATCHED IONS CHECK ##
             # check = list(assign.MZ)
@@ -421,8 +421,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ppmfinal["minv"] = ppmfinal.min(axis=1) # TODO df->array
             minv = list(ppmfinal["minv"])
             ## ABLINES ##
-            proof = makeAblines(texp, minv, assign, ions)
-            proof.INT = proof.INT * spec_correction
+            proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
+            proof[2] = proof[2] * spec_correction
             proof.INT[proof.INT > max(exp_spec[1])] = max(exp_spec[1]) - 3 # TODO df->array
             proof = proof[proof.PPM<=ftol]
             closest_proof.append(proof)
