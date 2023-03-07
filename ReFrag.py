@@ -502,22 +502,18 @@ def parallelFragging(query, parlist):
                 best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
         # Keep first after filtering
         best = np.array([best[0][0], best[1][0], best[2][0], best[3][0]])
-        best_label = best_label[0]        
-    
-    ###
-    # hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
-    # best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
-    # best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
-    # best.reset_index(drop=True, inplace=True)
-    # best = best.head(1)
-    # exp = hyperscores[hyperscores['name']=='EXPERIMENTAL']
-    # exp = exp[exp.hyperscore==exp.hyperscore.max()]
-    # exp.sort_values(by=['matched_ions'], inplace=True, ascending=True)
-    # exp.reset_index(drop=True, inplace=True)
-    # exp = exp.head(1)
-    # return([MH, best.dm[0], sequence, best.matched_ions[0], best.hyperscore[0], best['name'][0],
-    #         int(exp.matched_ions), float(exp.hyperscore), best.site[0]])
-    return(0)
+        best_label = best_label[0]
+    exp = np.array([hyperscores[0][hyperscores_label == 'EXPERIMENTAL'],
+                   hyperscores[1][hyperscores_label == 'EXPERIMENTAL'],
+                   hyperscores[2][hyperscores_label == 'EXPERIMENTAL'],
+                   hyperscores[3][hyperscores_label == 'EXPERIMENTAL']])
+    exp = np.array([exp[0][exp[3]==exp[3].max()][0],
+                     exp[1][exp[3]==exp[3].max()][0],
+                     exp[2][exp[3]==exp[3].max()][0],
+                     exp[3][exp[3]==exp[3].max()][0]])
+
+    return([MH, float(best[0][0]), sequence, int(best[2][0]), float(best[3][0]), best_label[0],
+            int(exp[2]), float(exp[3]), int(best[1][0])])
 
 def main(args):
     '''
