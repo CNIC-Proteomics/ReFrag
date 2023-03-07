@@ -418,8 +418,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
             else:
                 sys.exit('ERROR: Invalid charge value!')
-            ppmfinal["minv"] = ppmfinal.min(axis=1) # TODO df->array
-            minv = list(ppmfinal["minv"])
+            # ppmfinal["minv"] = ppmfinal.min(axis=1)
+            minv = list(ppmfinal.min(axis=1))
             ## ABLINES ##
             proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
             proof[2] = proof[2] * spec_correction
