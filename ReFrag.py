@@ -83,19 +83,23 @@ def locateScan(scan, mode, fr_ns, spectra, index2):
         ###
     return(ions)
 
-def hyperscore(ions, proof, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
+def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
     ## 1. Normalize intensity to 10^5
-    norm = (ions.INT / ions.INT.max()) * 10E4
-    ions["MSF_INT"] = norm
+    MSF_INT = (ions[1] / ions[1].max()) * 10E4
     ## 2. Pick matched ions ##
-    proof = proof[proof.PPM<=ftol]
-    matched_ions = proof.join(ions.set_index('MZ'), lsuffix='_x', rsuffix='_y', how='left')
-    if len(matched_ions) == 0:
+    proof[1] = proof[1][proof[1]<=ftol]
+    pfrags = pfrags[proof[1]<=ftol]
+    matched_ions = np.array([proof[0], proof[1], proof[2], 
+                             np.repeat(MSF_INT[np.isin(ions[0], proof[0])], np.unique(proof[0], return_counts=True)[1])])
+    if len(matched_ions[0]) == 0:
         hs = 0
         return(hs)
     ## 3. Adjust intensity
-    matched_ions.MSF_INT = matched_ions.MSF_INT / 10E2
+    matched_ions[3] = matched_ions[3] / 10E2
     ## 4. Hyperscore ## # Consider modified ions but not charged ions? unclear
+    SERIES = pfrags.astype('<U1') # TODO pfrags is not same length
+    
+    
     matched_ions["SERIES"] = matched_ions.apply(lambda x: x.FRAGS[0], axis=1)
     matched_ions.FRAGS = matched_ions.FRAGS.str.replace('+', '', regex=False)
     matched_ions.FRAGS = matched_ions.FRAGS.str.replace('*', '', regex=False)
@@ -314,7 +318,6 @@ def makeAblines(texp, minv, assign, afrags, ions):
         proof = np.array([[0,0,0,0]])
         return(proof)
     temp_mi = temp_mi[check<=51]
-    ions[1][np.isin(ions[0], temp_mi)]
     proof = np.array([temp_mi,
                       temp_mi1[check<=51],
                       np.repeat(ions[1][np.isin(ions[0], temp_mi)], np.unique(temp_mi, return_counts=True)[1])])
@@ -373,6 +376,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     theo_spec = theoSpectrum(plainseq, mods, pos, mass, m_proton, m_hydrogen, m_oxygen)
     terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton) # TODO df->array
     closest_proof = []
+    closest_pfrags = []
     closest_dm = []
     closest_name = []
     closest_pos = []
@@ -424,14 +428,16 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
             proof[2] = proof[2] * spec_correction
             proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
+            pfrags = pfrags[proof[1] <= ftol]
             proof = np.array([proof[0][proof[1] <= ftol],
                               proof[1][proof[1] <= ftol],
                               proof[2][proof[1] <= ftol]])
             closest_proof.append(proof)
+            closest_pfrags.append(pfrags)
             closest_dm.append(dm)
             closest_name.append(row['name'])
             closest_pos.append(dm_pos)
-    return(closest_proof, closest_dm, closest_name, closest_pos)
+    return(closest_proof, closest_pfrags, closest_dm, closest_name, closest_pos)
 
 def parallelFragging(query, parlist):
     m_proton = parlist[4]
@@ -452,14 +458,24 @@ def parallelFragging(query, parlist):
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
     exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
-    proof, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
-                                         parlist[0], parlist[1], parlist[2],
-                                         parlist[3], exp_spec, exp_ions, spec_correction, # TODO df->array
-                                         parlist[4], parlist[5], parlist[6])
+    proof, pfrags, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
+                                                 parlist[0], parlist[1], parlist[2],
+                                                 parlist[3], exp_spec, exp_ions, spec_correction,
+                                                 parlist[4], parlist[5], parlist[6])
     hyperscores = []
     check = []
     hss = []
     ufrags = []
+    ###
+    for i in list(range(0, len(dm))):
+        total = proof[i][0].sum() + proof[i][2].sum()
+        if total in check:
+            hscore = hss[check.index(total)]
+            frags = ufrags[check.index(total)]
+        else:
+            hscore = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1]) # TODO df->array
+            pfrags
+    ###
     # for i in list(range(0, len(dm))):
     #     total = sum(list(proof[i].index)) + proof[i].INT.sum() # proof[i].MZ.sum(), MZ is now index
     #     if total in check:
