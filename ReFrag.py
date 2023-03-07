@@ -9,6 +9,7 @@ from ast import literal_eval
 import argparse
 import concurrent.futures
 import configparser
+from datetime import datetime
 import itertools
 import logging
 import math
@@ -506,6 +507,41 @@ def parallelFragging(query, parlist):
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), int(best[1])])
 
+def makeSummary(df, outpath, infile, startt, endt):
+    
+    smods = df.REFRAG_name.value_counts()
+    smods = smods[smods.index!='EXPERIMENTAL']
+    # smods = "\n".join(str(smods).split("\n")[:-1]) # TODO: this cuts off some of the list
+    # lsmods = [val for pair in zip(smods.index, list(smods)) for val in pair]
+    # lsmods = '\t'.join(['\n'.join([str(v) for v in lsmods[i:i + 2]]) for i in range(len(lsmods))])
+    lsmods = []
+    for i in range(0, len(smods)):
+        lsmods += [str(list(smods)[i]), '\t', str(list(smods.index)[i]), '\n']
+    lsmods = ''.join(lsmods)
+        
+    summary = '''\
+    DATE = {date}
+    FILE = {infile}
+    SEARCH TIME = {time}
+    TOTAL PSMs =\t\t{total}
+    REFRAGGED PSMs =\t{refrag} ({perc}%)
+    
+    THEORETICAL MODIFICATIONS FREQUENCY
+    
+    {smods}\
+    '''.format(date=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+    infile=str(infile),
+    time=str(endt-startt),
+    total=str(len(df)),
+    refrag=str(len(df[df.REFRAG_name!='EXPERIMENTAL'])),
+    perc=str(round(len(df[df.REFRAG_name!='EXPERIMENTAL'])/len(df)*100,2)),
+    smods=lsmods)
+    
+    with open(outpath, 'w') as f:
+        f.write(summary)
+    
+    return
+
 def main(args):
     '''
     Main function
@@ -533,6 +569,7 @@ def main(args):
     # Prepare to parallelize
     logging.info("Refragging...")
     logging.info("\t" + "Locating scans...")
+    starttime = datetime.now()
     spectra = msdata.getSpectra()
     df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, spectra, index2), axis=1)
     indices, rowSeries = zip(*df.iterrows())
@@ -566,9 +603,14 @@ def main(args):
         refragged = len(df)
     prefragged = round((refragged/len(df))*100,2)
     logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
+    endtime = datetime.now()
     logging.info("Writing output file...")
     outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
     df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
+    logging.info("Done.")
+    logging.info("Writing summary file...")
+    outsum = Path(os.path.splitext(args.infile)[0] + "_SUMMARY.txt")
+    makeSummary(df, outsum, args.infile, starttime, endtime)
     logging.info("Done.")
     return
 
