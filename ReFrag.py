@@ -423,8 +423,10 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ## ABLINES ##
             proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
             proof[2] = proof[2] * spec_correction
-            proof.INT[proof.INT > max(exp_spec[1])] = max(exp_spec[1]) - 3 # TODO df->array
-            proof = proof[proof.PPM<=ftol]
+            proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
+            proof = np.array([proof[0][proof[1] <= ftol],
+                              proof[1][proof[1] <= ftol],
+                              proof[2][proof[1] <= ftol]])
             closest_proof.append(proof)
             closest_dm.append(dm)
             closest_name.append(row['name'])
