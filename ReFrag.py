@@ -458,6 +458,7 @@ def parallelFragging(query, parlist):
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6])
     hyperscores = []
+    hyperscores_label = []
     check = []
     hss = []
     ufrags = []
@@ -469,22 +470,41 @@ def parallelFragging(query, parlist):
             frags = ufrags[check.index(total)]
         else:
             hscore = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
-            pfrags
+            pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
+            frags = len(np.unique(pfrags[i]))
+            check += [total]
+            hss += [hscore]
+            ufrags += [frags]
+        hyperscores += [[dm[i], position[i], frags, hscore]]
+        hyperscores_label += [name[i]]
+    # best = hyperscores[[i[4] for i in hyperscores].index(max([i[4] for i in hyperscores]))]
+    hyperscores = np.transpose(np.array(hyperscores))
+    hyperscores_label = np.array(hyperscores_label)
+    best = np.array([hyperscores[0][hyperscores[3]==hyperscores[3].max()],
+                     hyperscores[1][hyperscores[3]==hyperscores[3].max()],
+                     hyperscores[2][hyperscores[3]==hyperscores[3].max()],
+                     hyperscores[3][hyperscores[3]==hyperscores[3].max()]])
+    best_label = hyperscores_label[hyperscores[3]==hyperscores[3].max()]
+    if len(best[0]) > 1:
+        # In case of tie, keep most matched_ions
+        best = np.array([best[0][best[2]==best[2].max()],
+                         best[1][best[2]==best[2].max()],
+                         best[2][best[2]==best[2].max()],
+                         best[3][best[2]==best[2].max()]])
+        best_label = best_label[best[2]==best[2].max()]
+        if len(best[0]) > 1:
+            # Prefer theoretical rather than experimental
+            if 0 < (best_label == 'EXPERIMENTAL').sum() < len(best_label):
+                best = np.array([np.delete(best[0], best_label == 'EXPERIMENTAL'),
+                                 np.delete(best[1], best_label == 'EXPERIMENTAL'),
+                                 np.delete(best[2], best_label == 'EXPERIMENTAL'),
+                                 np.delete(best[3], best_label == 'EXPERIMENTAL')])
+                best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
+        # Keep first after filtering
+        best = np.array([best[0][0], best[1][0], best[2][0], best[3][0]])
+        best_label = best_label[0]        
+    
     ###
-    # for i in list(range(0, len(dm))):
-    #     total = sum(list(proof[i].index)) + proof[i].INT.sum() # proof[i].MZ.sum(), MZ is now index
-    #     if total in check:
-    #         hscore = hss[check.index(total)]
-    #         frags = ufrags[check.index(total)]
-    #     else:
-    #         hscore = hyperscore(exp_ions, proof[i], parlist[2]) # TODO df->array
-    #         proof[i].FRAGS = proof[i].FRAGS.str.replace('+', '')
-    #         proof[i].FRAGS = proof[i].FRAGS.str.replace('*', '')
-    #         frags = proof[i].FRAGS.nunique()
-    #         check += [total]
-    #         hss += [hscore]
-    #         ufrags += [frags]
-    #     hyperscores += [[name[i], dm[i], position[i], frags, hscore]]
     # hyperscores = pd.DataFrame(hyperscores, columns = ['name', 'dm', 'site', 'matched_ions', 'hyperscore'])
     # best = hyperscores[hyperscores.hyperscore==hyperscores.hyperscore.max()]
     # best.sort_values(by=['matched_ions'], inplace=True, ascending=True) #TODO In case of tie (also prefer theoretical rather than experimental)
