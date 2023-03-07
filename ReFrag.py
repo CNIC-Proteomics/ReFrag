@@ -87,8 +87,10 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
     ## 1. Normalize intensity to 10^5
     MSF_INT = (ions[1] / ions[1].max()) * 10E4
     ## 2. Pick matched ions ##
-    proof[1] = proof[1][proof[1]<=ftol]
     pfrags = pfrags[proof[1]<=ftol]
+    proof = np.array([proof[0][proof[1]<=ftol],
+                      proof[1][proof[1]<=ftol],
+                      proof[2][proof[1]<=ftol]])
     matched_ions = np.array([proof[0], proof[1], proof[2], 
                              np.repeat(MSF_INT[np.isin(ions[0], proof[0])], np.unique(proof[0], return_counts=True)[1])])
     if len(matched_ions[0]) == 0:
@@ -97,25 +99,18 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
     ## 3. Adjust intensity
     matched_ions[3] = matched_ions[3] / 10E2
     ## 4. Hyperscore ## # Consider modified ions but not charged ions? unclear
-    SERIES = pfrags.astype('<U1') # TODO pfrags is not same length
-    
-    
-    matched_ions["SERIES"] = matched_ions.apply(lambda x: x.FRAGS[0], axis=1)
-    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('+', '', regex=False)
-    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('*', '', regex=False)
-    matched_ions.FRAGS = matched_ions.FRAGS.str.replace('#', '', regex=False)
-    temp = matched_ions.copy()
+    SERIES = pfrags.astype('<U1')
     # TRY use only charge less than 2maybe that's why only 3 and 4 have extra ions found.
     # temp = temp.drop_duplicates(subset='FRAGS', keep="first") # Count each kind of fragment only once
     try:
-        n_b = temp.SERIES.value_counts()['b']
-        i_b = matched_ions[matched_ions.SERIES=='b'].MSF_INT.sum()
+        n_b = (SERIES == 'b').sum()
+        i_b = matched_ions[3][SERIES == 'b'].sum()
     except KeyError:
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
     try:
-        n_y = temp.SERIES.value_counts()['y']
-        i_y = matched_ions[matched_ions.SERIES=='y'].MSF_INT.sum()
+        n_y = (SERIES == 'y').sum()
+        i_y = matched_ions[3][SERIES == 'y'].sum()
     except KeyError:
         n_y = 1
         i_y = 1
@@ -473,7 +468,7 @@ def parallelFragging(query, parlist):
             hscore = hss[check.index(total)]
             frags = ufrags[check.index(total)]
         else:
-            hscore = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1]) # TODO df->array
+            hscore = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
             pfrags
     ###
     # for i in list(range(0, len(dm))):
