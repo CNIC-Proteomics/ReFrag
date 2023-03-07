@@ -561,25 +561,25 @@ def main(args):
                             total=len(rowSeries)))
     df = df.drop('spectrum', axis = 1)
     df['templist'] = refrags
-    # df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
-    # df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
-    # df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
-    # df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
-    # df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
-    # df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
-    # df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
-    # df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
-    # df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
-    # df = df.drop('templist', axis = 1)
-    # try:
-    #     refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
-    # except KeyError:
-    #     refragged = len(df)
-    # prefragged = round((refragged/len(df))*100,2)
-    # logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
-    # logging.info("Writing output file...")
-    # outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
-    # df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
+    df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
+    df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
+    df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
+    df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
+    df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
+    df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+    df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
+    df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
+    df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
+    df = df.drop('templist', axis = 1)
+    try:
+        refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
+    except KeyError:
+        refragged = len(df)
+    prefragged = round((refragged/len(df))*100,2)
+    logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
+    logging.info("Writing output file...")
+    outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
+    df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
     logging.info("Done.")
     return
 
