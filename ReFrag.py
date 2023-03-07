@@ -502,7 +502,7 @@ def parallelFragging(query, parlist):
                 best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
         # Keep first after filtering
         best = np.array([best[0][0], best[1][0], best[2][0], best[3][0]])
-        best_label = best_label[0]
+        best_label = np.array(best_label[0])
     exp = np.array([hyperscores[0][hyperscores_label == 'EXPERIMENTAL'],
                    hyperscores[1][hyperscores_label == 'EXPERIMENTAL'],
                    hyperscores[2][hyperscores_label == 'EXPERIMENTAL'],
@@ -511,9 +511,12 @@ def parallelFragging(query, parlist):
                      exp[1][exp[3]==exp[3].max()][0],
                      exp[2][exp[3]==exp[3].max()][0],
                      exp[3][exp[3]==exp[3].max()][0]])
-
-    return([MH, float(best[0][0]), sequence, int(best[2][0]), float(best[3][0]), best_label[0],
-            int(exp[2]), float(exp[3]), int(best[1][0])])
+    try:
+        best_label = str(best_label[0])
+    except IndexError:
+        best_label = str(best_label)
+    return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
+            int(exp[2]), float(exp[3]), int(best[1])])
 
 def main(args):
     '''
