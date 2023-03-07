@@ -507,13 +507,10 @@ def parallelFragging(query, parlist):
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), int(best[1])])
 
-def makeSummary(df, outpath, infile, startt, endt):
+def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
     
     smods = df.REFRAG_name.value_counts()
     smods = smods[smods.index!='EXPERIMENTAL']
-    # smods = "\n".join(str(smods).split("\n")[:-1]) # TODO: this cuts off some of the list
-    # lsmods = [val for pair in zip(smods.index, list(smods)) for val in pair]
-    # lsmods = '\t'.join(['\n'.join([str(v) for v in lsmods[i:i + 2]]) for i in range(len(lsmods))])
     lsmods = []
     for i in range(0, len(smods)):
         lsmods += [str(list(smods)[i]), '\t', str(list(smods.index)[i]), '\n']
@@ -522,6 +519,8 @@ def makeSummary(df, outpath, infile, startt, endt):
     summary = '''\
     DATE = {date}
     FILE = {infile}
+    RAW = {raw}
+    DMLIST = {dmlist}
     SEARCH TIME = {time}
     TOTAL PSMs =\t\t{total}
     REFRAGGED PSMs =\t{refrag} ({perc}%)
@@ -531,6 +530,8 @@ def makeSummary(df, outpath, infile, startt, endt):
     {smods}\
     '''.format(date=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
     infile=str(infile),
+    raw=str(raw),
+    dmlist=str(dmlist),
     time=str(endt-startt),
     total=str(len(df)),
     refrag=str(len(df[df.REFRAG_name!='EXPERIMENTAL'])),
@@ -610,7 +611,7 @@ def main(args):
     logging.info("Done.")
     logging.info("Writing summary file...")
     outsum = Path(os.path.splitext(args.infile)[0] + "_SUMMARY.txt")
-    makeSummary(df, outsum, args.infile, starttime, endtime)
+    makeSummary(df, outsum, args.infile, args.rawfile, args.dmfile, starttime, endtime)
     logging.info("Done.")
     return
 
