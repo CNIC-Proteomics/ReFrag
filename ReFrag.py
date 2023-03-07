@@ -246,7 +246,8 @@ def errorMatrix(mz, theo_spec, m_proton):
     '''
 
     theo_spec = theo_spec[0] + theo_spec[1][::-1]
-    theo_spec = np.array([theo_spec]*len(mz))
+    # theo_spec = np.array([theo_spec]*len(mz))
+    theo_spec = np.tile(np.array(np.array(theo_spec)), (len(mz), 1))
     exp = np.transpose(np.array([mz]*len(theo_spec[0])))
     
     ## EXPERIMENTAL MASSES FOR CHARGE 2 ##
@@ -388,7 +389,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ## FRAGMENT NAMES ##
             frags = makeFrags(len(plainseq))
             ## ASSIGN IONS WITHIN SPECTRA ##
-            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass) # TODO: STILL SLOW
+            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
             ## MATCHED IONS CHECK ##
             # check = list(assign.MZ)
