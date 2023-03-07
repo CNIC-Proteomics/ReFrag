@@ -75,12 +75,8 @@ def locateScan(scan, mode, fr_ns, spectra, index2):
         except AssertionError or OverflowError:
             logging.info("\tERROR: Scan number " + str(scan) + " not found in mzML file.")
             sys.exit()
-        # ions = pd.DataFrame([s.get_peaks()[0], s.get_peaks()[1]]).T # TODO making a df is slow. work with array
-        # ions.columns = ["MZ", "INT"]
-        ###
         peaks = s.get_peaks()
         ions = np.array([peaks[0], peaks[1]])
-        ###
     return(ions)
 
 def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
@@ -294,7 +290,6 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     return(c_assign, frags[:5].flatten())
 
 def makeAblines(texp, minv, assign, afrags, ions):
-    ###
     masses = np.array([texp, minv])
     matches = np.array([masses[0][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)],
                         masses[1][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)]])
@@ -307,9 +302,6 @@ def makeAblines(texp, minv, assign, afrags, ions):
     temp_mi1 = np.repeat(list(matches[1]), len(assign[0]))
     temp_ci = np.tile(np.array(assign[0]), len(matches[0]))
     check = abs(temp_mi-temp_ci)/temp_ci*1000000
-    # matches_ions = np.array([temp_mi[check<=51],
-    #                          temp_ci1[check<=51],
-    #                          temp_mi1[check<=51]])
     if len(check) <= 0:
         proof = np.array([[0,0,0,0]])
         return(proof)
@@ -404,9 +396,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             #     assigndblist += [list(assign.MZ)]
             ## PPM ERRORS ##
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
-            # dmterrors.columns = frags.by
-            # dmterrors2.columns = frags.by2
-            # dmterrors3.columns = frags.by3
             if sub.Charge == 2:
                 ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
@@ -418,7 +407,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
             else:
                 sys.exit('ERROR: Invalid charge value!')
-            # ppmfinal["minv"] = ppmfinal.min(axis=1)
             minv = list(ppmfinal.min(axis=1))
             ## ABLINES ##
             proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
