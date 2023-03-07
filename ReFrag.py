@@ -462,7 +462,6 @@ def parallelFragging(query, parlist):
     check = []
     hss = []
     ufrags = []
-    ###
     for i in list(range(0, len(dm))):
         total = proof[i][0].sum() + proof[i][2].sum()
         if total in check:
@@ -487,11 +486,11 @@ def parallelFragging(query, parlist):
     best_label = hyperscores_label[hyperscores[3]==hyperscores[3].max()]
     if len(best[0]) > 1:
         # In case of tie, keep most matched_ions
+        best_label = best_label[best[2]==best[2].max()]
         best = np.array([best[0][best[2]==best[2].max()],
                          best[1][best[2]==best[2].max()],
                          best[2][best[2]==best[2].max()],
                          best[3][best[2]==best[2].max()]])
-        best_label = best_label[best[2]==best[2].max()]
         if len(best[0]) > 1:
             # Prefer theoretical rather than experimental
             if 0 < (best_label == 'EXPERIMENTAL').sum() < len(best_label):
