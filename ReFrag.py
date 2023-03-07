@@ -516,7 +516,7 @@ def parallelFragging(query, parlist):
     except IndexError:
         best_label = str(best_label)
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            int(exp[0]), float(exp[3]), int(best[1])])
+            float(exp[0]), float(exp[3]), int(best[1])])
 
 def main(args):
     '''
