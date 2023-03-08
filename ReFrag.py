@@ -30,20 +30,20 @@ shutup.please()
 def readRaw(msdata):
     if os.path.splitext(msdata)[1].lower() == ".mzml":
         mode = "mzml"
-        logging.info("Reading mzML file...")
+        logging.info("Reading mzML file (" + str(os.path.basename(Path(msdata))) + ")...")
         fr_ns = pyopenms.MSExperiment()
         pyopenms.MzMLFile().load(str(msdata), fr_ns)
         index2 = 0
         logging.info("\t" + str(fr_ns.getNrSpectra()) + " spectra read.")
     elif os.path.splitext(msdata)[1].lower() == ".mgf":
         mode = "mgf"
-        logging.info("Reading MGF file...")
+        logging.info("Reading MGF file (" + str(os.path.basename(Path(msdata))) + ")...")
         fr_ns = pd.read_csv(msdata, header=None)
         index2 = fr_ns.to_numpy() == 'END IONS'
         logging.info("\t" + str(sum(fr_ns[0].str[:4]=="SCAN")) + " spectra read.")
         # logging.info("\t" + str(fr_ns[0].str.count('SCANS').sum()) + " spectra read.") # VERY SLOW
     else:
-        logging.info("MS Data file extension not recognized!")
+        logging.info("MS Data file type '" + str(os.path.splitext(msdata)[1]) + "' not recognized!")
         sys.exit()
     return(fr_ns, mode, index2)
 
@@ -555,13 +555,13 @@ def main(args):
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
     # Read results file from MSFragger
-    logging.info("Reading MSFragger file...")
+    logging.info("Reading MSFragger file (" + str(os.path.basename(Path(args.infile))) + ")...")
     df = pd.read_csv(Path(args.infile), sep="\t")
     logging.info("\t" + str(len(df)) + " lines read.")
     # Read raw file
     msdata, mode, index2 = readRaw(Path(args.rawfile))
     # Read DM file
-    logging.info("Reading DM file...")
+    logging.info("Reading DM file (" + str(os.path.basename(Path(args.dmfile))) + ")...")
     dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
     dmdf.columns = ["name", "mass", "site"]
     dmdf.site = dmdf.site.apply(literal_eval)
