@@ -633,7 +633,7 @@ if __name__ == '__main__':
     parser.add_argument('-r',  '--rawfile', required=True, help='MS Data file (MGF or MZML)')
     parser.add_argument('-d',  '--dmfile', required=True, help='DeltaMass file')
     parser.add_argument('-c', '--config', default=defaultconfig, help='Path to custom config.ini file')
-    parser.add_argument('-w',  '--n_workers', type=int, default=4, help='Number of threads/n_workers (default: %(default)s)')
+    parser.add_argument('-w',  '--n_workers', type=int, default=os.cpu_count(), help='Number of threads/n_workers')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
     args = parser.parse_args()
     
