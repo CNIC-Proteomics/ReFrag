@@ -51,7 +51,7 @@ def main(args):
     '''
     
     # Make results directory
-    if not os.path.exists(os.path.dirname(args.infile)):
+    if not os.path.exists(os.path.dirname(args.infile + '\\mzMLedit')):
         os.mkdir(Path(os.path.dirname(args.infile) + '\\mzMLedit'))
     outdir = Path(os.path.dirname(args.infile) + '\\mzMLedit')
     
@@ -71,6 +71,7 @@ def main(args):
         # Operations
         first = 0
         for c in args.charge:
+            logging.info("Making charge " + str(c) + "...")
             # new_tree = copy.deepcopy(tree)
             new_tree = mzedit(tree, c, first) #Todo make copy
             # Write output
