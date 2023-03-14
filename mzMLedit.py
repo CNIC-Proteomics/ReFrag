@@ -28,7 +28,7 @@ def mzedit(tree, charge, first):
         if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (in_mz == 1)):
             accession = i.attrib['accession']
             # Modify mz # TODO isolation window target mz?
-            new_mz = 1 # TODO apply adjust # TODO save original and anlways apply adjust to it
+            new_mz = str(1) # TODO apply adjust # TODO save original and anlways apply adjust to it
             i.set("value", new_mz)
             # Add charge
             if first == 0:
@@ -51,7 +51,7 @@ def main(args):
     '''
     
     # Make results directory
-    if not os.path.exists(os.path.dirname(args.infile + '\\mzMLedit')):
+    if not os.path.exists(os.path.dirname(args.infile) + '\\mzMLedit'):
         os.mkdir(Path(os.path.dirname(args.infile) + '\\mzMLedit'))
     outdir = Path(os.path.dirname(args.infile) + '\\mzMLedit')
     
