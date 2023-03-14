@@ -65,23 +65,24 @@ def main(args):
         
     for infile in infiles:
         logging.info("Reading mzML file (" + str(os.path.basename(infile)) + ")...")
+        ET.register_namespace('', "http://psi.hupo.org/ms/mzml")
         tree = ET.parse(infile)
         logging.info("\t" + str(len(list(tree.iter('{http://psi.hupo.org/ms/mzml}precursor')))) + " spectra read.")
         
         # Operations
         first = 0
         for c in args.charge:
-            logging.info("Making charge " + str(c) + "...")
+            logging.info("\tMaking charge " + str(c) + "...")
             # new_tree = copy.deepcopy(tree)
             new_tree = mzedit(tree, c, first) #Todo make copy
             # Write output
-            logging.info("Writing output file...")
+            logging.info("\tWriting output file...")
             # outpath = Path(os.path.splitext(infile)[0] + "_ch" + str(c) + ".mzML")
             outpath = os.path.join(outdir, os.path.basename(infile)[:-5] + "_ch" + str(c) + ".mzML")
             with open(outpath, 'wb') as f:
                 new_tree.write(f, encoding='utf-8')
             first += 1
-        logging.info("Done.")
+        logging.info("\tDone.")
     return
 
 if __name__ == '__main__':
