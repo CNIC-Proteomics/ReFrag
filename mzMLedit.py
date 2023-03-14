@@ -4,16 +4,25 @@ Created on Mon Mar 13 15:50:15 2023
 
 @author: alaguillog
 """
+
 import argparse
-import copy
 import glob
 import logging
-import numpy as np
 import os
 from pathlib import Path
-import pyopenms
 import sys
 import xml.etree.ElementTree as ET
+
+def prettyPrint(current, parent=None, index=-1, depth=0):
+    for i, node in enumerate(current):
+        prettyPrint(node, current, i, depth+1)
+    if parent is not None:
+        if index == 0:
+            parent.text = '\n' + ('  ' * depth)
+        else:
+            parent[index - 1].tail = '\n' + ('  ' * depth)
+        if index == len(parent) - 1:
+            current.tail = '\n' + ('  ' * (depth - 1))
 
 def mzedit(tree, charge, first):    
     # for child in root:
@@ -38,8 +47,9 @@ def mzedit(tree, charge, first):
                            "value": str(charge), # TODO repeat for 3 and 4
                            "name" : "charge state"
                           }
-                charge = ET.Element('{http://psi.hupo.org/ms/mzml}cvParam', chdict)
-                i.insert(0, charge)
+                charge_elem = ET.Element('{http://psi.hupo.org/ms/mzml}cvParam', chdict)
+                charge_elem.tail = i.tail
+                i.insert(0, charge_elem)
             else:
                 tree_list[n+1].set("value", str(charge))
             in_mz = 0
@@ -79,6 +89,9 @@ def main(args):
             logging.info("\tWriting output file...")
             # outpath = Path(os.path.splitext(infile)[0] + "_ch" + str(c) + ".mzML")
             outpath = os.path.join(outdir, os.path.basename(infile)[:-5] + "_ch" + str(c) + ".mzML")
+            new_root = new_tree.getroot()
+            prettyPrint(new_root)
+            new_tree = ET.ElementTree(new_root)
             with open(outpath, 'wb') as f:
                 new_tree.write(f, encoding='utf-8')
             first += 1
