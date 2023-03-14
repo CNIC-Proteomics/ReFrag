@@ -24,16 +24,16 @@ def prettyPrint(current, parent=None, index=-1, depth=0):
         if index == len(parent) - 1:
             current.tail = '\n' + ('  ' * (depth - 1))
 
-def mzedit(tree, charge, first):  
+def mzedit(tree, charge, first, adjust):  
     # for child in root:
     #     print(child.tag, child.attrib)
     # precursor = list(elem.iter('{http://psi.hupo.org/ms/mzml}precursor'))
     tree_list = list(tree.iter())
-    in_mz = 0
+    # in_mz = 0
     accession = 0
     for n,i in enumerate(tree_list):
         if i.tag == '{http://psi.hupo.org/ms/mzml}selectedIon':
-            in_mz = 1
+            # in_mz = 1
             # TODO insert charge here
             # Add charge
             if first == 0:
@@ -51,17 +51,23 @@ def mzedit(tree, charge, first):
             #     tree_list[n+1].set("value", str(charge))
         if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'charge state')):
             i.set("value", str(charge))
-        if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (in_mz == 1)):
-            # Modify mz # TODO isolation window target mz?
-            new_mz = str(1) # TODO apply adjust # TODO save original and anlways apply adjust to it
-            i.set("value", new_mz)
-            in_mz = 0
+        if adjust:
+            if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'selected ion m/z')):
+                # Modify mz
+                new_mz = str(1) # TODO apply adjust # TODO save original and always apply adjust to it
+                i.set("value", new_mz)
+            if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'isolation window target m/z')):
+                # Modify mz # TODO isolation window target mz?
+                new_mz = str(1) # TODO apply adjust # TODO save original and always apply adjust to it
+                i.set("value", new_mz)
+                # in_mz = 0
     return(tree)
 
 def main(args):
     '''
     Main function
     '''
+    adjust = args.adjust
     
     # Make results directory
     if not os.path.exists(os.path.dirname(args.infile) + '\\mzMLedit'):
@@ -87,7 +93,7 @@ def main(args):
         for c in args.charge:
             logging.info("\tMaking charge " + str(c) + "...")
             # new_tree = copy.deepcopy(tree)
-            new_tree = mzedit(tree, c, first) #Todo make copy
+            new_tree = mzedit(tree, c, first, adjust) #Todo make copy
             # Write output
             logging.info("\tWriting output file...")
             # outpath = Path(os.path.splitext(infile)[0] + "_ch" + str(c) + ".mzML")
@@ -118,6 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('-i',  '--infile', required=True, help='MS Data file (mzML)')
     parser.add_argument('-c',  '--charge', default='2,3,4', help='Charges, separated by comma (default: %(default)s)',
                         type=lambda s: [int(item) for item in s.split(',')])
+    parser.add_argument('-a', '--adjust', action='store_true', help="Adjust m/z values")
     parser.add_argument('-w',  '--n_workers', type=int, default=os.cpu_count(), help='Number of threads/n_workers')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
     args = parser.parse_args()
