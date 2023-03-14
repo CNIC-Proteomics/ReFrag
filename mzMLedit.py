@@ -24,7 +24,7 @@ def prettyPrint(current, parent=None, index=-1, depth=0):
         if index == len(parent) - 1:
             current.tail = '\n' + ('  ' * (depth - 1))
 
-def mzedit(tree, charge, first):    
+def mzedit(tree, charge, first):  
     # for child in root:
     #     print(child.tag, child.attrib)
     # precursor = list(elem.iter('{http://psi.hupo.org/ms/mzml}precursor'))
@@ -34,13 +34,10 @@ def mzedit(tree, charge, first):
     for n,i in enumerate(tree_list):
         if i.tag == '{http://psi.hupo.org/ms/mzml}selectedIon':
             in_mz = 1
-        if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (in_mz == 1)):
-            accession = i.attrib['accession']
-            # Modify mz # TODO isolation window target mz?
-            new_mz = str(1) # TODO apply adjust # TODO save original and anlways apply adjust to it
-            i.set("value", new_mz)
+            # TODO insert charge here
             # Add charge
             if first == 0:
+                accession = tree_list[n+1].attrib['accession']
                 chdict =  {
                            "cvRef": "MS",
                            "accession": str(accession),
@@ -49,9 +46,15 @@ def mzedit(tree, charge, first):
                           }
                 charge_elem = ET.Element('{http://psi.hupo.org/ms/mzml}cvParam', chdict)
                 charge_elem.tail = i.tail
-                i.insert(0, charge_elem)
-            else:
-                tree_list[n+1].set("value", str(charge))
+                i.insert(1, charge_elem)
+            # else: # TODO check
+            #     tree_list[n+1].set("value", str(charge))
+        if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'charge state')):
+            i.set("value", str(charge))
+        if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (in_mz == 1)):
+            # Modify mz # TODO isolation window target mz?
+            new_mz = str(1) # TODO apply adjust # TODO save original and anlways apply adjust to it
+            i.set("value", new_mz)
             in_mz = 0
     return(tree)
 
