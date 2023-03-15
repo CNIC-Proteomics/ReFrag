@@ -27,6 +27,32 @@ from tqdm import tqdm
 pd.options.mode.chained_assignment = None  # default='warn'
 shutup.please()
 
+def preProcess(args):
+    if os.path.isdir(args.infile):
+        infiles = []
+        for f in os.listdir(args.infile):
+            if f.lower().endswith(".tsv"):
+                infiles += [os.path.join(args.infile, f)]
+        if len(infiles) == 0:
+            sys.exit("ERROR: No TSV files found in directory " + str(args.infile))
+    else:
+        infiles = [args.infile]
+
+    if os.path.isdir(args.rawfile):
+        rawfiles = []
+        rawbase = []
+        for f in os.listdir(args.rawfile):
+            if (f.lower().endswith(".mzml") or f.lower().endswith(".mgf")):
+                rawfiles += [os.path.join(args.rawfile, f)]
+                rawbase += [os.path.basename(f).split(sep=".")[0]]
+        if len(rawfiles) == 0:
+            sys.exit("ERROR: No mzML or MGF files found matching pattern " + str(args.rawfile))
+    else:
+        rawfiles = [args.rawfile]
+        rawbase = [os.path.basename(args.rawfile).split(sep=".")[0]]
+        
+    return(infiles, rawfiles, rawbase)
+
 def readRaw(msdata):
     if os.path.splitext(msdata)[1].lower() == ".mzml":
         mode = "mzml"
@@ -554,65 +580,76 @@ def main(args):
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
-    # Read results file from MSFragger
-    logging.info("Reading MSFragger file (" + str(os.path.basename(Path(args.infile))) + ")...")
-    df = pd.read_csv(Path(args.infile), sep="\t")
-    logging.info("\t" + str(len(df)) + " lines read.")
-    # Read raw file
-    msdata, mode, index2 = readRaw(Path(args.rawfile))
-    # Read DM file
-    logging.info("Reading DM file (" + str(os.path.basename(Path(args.dmfile))) + ")...")
-    dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
-    dmdf.columns = ["name", "mass", "site"]
-    dmdf.site = dmdf.site.apply(literal_eval)
-    dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
-    logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
-    # Prepare to parallelize
-    logging.info("Refragging...")
-    logging.info("\t" + "Locating scans...")
-    starttime = datetime.now()
-    spectra = msdata.getSpectra()
-    df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, spectra, index2), axis=1)
-    indices, rowSeries = zip(*df.iterrows())
-    rowSeries = list(rowSeries)
-    tqdm.pandas(position=0, leave=True)
-    if len(df) <= chunks:
-        chunks = math.ceil(len(df)/args.n_workers)
-    parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen]
-    logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
-    with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
-        refrags = list(tqdm(executor.map(parallelFragging,
-                                         rowSeries,
-                                         itertools.repeat(parlist),
-                                         chunksize=chunks),
-                            total=len(rowSeries)))
-    df = df.drop('spectrum', axis = 1)
-    df['templist'] = refrags
-    df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
-    df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
-    df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
-    df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
-    df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
-    df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
-    df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
-    df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
-    df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
-    df = df.drop('templist', axis = 1)
-    try:
-        refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
-    except KeyError:
-        refragged = len(df)
-    prefragged = round((refragged/len(df))*100,2)
-    logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
-    endtime = datetime.now()
-    logging.info("Writing output file...")
-    outpath = Path(os.path.splitext(args.infile)[0] + "_REFRAG.tsv")
-    df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
-    logging.info("Done.")
-    logging.info("Writing summary file...")
-    outsum = Path(os.path.splitext(args.infile)[0] + "_SUMMARY.txt")
-    makeSummary(df, outsum, args.infile, args.rawfile, args.dmfile, starttime, endtime)
-    logging.info("Done.")
+    
+    infiles, rawfiles, rawbase = preProcess(args)
+        
+    for f in infiles:
+        if os.path.basename(f).split(sep=".")[0] in rawbase:
+            infile = f
+            rawfile = rawfiles[rawbase.index(os.path.basename(f).split(sep=".")[0])]
+        else:
+            logging.info("ERROR: No MS data file (mzML or MGF) found for MSFragger file " + str(f) + "\nSkipping...")
+            continue
+
+        # Read results file from MSFragger
+        logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile))) + ")...")
+        df = pd.read_csv(Path(infile), sep="\t")
+        logging.info("\t" + str(len(df)) + " lines read.")
+        # Read raw file
+        msdata, mode, index2 = readRaw(Path(rawfile))
+        # Read DM file
+        logging.info("Reading DM file (" + str(os.path.basename(Path(args.dmfile))) + ")...")
+        dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
+        dmdf.columns = ["name", "mass", "site"]
+        dmdf.site = dmdf.site.apply(literal_eval)
+        dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
+        logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
+        # Prepare to parallelize
+        logging.info("Refragging...")
+        logging.info("\t" + "Locating scans...")
+        starttime = datetime.now()
+        spectra = msdata.getSpectra()
+        df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, spectra, index2), axis=1)
+        indices, rowSeries = zip(*df.iterrows())
+        rowSeries = list(rowSeries)
+        tqdm.pandas(position=0, leave=True)
+        if len(df) <= chunks:
+            chunks = math.ceil(len(df)/args.n_workers)
+        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen]
+        logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
+        with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
+            refrags = list(tqdm(executor.map(parallelFragging,
+                                             rowSeries,
+                                             itertools.repeat(parlist),
+                                             chunksize=chunks),
+                                total=len(rowSeries)))
+        df = df.drop('spectrum', axis = 1)
+        df['templist'] = refrags
+        df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
+        df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
+        df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
+        df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
+        df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
+        df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
+        df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
+        df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
+        df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
+        df = df.drop('templist', axis = 1)
+        try:
+            refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
+        except KeyError:
+            refragged = len(df)
+        prefragged = round((refragged/len(df))*100,2)
+        logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
+        endtime = datetime.now()
+        logging.info("Writing output file...")
+        outpath = Path(os.path.splitext(infile)[0] + "_REFRAG.tsv")
+        df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
+        logging.info("Done.")
+        logging.info("Writing summary file...")
+        outsum = Path(os.path.splitext(infile)[0] + "_SUMMARY.txt")
+        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime)
+        logging.info("Done.")
     return
 
 if __name__ == '__main__':
