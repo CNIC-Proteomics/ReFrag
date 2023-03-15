@@ -27,10 +27,10 @@ def prettyPrint(current, parent=None, index=-1, depth=0):
 def mzadjust(mz, charge):
     if charge == 2:
         mz = mz + (0.0004*mz + 0.107)
-    # elif charge == 3:
-        
-    # elif charge == 4:
-        
+    elif charge == 3:
+        mz = mz + (0.0004*mz + 0.0925)
+    elif charge == 4:
+        mz = mz + (0.0004*mz + 0.0721)
     return(mz)
 
 def mzedit(tree, charge, first, adjust):  
