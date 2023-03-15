@@ -14,6 +14,9 @@ import sys
 import xml.etree.ElementTree as ET
 
 def prettyPrint(current, parent=None, index=-1, depth=0):
+    '''
+    Print formatted mzML.
+    '''
     for i, node in enumerate(current):
         prettyPrint(node, current, i, depth+1)
     if parent is not None:
@@ -25,6 +28,9 @@ def prettyPrint(current, parent=None, index=-1, depth=0):
             current.tail = '\n' + ('  ' * (depth - 1))
             
 def mzadjust(mz, charge):
+    '''
+    Adjust precursor m/z value according to its charge.
+    '''
     if charge == 2:
         mz = mz + (0.0004*mz + 0.107)
     elif charge == 3:
@@ -33,16 +39,15 @@ def mzadjust(mz, charge):
         mz = mz + (0.0004*mz + 0.0721)
     return(mz)
 
-def mzedit(tree, charge, first, adjust):  
-    # for child in root:
-    #     print(child.tag, child.attrib)
+def mzedit(tree, charge, first, adjust):
+    '''
+    Add charge values and modify m/z values.
+    '''
     # precursor = list(elem.iter('{http://psi.hupo.org/ms/mzml}precursor'))
     tree_list = list(tree.iter())
-    # in_mz = 0
     accession = 0
     for n,i in enumerate(tree_list):
         if i.tag == '{http://psi.hupo.org/ms/mzml}selectedIon':
-            # in_mz = 1
             # Add charge
             if first == 0:
                 accession = tree_list[n+1].attrib['accession']
@@ -55,28 +60,26 @@ def mzedit(tree, charge, first, adjust):
                 charge_elem = ET.Element('{http://psi.hupo.org/ms/mzml}cvParam', chdict)
                 charge_elem.tail = i.tail
                 i.insert(1, charge_elem)
-            # else: # TODO check
-            #     tree_list[n+1].set("value", str(charge))
         if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'charge state')):
             i.set("value", str(charge))
         if adjust:
             if 'baseMZ' not in i.attrib:
                 i.attrib["baseMZ"] = str(i.attrib['value'])
             if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'selected ion m/z')):
-                # Modify mz
+                # Modify m/z
                 new_mz = str(mzadjust(float(i.attrib["baseMZ"]), charge))
                 i.set("value", new_mz)
             if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'isolation window target m/z')):
-                # Modify mz # TODO isolation window target mz?
+                # Modify m/z # TODO isolation window target mz?
                 new_mz = str(mzadjust(float(i.attrib["baseMZ"]), charge))
                 i.set("value", new_mz)
-                # in_mz = 0
     return(tree)
 
 def main(args):
     '''
     Main function
     '''
+    # Parameters
     adjust = args.adjust
     
     # Make results directory
@@ -84,14 +87,13 @@ def main(args):
         os.mkdir(Path(os.path.dirname(args.infile) + '\\mzMLedit'))
     outdir = Path(os.path.dirname(args.infile) + '\\mzMLedit')
     
-    # Read mzML file
+    # Read mzML files
     if '*' in args.infile: # wildcard
         infiles = glob.glob(args.infile)
         if len(infiles) == 0:
             sys.exit("ERROR: No files found matching pattern " + str(args.infile))
     else:
         infiles = [Path(args.infile)]
-        
     for infile in infiles:
         logging.info("Reading mzML file (" + str(os.path.basename(infile)) + ")...")
         ET.register_namespace('', "http://psi.hupo.org/ms/mzml")
@@ -102,11 +104,10 @@ def main(args):
         first = 0
         for c in args.charge:
             logging.info("\tMaking charge " + str(c) + "...")
-            # new_tree = copy.deepcopy(tree)
-            new_tree = mzedit(tree, c, first, adjust) #Todo make copy
+            new_tree = mzedit(tree, c, first, adjust)
+            
             # Write output
             logging.info("\tWriting output file...")
-            # outpath = Path(os.path.splitext(infile)[0] + "_ch" + str(c) + ".mzML")
             outpath = os.path.join(outdir, os.path.basename(infile)[:-5] + "_ch" + str(c) + ".mzML")
             new_root = new_tree.getroot()
             prettyPrint(new_root)
@@ -115,6 +116,7 @@ def main(args):
                 new_tree.write(f, encoding='utf-8')
             first += 1
         logging.info("\tDone.")
+        # TODO try joining all charges together
     return
 
 if __name__ == '__main__':
@@ -139,21 +141,14 @@ if __name__ == '__main__':
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
     args = parser.parse_args()
 
-    # logging debug level. By default, info level
-    # log_file = args.infile[:-4] + '_mzMLedit_log.txt'
-    # log_file_debug = args.infile[:-4] + '_mzMLedit_log_debug.txt'
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s - %(levelname)s - %(message)s',
                             datefmt='%m/%d/%Y %I:%M:%S %p')
-                            # handlers=[logging.FileHandler(log_file_debug),
-                            #           logging.StreamHandler()])
     else:
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s - %(levelname)s - %(message)s',
                             datefmt='%m/%d/%Y %I:%M:%S %p')
-                            # handlers=[logging.FileHandler(log_file),
-                            #           logging.StreamHandler()])
 
     # start main function
     logging.info('start script: '+"{0}".format(" ".join([x for x in sys.argv])))
