@@ -23,6 +23,15 @@ def prettyPrint(current, parent=None, index=-1, depth=0):
             parent[index - 1].tail = '\n' + ('  ' * depth)
         if index == len(parent) - 1:
             current.tail = '\n' + ('  ' * (depth - 1))
+            
+def mzadjust(mz, charge):
+    if charge == 2:
+        mz = mz + (0.0004*mz + 0.107)
+    # elif charge == 3:
+        
+    # elif charge == 4:
+        
+    return(mz)
 
 def mzedit(tree, charge, first, adjust):  
     # for child in root:
@@ -34,14 +43,13 @@ def mzedit(tree, charge, first, adjust):
     for n,i in enumerate(tree_list):
         if i.tag == '{http://psi.hupo.org/ms/mzml}selectedIon':
             # in_mz = 1
-            # TODO insert charge here
             # Add charge
             if first == 0:
                 accession = tree_list[n+1].attrib['accession']
                 chdict =  {
                            "cvRef": "MS",
                            "accession": str(accession),
-                           "value": str(charge), # TODO repeat for 3 and 4
+                           "value": str(charge),
                            "name" : "charge state"
                           }
                 charge_elem = ET.Element('{http://psi.hupo.org/ms/mzml}cvParam', chdict)
@@ -52,13 +60,15 @@ def mzedit(tree, charge, first, adjust):
         if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'charge state')):
             i.set("value", str(charge))
         if adjust:
+            if 'baseMZ' not in i.attrib:
+                i.attrib["baseMZ"] = str(i.attrib['value'])
             if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'selected ion m/z')):
                 # Modify mz
-                new_mz = str(1) # TODO apply adjust # TODO save original and always apply adjust to it
+                new_mz = str(mzadjust(float(i.attrib["baseMZ"]), charge))
                 i.set("value", new_mz)
             if ((i.tag == '{http://psi.hupo.org/ms/mzml}cvParam') and (i.attrib['name'] == 'isolation window target m/z')):
                 # Modify mz # TODO isolation window target mz?
-                new_mz = str(1) # TODO apply adjust # TODO save original and always apply adjust to it
+                new_mz = str(mzadjust(float(i.attrib["baseMZ"]), charge))
                 i.set("value", new_mz)
                 # in_mz = 0
     return(tree)
