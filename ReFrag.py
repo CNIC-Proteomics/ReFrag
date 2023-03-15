@@ -32,11 +32,17 @@ def preProcess(args):
         infiles = []
         for f in os.listdir(args.infile):
             if f.lower().endswith(".tsv"):
-                infiles += [os.path.join(args.infile, f)]
+                if len(args.dia) > 0:
+                    infiles += [os.path.join(args.infile, os.path.basename(f).split(sep=".")[0] + "_ch" + str(c) + ".tsv") for c in args.dia]
+                else:
+                    infiles += [os.path.join(args.infile, f)]
         if len(infiles) == 0:
             sys.exit("ERROR: No TSV files found in directory " + str(args.infile))
     else:
-        infiles = [args.infile]
+        if len(args.dia) > 0:
+            infiles = [os.path.join(os.path.dirname(args.infile), os.path.basename(args.infile).split(sep=".")[0] + "_ch" + str(c) + ".tsv") for c in args.dia]
+        else:
+            infiles = [args.infile]
 
     if os.path.isdir(args.rawfile):
         rawfiles = []
@@ -50,7 +56,7 @@ def preProcess(args):
     else:
         rawfiles = [args.rawfile]
         rawbase = [os.path.basename(args.rawfile).split(sep=".")[0]]
-        
+
     return(infiles, rawfiles, rawbase)
 
 def readRaw(msdata):
@@ -592,8 +598,12 @@ def main(args):
             continue
 
         # Read results file from MSFragger
-        logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile))) + ")...")
-        df = pd.read_csv(Path(infile), sep="\t")
+        if len(args.dia) > 0:
+            logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile[0:-8] + infile[-4:]))) + ")...")
+            df = pd.read_csv(Path(infile[0:-8] + infile[-4:]), sep="\t")
+        else:
+            logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile))) + ")...")
+            df = pd.read_csv(Path(infile), sep="\t")
         logging.info("\t" + str(len(df)) + " lines read.")
         # Read raw file
         msdata, mode, index2 = readRaw(Path(rawfile))
@@ -669,6 +679,8 @@ if __name__ == '__main__':
     parser.add_argument('-i',  '--infile', required=True, help='MSFragger results file')
     parser.add_argument('-r',  '--rawfile', required=True, help='MS Data file (MGF or MZML)')
     parser.add_argument('-d',  '--dmfile', required=True, help='DeltaMass file')
+    parser.add_argument('-a', '--dia', default=[], help='DIA mode (looks for MS Data files with _chN suffix)',
+                        type=lambda s: [int(item) for item in s.split(',')])
     parser.add_argument('-c', '--config', default=defaultconfig, help='Path to custom config.ini file')
     parser.add_argument('-w',  '--n_workers', type=int, default=os.cpu_count(), help='Number of threads/n_workers')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
