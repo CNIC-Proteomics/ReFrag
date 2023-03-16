@@ -32,11 +32,11 @@ def mzadjust(mz, charge):
     Adjust precursor m/z value according to its charge.
     '''
     if charge == 2:
-        mz = mz + (0.0004*mz + 0.107)
+        mz = mz + (0.000437*mz + 0.091871)
     elif charge == 3:
-        mz = mz + (0.0004*mz + 0.0925)
+        mz = mz + (0.000443*mz + 0.078198)
     elif charge == 4:
-        mz = mz + (0.0004*mz + 0.0721)
+        mz = mz + (0.000436*mz + 0.077352)
     return(mz)
 
 def mzedit(tree, charge, first, adjust):
