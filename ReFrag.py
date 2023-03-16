@@ -695,8 +695,12 @@ if __name__ == '__main__':
             mass.write(newconfig)
 
     # logging debug level. By default, info level
-    log_file = args.infile[:-4] + 'ReFrag_log.txt'
-    log_file_debug = args.infile[:-4] + 'ReFrag_log_debug.txt'
+    if os.path.isdir(args.infile):
+        log_file = os.path.join(args.infile + '/ReFrag_log.txt')
+        log_file_debug = os.path.join(args.infile + '/ReFrag_log_debug.txt')
+    else:
+        log_file = args.infile[:-4] + 'ReFrag_log.txt'
+        log_file_debug = args.infile[:-4] + 'ReFrag_log_debug.txt'
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s - %(levelname)s - %(message)s',
