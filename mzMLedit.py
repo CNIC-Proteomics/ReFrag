@@ -81,6 +81,7 @@ def main(args):
     '''
     # Parameters
     adjust = args.adjust
+    force = args.force
     
     # Make results directory
     if not os.path.exists(os.path.dirname(args.infile) + '\\mzMLedit'):
@@ -101,7 +102,8 @@ def main(args):
         logging.info("\t" + str(len(list(tree.iter('{http://psi.hupo.org/ms/mzml}precursor')))) + " spectra read.")
         
         # Operations
-        first = 0
+        if force: first = 0
+        else: first = 1
         for c in args.charge:
             logging.info("\tMaking charge " + str(c) + "...")
             new_tree = mzedit(tree, c, first, adjust)
@@ -136,6 +138,7 @@ if __name__ == '__main__':
     parser.add_argument('-i',  '--infile', required=True, help='MS Data file (mzML)')
     parser.add_argument('-c',  '--charge', default='2,3,4', help='Charges, separated by comma (default: %(default)s)',
                         type=lambda s: [int(item) for item in s.split(',')])
+    parser.add_argument('-f',  '--force', action='store_true', help='Files do not contain any charge info, create new entries')
     parser.add_argument('-a', '--adjust', action='store_true', help="Adjust m/z values")
     parser.add_argument('-w',  '--n_workers', type=int, default=os.cpu_count(), help='Number of threads/n_workers')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
