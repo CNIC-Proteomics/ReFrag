@@ -35,34 +35,24 @@ def main(args):
     for i in glob.glob(indir + '\\*'):
         if (i[-3:].lower()  in ['tsv', 'txt']) and (i[-8:-5].lower() in ['_ch', '_ch', '_ch']): # TODO charges larger than 9 = error
             infiles += [i]
-    filenames = set([os.path.basename(i)[:-8] for i in infiles]) # TODO charges larger than 9 = error
+    filenames = list(set([os.path.basename(i)[:-8] for i in infiles])) # TODO charges larger than 9 = error
     
     # Make groups
     for i in filenames:
         df = []
+        logging.info('Reading ' + str(i) + '...')
         for k in [j for j in infiles if os.path.basename(j)[:-8] == i]:
+            logging.info('\tCharge ' + str(os.path.basename(k)[-5:-4]) + '...') # TODO charges larger than 9 = error
             df += [pd.read_csv(k, sep='\t')]
         df = pd.concat(df)
         # Sort
         df.sort_values([scan, score], ascending=[True, False], inplace=True)
         # Create new rank column
-        df['new_hit_rank'] = df.groupby(scan).cumcount()+1
         df.insert(df.columns.get_loc(rank)+1, 'new_hit_rank', df.groupby(scan).cumcount()+1)
-            
-
-    # df = []
-    # for f in files: # TODO use concatInfiles function from PeakModeller
-    #     df += [pd.read_csv(f, sep='\t')]
-    # df = pd.concat(df)
-    
-    # df = df.sort_values(['hyperscore'],ascending=False).groupby('scannum').head(100) # TODO chapuza
-    
-    # # CHECK NEGATIVE DM
-    # df = df.sort_values(['hyperscore'],ascending=False).groupby('scannum').head(1)
-    # df.sort_values(by='scannum', inplace=True)
-    # df.charge.value_counts()
-    # df[df.massdiff<0]
-    # df[df.massdiff>0]
+        # Write output
+        logging.info('Writing ' + str(i) + '.tsv...')
+        df.to_csv(os.path.join(outdir, i + '.tsv'), sep='\t', index=False)
+    logging.info('Done.')
     return
 
 if __name__ == '__main__':
