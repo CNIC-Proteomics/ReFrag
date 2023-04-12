@@ -149,7 +149,29 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
         hs = 0
     if hs < 0:
         hs = 0
-    return(hs)
+    return(hs, i_b+i_y)
+
+def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
+    # Consecutive fragments
+    beta = 0.075 # TODO consecutive fragments
+    
+    # Immonium_ions
+    rho = 0.15
+    immonium_ions = [('H', 110.0718), ('Y', 136.0762), ('W', 159.0922), ('M', 104.0534), ('F', 120.0813)]
+    immonium_ions = [(i[0],i[1]) for i in immonium_ions if i[1] >= sub_spec[0].min()-(i[1]/((1/ftol)*1E6))]
+    for i in immonium_ions:
+        if min(abs(sub_spec[0] - i[1])) <= (i[1]/((1/ftol)*1E6)): # immonium ion found
+            minloc = np.where(abs(sub_spec[0]-i[1]) == min(abs(sub_spec[0] - i[1])))
+            if sub_spec[1][minloc] > 0: # TODO minimum intensity to be considered?
+                if i[0] in seq: # increase rho if immonium in sequence
+                    rho += 0.15
+                else: # decrease rho if immonium not in sequence
+                    rho -= 0.15
+    nm = len(mfrags)
+    im = matched_ions
+    nt = len(seq) * 2 * 2 * 3 # TODO consider all fragment charges 1, 2, 3 and dm states
+    sp = im * nm * (1 + beta) * (1 + rho) / nt
+    return(sp)
 
 def insertMods(peptide, mods):
     mods = mods.split(sep=", ")
@@ -490,13 +512,13 @@ def parallelFragging(query, parlist):
             hscore = hss[check.index(total)]
             frags = ufrags[check.index(total)]
         else:
-            hscore = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
+            hscore, isum = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
             pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
             frags = len(np.unique(pfrags[i]))
             check += [total]
             hss += [hscore]
             ufrags += [frags]
-        hyperscores += [[dm[i], position[i], frags, hscore]]
+        hyperscores += [[dm[i], position[i], frags, hscore, i, isum]]
         hyperscores_label += [name[i]]
     # best = hyperscores[[i[4] for i in hyperscores].index(max([i[4] for i in hyperscores]))]
     hyperscores = np.transpose(np.array(hyperscores))
@@ -504,7 +526,9 @@ def parallelFragging(query, parlist):
     best = np.array([hyperscores[0][hyperscores[3]==hyperscores[3].max()],
                      hyperscores[1][hyperscores[3]==hyperscores[3].max()],
                      hyperscores[2][hyperscores[3]==hyperscores[3].max()],
-                     hyperscores[3][hyperscores[3]==hyperscores[3].max()]])
+                     hyperscores[3][hyperscores[3]==hyperscores[3].max()],
+                     hyperscores[4][hyperscores[3]==hyperscores[3].max()],
+                     hyperscores[5][hyperscores[3]==hyperscores[3].max()]])
     best_label = hyperscores_label[hyperscores[3]==hyperscores[3].max()]
     if len(best[0]) > 1:
         # In case of tie, keep most matched_ions
@@ -512,17 +536,21 @@ def parallelFragging(query, parlist):
         best = np.array([best[0][best[2]==best[2].max()],
                          best[1][best[2]==best[2].max()],
                          best[2][best[2]==best[2].max()],
-                         best[3][best[2]==best[2].max()]])
+                         best[3][best[2]==best[2].max()],
+                         best[4][best[2]==best[2].max()],
+                         best[5][best[2]==best[2].max()]])
         if len(best[0]) > 1:
             # Prefer theoretical rather than experimental
             if 0 < (best_label == 'EXPERIMENTAL').sum() < len(best_label):
                 best = np.array([np.delete(best[0], best_label == 'EXPERIMENTAL'),
                                  np.delete(best[1], best_label == 'EXPERIMENTAL'),
                                  np.delete(best[2], best_label == 'EXPERIMENTAL'),
-                                 np.delete(best[3], best_label == 'EXPERIMENTAL')])
+                                 np.delete(best[3], best_label == 'EXPERIMENTAL'),
+                                 np.delete(best[4], best_label == 'EXPERIMENTAL'),
+                                 np.delete(best[5], best_label == 'EXPERIMENTAL')])
                 best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
         # Keep first after filtering
-        best = np.array([best[0][0], best[1][0], best[2][0], best[3][0]])
+        best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
         best_label = np.array(best_label[0])
     exp = np.array([hyperscores[0][hyperscores_label == 'EXPERIMENTAL'],
                    hyperscores[1][hyperscores_label == 'EXPERIMENTAL'],
@@ -536,6 +564,8 @@ def parallelFragging(query, parlist):
         best_label = str(best_label[0])
     except IndexError:
         best_label = str(best_label)
+    # TODO spscore on best
+    sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), int(best[1])])
 
