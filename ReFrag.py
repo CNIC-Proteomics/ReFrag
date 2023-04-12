@@ -153,8 +153,13 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
 
 def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
     # Consecutive fragments
-    beta = 0.075 # TODO consecutive fragments
-    
+    beta = 0.075
+    f = np.unique(mfrags)
+    bf = f[np.char.startswith(f, 'b')]
+    bf = np.array([int(i.replace('b' , '')) for i in bf])
+    yf = f[np.char.startswith(f, 'y')]
+    yf = np.array([int(i.replace('y' , '')) for i in yf])
+    beta = (sum((bf[1:]-bf[:-1])==1) + sum((yf[1:]-yf[:-1])==1)) * beta
     # Immonium_ions
     rho = 0.15
     immonium_ions = [('H', 110.0718), ('Y', 136.0762), ('W', 159.0922), ('M', 104.0534), ('F', 120.0813)]
@@ -169,7 +174,7 @@ def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
                     rho -= 0.15
     nm = len(mfrags)
     im = matched_ions
-    nt = len(seq) * 2 * 2 * 3 # TODO consider all fragment charges 1, 2, 3 and dm states
+    nt = len(seq) * 2 * 2 * 3 # TODO consider all fragment charges 1, 2, 3 and dm states?
     sp = im * nm * (1 + beta) * (1 + rho) / nt
     return(sp)
 
