@@ -156,7 +156,7 @@ def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
     f = np.unique(mfrags)
     # B series
     bf = f[np.char.startswith(f, 'b')]
-    if bf:
+    if bf.size > 0:
         bf = np.array([i.replace('b' , '') for i in bf])
         bf3 = bf[np.char.endswith(bf, '+++')]
         bf = bf[np.invert(np.char.endswith(bf, '+++'))]
@@ -167,7 +167,7 @@ def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
         bf = np.array([int(i) for i in bf])
     # Y series
     yf = f[np.char.startswith(f, 'y')]
-    if yf:
+    if yf.size > 0:
         yf = np.array([i.replace('y' , '') for i in yf])
         yf3 = yf[np.char.endswith(yf, '+++')]
         yf = yf[np.invert(np.char.endswith(yf, '+++'))]
