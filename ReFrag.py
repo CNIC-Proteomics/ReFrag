@@ -593,7 +593,7 @@ def parallelFragging(query, parlist):
     # TODO spscore on best
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            float(exp[0]), float(exp[3]), int(best[1])])
+            float(exp[0]), float(exp[3]), int(best[1]), sp])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
     
@@ -700,6 +700,7 @@ def main(args):
         df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
         df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
         df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
+        df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
         df = df.drop('templist', axis = 1)
         try:
             refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
