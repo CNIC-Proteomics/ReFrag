@@ -124,7 +124,7 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
                              np.repeat(MSF_INT[np.isin(ions[0], proof[0])], np.unique(proof[0], return_counts=True)[1])])
     if len(matched_ions[0]) == 0:
         hs = 0
-        return(hs)
+        return(hs, 0)
     ## 3. Adjust intensity
     matched_ions[3] = matched_ions[3] / 10E2
     ## 4. Hyperscore ## # Consider modified ions but not charged ions? unclear
