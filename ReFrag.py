@@ -591,6 +591,9 @@ def parallelFragging(query, parlist):
         # Keep first after filtering
         best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
         best_label = np.array(best_label[0])
+    elif len(best[0]) == 1:
+        best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
+        best_label = np.array(best_label[0])
     exp = np.array([hyperscores[0][hyperscores_label == 'EXPERIMENTAL'],
                    hyperscores[1][hyperscores_label == 'EXPERIMENTAL'],
                    hyperscores[2][hyperscores_label == 'EXPERIMENTAL'],
