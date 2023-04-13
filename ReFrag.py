@@ -381,8 +381,8 @@ def makeAblines(texp, minv, assign, afrags, ions):
     matches = np.array([masses[0][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)],
                         masses[1][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)]])
     if len(matches[0]) <= 0:
-        proof = np.array([[0,0,0]])
-        pfrags = [0]
+        proof = np.array([[0],[0],[0]])
+        pfrags = np.array([])
         return(proof, pfrags)
     temp_mi = np.repeat(list(matches[0]), len(assign[0]))
     temp_ci1 = np.tile(afrags, len(matches[0]))
@@ -390,8 +390,9 @@ def makeAblines(texp, minv, assign, afrags, ions):
     temp_ci = np.tile(np.array(assign[0]), len(matches[0]))
     check = abs(temp_mi-temp_ci)/temp_ci*1000000
     if len(check) <= 0:
-        proof = np.array([[0,0,0,0]])
-        return(proof)
+        proof = np.array([[0],[0],[0]])
+        pfrags = np.array([])
+        return(proof, pfrags)
     temp_mi = temp_mi[check<=51]
     proof = np.array([temp_mi,
                       temp_mi1[check<=51],
@@ -497,12 +498,13 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             minv = list(ppmfinal.min(axis=1))
             ## ABLINES ##
             proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
-            proof[2] = proof[2] * spec_correction
-            proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
-            pfrags = pfrags[proof[1] <= ftol]
-            proof = np.array([proof[0][proof[1] <= ftol],
-                              proof[1][proof[1] <= ftol],
-                              proof[2][proof[1] <= ftol]])
+            if pfrags.size > 0:
+                proof[2] = proof[2] * spec_correction
+                proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
+                pfrags = pfrags[proof[1] <= ftol]
+                proof = np.array([proof[0][proof[1] <= ftol],
+                                  proof[1][proof[1] <= ftol],
+                                  proof[2][proof[1] <= ftol]])
             closest_proof.append(proof)
             closest_pfrags.append(pfrags)
             closest_dm.append(dm)
@@ -545,7 +547,10 @@ def parallelFragging(query, parlist):
             frags = ufrags[check.index(total)]
             pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
         else:
-            hscore, isum = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
+            if pfrags[i].size > 0:
+                hscore, isum = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
+            else:
+                hscore = isum = 0
             #pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
             pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
             frags = len(np.unique(np.array([f.replace('+' , '') for f in pfrags[i]])))
