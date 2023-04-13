@@ -152,50 +152,57 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
     return(hs, i_b+i_y)
 
 def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
-    # Consecutive fragments
-    f = np.unique(mfrags)
-    # B series
-    bf = f[np.char.startswith(f, 'b')]
-    if bf.size > 0:
-        bf = np.array([i.replace('b' , '') for i in bf])
-        bf3 = bf[np.char.endswith(bf, '+++')]
-        bf = bf[np.invert(np.char.endswith(bf, '+++'))]
-        bf2 = bf[np.char.endswith(bf, '++')]
-        bf = bf[np.invert(np.char.endswith(bf, '++'))]
-        bf3 = np.array([int(i.replace('+' , '')) for i in bf3])
-        bf2 = np.array([int(i.replace('+' , '')) for i in bf2])
-        bf = np.array([int(i) for i in bf])
-    # Y series
-    yf = f[np.char.startswith(f, 'y')]
-    if yf.size > 0:
-        yf = np.array([i.replace('y' , '') for i in yf])
-        yf3 = yf[np.char.endswith(yf, '+++')]
-        yf = yf[np.invert(np.char.endswith(yf, '+++'))]
-        yf2 = yf[np.char.endswith(yf, '++')]
-        yf = yf[np.invert(np.char.endswith(yf, '++'))]
-        yf3 = np.array([int(i.replace('+' , '')) for i in yf3])
-        yf2 = np.array([int(i.replace('+' , '')) for i in yf2])
-        yf = np.array([int(i) for i in yf])
-    # Claculate continuity per charge
-    beta = (((sum((bf[1:]-bf[:-1])==1) + sum((yf[1:]-yf[:-1])==1)) * 0.075) +
-            ((sum((bf2[1:]-bf2[:-1])==1) + sum((yf2[1:]-yf2[:-1])==1)) * 0.075) +
-            ((sum((bf3[1:]-bf3[:-1])==1) + sum((yf3[1:]-yf3[:-1])==1)) * 0.075))
-    # Immonium_ions
-    rho = 0
-    immonium_ions = [('H', 110.0718), ('Y', 136.0762), ('W', 159.0922), ('M', 104.0534), ('F', 120.0813)]
-    immonium_ions = [(i[0],i[1]) for i in immonium_ions if i[1] >= sub_spec[0].min()-(i[1]/((1/ftol)*1E6))]
-    for i in immonium_ions:
-        if min(abs(sub_spec[0] - i[1])) <= (i[1]/((1/ftol)*1E6)): # immonium ion found
-            minloc = np.where(abs(sub_spec[0]-i[1]) == min(abs(sub_spec[0] - i[1])))
-            if sub_spec[1][minloc] > 0: # TODO minimum intensity to be considered?
-                if i[0] in seq: # increase rho if immonium in sequence
-                    rho += 0.15
-                else: # decrease rho if immonium not in sequence
-                    rho -= 0.15
-    nm = len(mfrags)
-    im = matched_ions
-    nt = len(seq) * 2 * 3 # 2 series, 3 charge states # TODO param
-    sp = (im * nm * (1 + beta) * (1 + rho)) / nt
+    if mfrags.size > 0:
+        # Consecutive fragments
+        f = np.unique(mfrags)
+        # B series
+        bf = f[np.char.startswith(f, 'b')]
+        if bf.size > 0:
+            bf = np.array([i.replace('b' , '') for i in bf])
+            bf3 = bf[np.char.endswith(bf, '+++')]
+            bf = bf[np.invert(np.char.endswith(bf, '+++'))]
+            bf2 = bf[np.char.endswith(bf, '++')]
+            bf = bf[np.invert(np.char.endswith(bf, '++'))]
+            bf3 = np.array([int(i.replace('+' , '')) for i in bf3])
+            bf2 = np.array([int(i.replace('+' , '')) for i in bf2])
+            bf = np.array([int(i) for i in bf])
+        else: 
+            bf = bf2 = bf3 = np.array([0])
+        # Y series
+        yf = f[np.char.startswith(f, 'y')]
+        if yf.size > 0:
+            yf = np.array([i.replace('y' , '') for i in yf])
+            yf3 = yf[np.char.endswith(yf, '+++')]
+            yf = yf[np.invert(np.char.endswith(yf, '+++'))]
+            yf2 = yf[np.char.endswith(yf, '++')]
+            yf = yf[np.invert(np.char.endswith(yf, '++'))]
+            yf3 = np.array([int(i.replace('+' , '')) for i in yf3])
+            yf2 = np.array([int(i.replace('+' , '')) for i in yf2])
+            yf = np.array([int(i) for i in yf])
+        else: 
+            yf = yf2 = yf3 = np.array([0])
+        # Claculate continuity per charge
+        beta = (((sum((bf[1:]-bf[:-1])==1) + sum((yf[1:]-yf[:-1])==1)) * 0.075) +
+                ((sum((bf2[1:]-bf2[:-1])==1) + sum((yf2[1:]-yf2[:-1])==1)) * 0.075) +
+                ((sum((bf3[1:]-bf3[:-1])==1) + sum((yf3[1:]-yf3[:-1])==1)) * 0.075))
+        # Immonium_ions
+        rho = 0
+        immonium_ions = [('H', 110.0718), ('Y', 136.0762), ('W', 159.0922), ('M', 104.0534), ('F', 120.0813)]
+        immonium_ions = [(i[0],i[1]) for i in immonium_ions if i[1] >= sub_spec[0].min()-(i[1]/((1/ftol)*1E6))]
+        for i in immonium_ions:
+            if min(abs(sub_spec[0] - i[1])) <= (i[1]/((1/ftol)*1E6)): # immonium ion found
+                minloc = np.where(abs(sub_spec[0]-i[1]) == min(abs(sub_spec[0] - i[1])))
+                if sub_spec[1][minloc] > 0: # TODO minimum intensity to be considered?
+                    if i[0] in seq: # increase rho if immonium in sequence
+                        rho += 0.15
+                    else: # decrease rho if immonium not in sequence
+                        rho -= 0.15
+        nm = len(mfrags)
+        im = matched_ions
+        nt = len(seq) * 2 * 3 # 2 series, 3 charge states # TODO param
+        sp = (im * nm * (1 + beta) * (1 + rho)) / nt
+    else:
+        sp = 0
     return(sp)
 
 def insertMods(peptide, mods):
@@ -536,6 +543,7 @@ def parallelFragging(query, parlist):
         if total in check:
             hscore = hss[check.index(total)]
             frags = ufrags[check.index(total)]
+            pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
         else:
             hscore, isum = hyperscore(exp_ions, proof[i], pfrags[i], parlist[1])
             #pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
