@@ -131,18 +131,18 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
     SERIES = pfrags.astype('<U1')
     # TRY use only charge less than 2maybe that's why only 3 and 4 have extra ions found.
     # temp = temp.drop_duplicates(subset='FRAGS', keep="first") # Count each kind of fragment only once
-    try:
-        n_b = (SERIES == 'b').sum()
-        i_b = matched_ions[3][SERIES == 'b'].sum()
-    except KeyError:
+    if len(matched_ions[3][SERIES == 'b']) == 0:
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
-    try:
+    else:
+        n_b = (SERIES == 'b').sum()
+        i_b = matched_ions[3][SERIES == 'b'].sum()
+    if len(matched_ions[3][SERIES == 'y']) == 0:
+        n_y = 1 # So that hyperscore will not be 0 if one series is missing
+        i_y = 1
+    else:
         n_y = (SERIES == 'y').sum()
         i_y = matched_ions[3][SERIES == 'y'].sum()
-    except KeyError:
-        n_y = 1
-        i_y = 1
     try:
         hs = math.log10(math.factorial(n_b) * math.factorial(n_y)) + math.log10(i_b * i_y)
     except ValueError:
