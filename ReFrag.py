@@ -122,7 +122,7 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
                       proof[2][proof[1]<=ftol]])
     matched_ions = np.array([proof[0], proof[1], proof[2], 
                              np.repeat(MSF_INT[np.isin(ions[0], proof[0])], np.unique(proof[0], return_counts=True)[1])])
-    if len(matched_ions[0]) == 0:
+    if (len(matched_ions[0]) == 0) or (len(pfrags) == 0):
         hs = 0
         return(hs, 0)
     ## 3. Adjust intensity
@@ -144,7 +144,7 @@ def hyperscore(ions, proof, pfrags, ftol=50): # TODO play with number of ions # 
         n_y = 1
         i_y = 1
     try:
-        hs = math.log10(math.factorial(n_b) * math.factorial(n_y) * i_b * i_y)
+        hs = math.log10(math.factorial(n_b) * math.factorial(n_y)) + math.log10(i_b * i_y)
     except ValueError:
         hs = 0
     if hs < 0:
@@ -606,7 +606,6 @@ def parallelFragging(query, parlist):
         best_label = str(best_label[0])
     except IndexError:
         best_label = str(best_label)
-    # TODO spscore on best
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), int(best[1]), sp])
