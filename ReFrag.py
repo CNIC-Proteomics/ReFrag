@@ -608,7 +608,7 @@ def parallelFragging(query, parlist):
         best_label = str(best_label)
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            float(exp[0]), float(exp[3]), int(best[1]), sp])
+            float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])), sp])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
     
