@@ -699,6 +699,9 @@ def main(args):
         else:
             logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile))) + ")...")
             df = pd.read_csv(Path(infile), sep="\t")
+        if len(args.scanrange) > 0:
+            logging.info("Filtering scan range " + str() + "-" + str() + "...")
+            df[(df.scannum>=args.scanrange[0])&(df.scannum<=args.scanrange[1])]
         logging.info("\t" + str(len(df)) + " lines read.")
         # Read raw file
         msdata, mode, index2 = readRaw(Path(rawfile))
@@ -750,10 +753,18 @@ def main(args):
         endtime = datetime.now()
         logging.info("Writing output file...")
         outpath = Path(os.path.splitext(infile)[0] + "_REFRAG.tsv")
+        if len(args.scanrange) > 0:
+            outpath = Path(os.path.splitext(infile)[0] + "_" +
+                           str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
+                           "_REFRAG.tsv")
         df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
         logging.info("Done.")
         logging.info("Writing summary file...")
         outsum = Path(os.path.splitext(infile)[0] + "_SUMMARY.txt")
+        if len(args.scanrange) > 0:
+            outsum = Path(os.path.splitext(infile)[0] + "_" +
+                           str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
+                           "_SUMMARY.txt")
         makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime)
         logging.info("Done.")
     return
@@ -776,6 +787,8 @@ if __name__ == '__main__':
     parser.add_argument('-r',  '--rawfile', required=True, help='MS Data file (MGF or MZML)')
     parser.add_argument('-d',  '--dmfile', required=True, help='DeltaMass file')
     parser.add_argument('-a', '--dia', default=[], help='DIA mode (looks for MS Data files with _chN suffix)',
+                        type=lambda s: [int(item) for item in s.split(',')])
+    parser.add_argument('-s', '--scanrange', default=[], help='Scan range to search',
                         type=lambda s: [int(item) for item in s.split(',')])
     parser.add_argument('-c', '--config', default=defaultconfig, help='Path to custom config.ini file')
     parser.add_argument('-w',  '--n_workers', type=int, default=os.cpu_count(), help='Number of threads/n_workers')
@@ -809,6 +822,9 @@ if __name__ == '__main__':
                             datefmt='%m/%d/%Y %I:%M:%S %p',
                             handlers=[logging.FileHandler(log_file),
                                       logging.StreamHandler()])
+        
+    if len(args.scanrange) > 2:
+        sys.exit('ERROR: Scan range list can only contain two elements (start and end)')
 
     # start main function
     logging.info('start script: '+"{0}".format(" ".join([x for x in sys.argv])))
