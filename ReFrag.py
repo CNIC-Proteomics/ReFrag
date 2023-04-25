@@ -346,16 +346,32 @@ def errorMatrix(mz, theo_spec, m_proton):
     
     return(terrors, terrors2, terrors3, exp)
 
-def makeFrags(seq_len): # TODO: SLOW
+def makeFrags(seq): # TODO: SLOW
     '''
     Name all fragments.
     '''
-    frags = np.array([["b" + str(i) for i in list(range(2,seq_len+1))] + ["y" + str(i) for i in list(range(2,seq_len+1))[::-1]],
-                      ["b" + str(i) + "++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "++" for i in list(range(2,seq_len+1))[::-1]],
-                      ["b" + str(i) + "+++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "+++" for i in list(range(2,seq_len+1))[::-1]],
-                      ["b" + str(i) + "*" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "*" for i in list(range(2,seq_len+1))[::-1]],
-                      ["b" + str(i) + "*++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(2,seq_len+1))[::-1]],
-                      ["b" + str(i) + "*+++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(2,seq_len+1))[::-1]]])
+    bp = bh = yp = yh = []
+    if 'P' in seq: # Cannot cut after
+        # Disallowed b ions
+        bp = [pos+1 for pos, char in enumerate(seq) if char == 'P']
+        # Disallowed y ions
+        yp = [pos for pos, char in enumerate(seq[::-1]) if char == 'P']
+    if 'H' in seq: # Cannot cut before
+        # Disallowed b ions
+        bh = [pos for pos, char in enumerate(seq) if char == 'H']
+        # Disallowed y ions
+        yh = [pos+1 for pos, char in enumerate(seq[::-1]) if char == 'H']
+    seq_len = len(seq)
+    blist = list(range(2,seq_len+1))
+    blist = [i for i in blist if i not in bp + bh]
+    ylist = list(range(2,seq_len+1))[::-1]
+    ylist = [i for i in ylist if i not in yp + yh]
+    frags = np.array([["b" + str(i) for i in blist] + ["y" + str(i) for i in ylist],
+                      ["b" + str(i) + "++" for i in blist] + ["y" + str(i) + "++" for i in ylist],
+                      ["b" + str(i) + "+++" for i in blist] + ["y" + str(i) + "+++" for i in ylist],
+                      ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
+                      ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
+                      ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*++" for i in ylist]])
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
@@ -467,7 +483,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 dm_theo_spec = theo_spec.copy()
                 dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
             ## FRAGMENT NAMES ##
-            frags = makeFrags(len(plainseq))
+            frags = makeFrags(plainseq)
             ## ASSIGN IONS WITHIN SPECTRA ##
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
