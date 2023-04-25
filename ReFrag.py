@@ -350,12 +350,12 @@ def makeFrags(seq_len): # TODO: SLOW
     '''
     Name all fragments.
     '''
-    frags = np.array([["b" + str(i) for i in list(range(1,seq_len+1))] + ["y" + str(i) for i in list(range(1,seq_len+1))[::-1]],
-                      ["b" + str(i) + "++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "++" for i in list(range(1,seq_len+1))[::-1]],
-                      ["b" + str(i) + "+++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "+++" for i in list(range(1,seq_len+1))[::-1]],
-                      ["b" + str(i) + "*" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "*" for i in list(range(1,seq_len+1))[::-1]],
-                      ["b" + str(i) + "*++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(1,seq_len+1))[::-1]],
-                      ["b" + str(i) + "*+++" for i in list(range(1,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(1,seq_len+1))[::-1]]])
+    frags = np.array([["b" + str(i) for i in list(range(2,seq_len+1))] + ["y" + str(i) for i in list(range(2,seq_len+1))[::-1]],
+                      ["b" + str(i) + "++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "++" for i in list(range(2,seq_len+1))[::-1]],
+                      ["b" + str(i) + "+++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "+++" for i in list(range(2,seq_len+1))[::-1]],
+                      ["b" + str(i) + "*" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "*" for i in list(range(2,seq_len+1))[::-1]],
+                      ["b" + str(i) + "*++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(2,seq_len+1))[::-1]],
+                      ["b" + str(i) + "*+++" for i in list(range(2,seq_len+1))] + ["y" + str(i) + "*++" for i in list(range(2,seq_len+1))[::-1]]])
     return(frags)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
