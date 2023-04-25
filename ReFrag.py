@@ -700,7 +700,7 @@ def main(args):
             logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile))) + ")...")
             df = pd.read_csv(Path(infile), sep="\t")
         if len(args.scanrange) > 0:
-            logging.info("Filtering scan range " + str() + "-" + str() + "...")
+            logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
             df[(df.scannum>=args.scanrange[0])&(df.scannum<=args.scanrange[1])]
         logging.info("\t" + str(len(df)) + " lines read.")
         # Read raw file
