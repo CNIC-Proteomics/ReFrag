@@ -284,11 +284,16 @@ def expSpectrum(ions):
     else: spec_correction = 0
     return(spec, ions, spec_correction)
 
-def theoSpectrum(seq, mods, pos, mass,  m_proton, m_hydrogen, m_oxygen, dm=0):
+def theoSpectrum(seq, blist, ylist, mods, pos, mass,
+                 m_proton, m_hydrogen, m_oxygen, dm=0):
+    # blist = [i - 2 for i in blist]
+    # ylist = [len(seq)-i for i in ylist]
     ## Y SERIES ##
     outy = []
-    for i in range(0,len(seq)):
-        yn = list(seq[i:])
+    # for i in range(1,len(seq)):
+    for i in ylist:
+        # yn = list(seq[i:])
+        yn = list(seq[-i:])
         if i > 0: nt = False
         else: nt = True
         fragy = getTheoMH(yn,nt,True,mass,
@@ -296,15 +301,17 @@ def theoSpectrum(seq, mods, pos, mass,  m_proton, m_hydrogen, m_oxygen, dm=0):
         outy += [fragy]
     ## B SERIES ##
     outb = []
-    for i in range(0,len(seq)):
-        bn = list(seq[::-1][i:])
+    # for i in range(1,len(seq)):
+    for i in blist:
+        bn = list(seq[:i][::-1])
+        # bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
         fragb = getTheoMH(bn,True,ct,mass,
                           m_proton,m_hydrogen,m_oxygen) + dm # TODO only add +dm to fragments up until n_pos
         outb += [fragb]
     ## FRAGMENT MATRIX ##
-    spec = [outb[::-1], outy[::-1]]
+    spec = [outb, outy[::-1]]
     ## ADD FIXED MODS ##
     for i, m in enumerate(mods):
         # bpos = range(0, pos[mods.index(i)]+1)
@@ -372,7 +379,7 @@ def makeFrags(seq): # TODO: SLOW
                       ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
                       ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
                       ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*++" for i in ylist]])
-    return(frags)
+    return(frags, blist, ylist)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     
@@ -461,12 +468,15 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
+    ## FRAGMENT NAMES ##
+    frags, blist, ylist = makeFrags(plainseq)
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    theo_spec = theoSpectrum(plainseq, mods, pos, mass, m_proton, m_hydrogen, m_oxygen)
-    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton) # TODO df->array
+    theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
+                             m_proton, m_hydrogen, m_oxygen)
+    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton)
     closest_proof = []
     closest_pfrags = []
     closest_dm = []
@@ -482,8 +492,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             else:
                 dm_theo_spec = theo_spec.copy()
                 dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
-            ## FRAGMENT NAMES ##
-            frags = makeFrags(plainseq)
             ## ASSIGN IONS WITHIN SPECTRA ##
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
