@@ -10,6 +10,7 @@ import argparse
 import concurrent.futures
 import configparser
 from datetime import datetime
+import inspect
 import itertools
 import logging
 import math
@@ -688,7 +689,7 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
         lsmods += [str(list(smods)[i]), '\t', str(list(smods.index)[i]), '\n']
     lsmods = ''.join(lsmods)
         
-    summary = '''\
+    summary = inspect.cleandoc('''\
     DATE = {date}
     FILE = {infile}
     RAW = {raw}
@@ -708,7 +709,7 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
     total=str(len(df)),
     refrag=str(len(df[df.REFRAG_name!='EXPERIMENTAL'])),
     perc=str(round(len(df[df.REFRAG_name!='EXPERIMENTAL'])/len(df)*100,2)),
-    smods=lsmods)
+    smods=lsmods))
     
     with open(outpath, 'w') as f:
         f.write(summary)
@@ -850,11 +851,11 @@ if __name__ == '__main__':
 
     # logging debug level. By default, info level
     if os.path.isdir(args.infile):
-        log_file = os.path.join(args.infile + '/ReFrag_log.txt')
-        log_file_debug = os.path.join(args.infile + '/ReFrag_log_debug.txt')
+        log_file = os.path.join(args.infile + '/ReFrag.log')
+        log_file_debug = os.path.join(args.infile + '/ReFrag_debug.log')
     else:
-        log_file = args.infile[:-4] + 'ReFrag_log.txt'
-        log_file_debug = args.infile[:-4] + 'ReFrag_log_debug.txt'
+        log_file = args.infile[:-4] + '_ReFrag.log'
+        log_file_debug = args.infile[:-4] + '_ReFrag_debug.log'
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s - %(levelname)s - %(message)s',
