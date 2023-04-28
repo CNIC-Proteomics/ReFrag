@@ -541,17 +541,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             ## ASSIGN IONS WITHIN SPECTRA ##
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
-            ## MATCHED IONS CHECK ##
-            # check = list(assign.MZ)
-            # if check in assigndblist:
-            #     found = assigndblist.index(check)
-            #     closest_proof.append(closest_proof[found])
-            #     closest_dm.append(closest_dm[found])
-            #     closest_name.append(closest_name[found])
-            #     closest_pos.append(closest_name[found])
-            # else:
-            #     assigndb += [assign]
-            #     assigndblist += [list(assign.MZ)]
             ## PPM ERRORS ##
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
             if sub.Charge == 2:
@@ -680,7 +669,7 @@ def parallelFragging(query, parlist):
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])), sp])
 
-def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
+def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
     
     smods = df.REFRAG_name.value_counts()
     smods = smods[smods.index!='EXPERIMENTAL']
@@ -690,13 +679,15 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
     lsmods = ''.join(lsmods)
         
     summary = inspect.cleandoc('''\
-    DATE = {date}
-    FILE = {infile}
-    RAW = {raw}
-    DMLIST = {dmlist}
-    SEARCH TIME = {time}
-    TOTAL PSMs =\t\t{total}
-    REFRAGGED PSMs =\t{refrag} ({perc}%)
+    DATE\t{date}
+    FILE\t{infile}
+    RAW\t{raw}
+    DMLIST\t{dmlist}
+    SEARCH TIME\t{time}
+    TOTAL PSMs\t{total}
+    TARGET PSMs\t{target}
+    REFRAGGED PSMs\t{refrag}\t({perc}% of total)
+    REFRAGGED TARGET PSMs\t{refragt}\t({perct}% of targets)
     
     THEORETICAL MODIFICATIONS FREQUENCY
     
@@ -707,8 +698,11 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt):
     dmlist=str(dmlist),
     time=str(endt-startt),
     total=str(len(df)),
+    target=str(len(df[~df.protein.str.startswith(decoy)])),
     refrag=str(len(df[df.REFRAG_name!='EXPERIMENTAL'])),
     perc=str(round(len(df[df.REFRAG_name!='EXPERIMENTAL'])/len(df)*100,2)),
+    refragt=str(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith('DECOY'))])),
+    perct=str(round(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith('DECOY'))])/len(df[~df.protein.str.startswith(decoy)])*100,2)),
     smods=lsmods))
     
     with open(outpath, 'w') as f:
@@ -724,6 +718,7 @@ def main(args):
     chunks = int(mass._sections['Parameters']['batch_size'])
     ftol = float(mass._sections['Parameters']['f_tol'])
     dmtol = float(mass._sections['Parameters']['dm_tol'])
+    decoy_label = str(mass._sections['Parameters']['decoy_label'])
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
@@ -806,12 +801,12 @@ def main(args):
         df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
         logging.info("Done.")
         logging.info("Writing summary file...")
-        outsum = Path(os.path.splitext(infile)[0] + "_SUMMARY.txt")
+        outsum = Path(os.path.splitext(infile)[0] + "_SUMMARY.tsv")
         if len(args.scanrange) > 0:
             outsum = Path(os.path.splitext(infile)[0] + "_" +
                            str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
-                           "_SUMMARY.txt")
-        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime)
+                           "_SUMMARY.tsv")
+        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_label)
         logging.info("Done.")
     return
 
