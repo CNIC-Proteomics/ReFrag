@@ -838,7 +838,10 @@ if __name__ == '__main__':
     
     # parse config
     mass = configparser.ConfigParser(inline_comment_prefixes='#')
-    mass.read(args.config)
+    if Path(args.config).isfile:
+        mass.read(args.config)
+    else:
+        sys.exit('ERROR: Cannot find configuration file at' + str(args.config))
     # if something is changed, write a copy of ini
     if mass.getint('Logging', 'create_ini') == 1:
         with open(os.path.dirname(args.infile) + '/ReFrag.ini', 'w') as newconfig:
