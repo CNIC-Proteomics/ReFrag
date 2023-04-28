@@ -577,7 +577,8 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
-    if pd.isnull(query.modification_info): 
+    dmdf = parlist[8]
+    if pd.isnull(query.modification_info):
         sequence = plain_peptide
         mod = []
         pos = []
@@ -769,7 +770,7 @@ def main(args):
         tqdm.pandas(position=0, leave=True)
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
-        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen]
+        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, dmdf2]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
