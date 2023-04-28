@@ -647,6 +647,9 @@ def parallelFragging(query, parlist):
                                  np.delete(best[4], best_label == 'EXPERIMENTAL'),
                                  np.delete(best[5], best_label == 'EXPERIMENTAL')])
                 best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
+            # Prefer cases where the AA location is possible according to UNIMOD
+            pos_check = np.array([plain_peptide[int(i)]+str(int(bool(i))) if i==0 or i==len(plain_peptide)-1 else plain_peptide[int(i)] for i in best[1]])
+            name_check = np.array([dmdf[3][dmdf[1]==i][0] for i in best[0]])
         # Keep first after filtering
         best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
         best_label = np.array(best_label[0])
