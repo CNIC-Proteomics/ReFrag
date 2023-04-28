@@ -748,8 +748,8 @@ def main(args):
         msdata, mode, index2 = readRaw(Path(rawfile))
         # Read DM file
         logging.info("Reading DM file (" + str(os.path.basename(Path(args.dmfile))) + ")...")
-        dmdf = pd.read_csv(Path(args.dmfile), sep="\t")
-        dmdf.columns = ["name", "mass", "site"]
+        dmdf = pd.read_csv(Path(args.dmfile), sep="\t") # TODO check for duplicates (when both DM and SITE is the same)
+        dmdf.columns = ["name", "mass", "site", "site_tiebreaker"]
         dmdf.site = dmdf.site.apply(literal_eval)
         dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
         dmdf2 = dmdf.T.to_numpy()
