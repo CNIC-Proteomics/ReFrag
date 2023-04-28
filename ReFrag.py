@@ -358,14 +358,14 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
         outb += [fragb]
     ## FRAGMENT MATRIX ##
     spec = [outb, outy[::-1]]
-    ## ADD FIXED MODS ##
-    for i, m in enumerate(mods):
+    ## ADD FIXED MODS ## # TODO two modes, use mods from config file or input table
+    # for i, m in enumerate(mods):
         # bpos = range(0, pos[mods.index(i)]+1)
         # ypos = range(len(seq)-pos[mods.index(i)]-1, len(seq))
-        bpos = pos[i]
-        ypos = len(seq)-pos[i]-1
-        spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
-        spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
+        # bpos = pos[i]
+        # ypos = len(seq)-pos[i]-1
+        # spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
+        # spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
     return(spec)
 
 def addMod(spec, dm, pos, len_seq):
