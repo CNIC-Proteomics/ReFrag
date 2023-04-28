@@ -847,7 +847,7 @@ if __name__ == '__main__':
     
     # parse config
     mass = configparser.ConfigParser(inline_comment_prefixes='#')
-    if Path(args.config).isfile:
+    if Path(args.config).is_file():
         mass.read(args.config)
     else:
         sys.exit('ERROR: Cannot find configuration file at' + str(args.config))
