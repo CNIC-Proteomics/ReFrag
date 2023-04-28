@@ -752,6 +752,8 @@ def main(args):
         dmdf.columns = ["name", "mass", "site"]
         dmdf.site = dmdf.site.apply(literal_eval)
         dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
+        dmdf2 = dmdf.T.to_numpy()
+        dmdf2[3] = np.array([''.join(set(''.join(literal_eval(i)).replace('N-term', '0').replace('C-term', '1'))) for i in dmdf2[3]]) # Nt = 0, Ct = 1
         logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
         # Prepare to parallelize
         logging.info("Refragging...")
