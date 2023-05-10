@@ -10,7 +10,6 @@ import argparse
 import concurrent.futures
 import configparser
 from datetime import datetime
-import inspect
 import itertools
 import logging
 import math
@@ -750,21 +749,18 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
         lsmods += [str(list(smods)[i]), '\t', str(list(smods.index)[i]), '\n']
     lsmods = ''.join(lsmods)
         
-    summary = inspect.cleandoc('''\
-    DATE\t{date}
-    FILE\t{infile}
-    RAW\t{raw}
-    DMLIST\t{dmlist}
-    SEARCH TIME\t{time}
-    TOTAL PSMs\t{total}
-    TARGET PSMs\t{target}
-    REFRAGGED PSMs\t{refrag}\t({perc}% of total)
-    REFRAGGED TARGET PSMs\t{refragt}\t({perct}% of targets)
-    
-    THEORETICAL MODIFICATIONS FREQUENCY
-    
-    {smods}\
-    '''.format(date=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+    summary = (
+    "DATE\t{date}\n"
+    "FILE\t{infile}\n"
+    "RAW\t{raw}\n"
+    "DMLIST\t{dmlist}\n"
+    "SEARCH TIME\t{time}\n"
+    "TOTAL PSMs\t{total}\n"
+    "TARGET PSMs\t{target}\n"
+    "REFRAGGED PSMs\t{refrag}\t({perc}% of total)\n"
+    "REFRAGGED TARGET PSMs\t{refragt}\t({perct}% of targets)\n\n"
+    "THEORETICAL MODIFICATIONS FREQUENCY\n\n"
+    "{smods}").format(date=datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
     infile=str(infile),
     raw=str(raw),
     dmlist=str(dmlist),
