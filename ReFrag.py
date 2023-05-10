@@ -536,7 +536,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
         temp_dm = []
         temp_name = []
         temp_pos = []
-        temp_tie = []
         tiebreaker = []
         for dm_pos in row.idx:
             ## DM OPERATIONS ##
@@ -578,18 +577,11 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
             temp_dm.append(dm)
             temp_name.append(row['name'])
             temp_pos.append(dm_pos)
-            temp_tie.append(False)
         ## TIE-BREAKER ##
         if len(set(tiebreaker)) <= len(plainseq)-len(plainseq)*tmin:
-            # TODO rescore only tied candidates?
-            temp_proof = []
-            temp_pfrags = []
-            temp_dm = []
-            temp_name = []
-            temp_pos = []
-            temp_tie = []
-            tiebreaker = []
-            for dm_pos in row.idx:
+            temp_tie = [True if tiebreaker.count(tiebreaker[i]) > 1 else False for i in range(len(tiebreaker))]
+            for i in range(len(row.idx)):
+                dm_pos = row.idx[i]
                 ## DM OPERATIONS ##
                 if dm_pos == -1: # Non-modified
                     dm_theo_spec = theo_spec.copy()
@@ -623,13 +615,13 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                     proof = np.array([proof[0][proof[1] <= ftol+ttol],
                                       proof[1][proof[1] <= ftol+ttol],
                                       proof[2][proof[1] <= ftol+ttol]])
-                tiebreaker.append(''.join(list(pfrags)))
-                temp_proof.append(proof)
-                temp_pfrags.append(pfrags)
-                temp_dm.append(dm)
-                temp_name.append(row['name'])
-                temp_pos.append(dm_pos)
-                temp_tie.append(True)
+                temp_proof[i] = proof
+                temp_pfrags[i] = pfrags
+                temp_dm[i] = dm
+                temp_name[i] = row['name']
+                temp_pos[i] = dm_pos
+        else:
+            temp_tie = [False]*len(temp_proof)
         closest_proof += temp_proof
         closest_pfrags += temp_pfrags
         closest_dm += temp_dm
