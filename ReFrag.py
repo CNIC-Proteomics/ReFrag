@@ -528,6 +528,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     closest_dm = []
     closest_name = []
     closest_pos = []
+    closest_tie = []
     for index, row in dm_set.iterrows():
         dm = row.mass
         temp_proof = []
@@ -535,6 +536,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
         temp_dm = []
         temp_name = []
         temp_pos = []
+        temp_tie = []
         tiebreaker = []
         for dm_pos in row.idx:
             ## DM OPERATIONS ##
@@ -576,6 +578,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
             temp_dm.append(dm)
             temp_name.append(row['name'])
             temp_pos.append(dm_pos)
+            temp_tie.append(False)
         ## TIE-BREAKER ##
         if len(set(tiebreaker)) <= len(plainseq)-len(plainseq)*tmin:
             # TODO rescore only tied candidates?
@@ -584,6 +587,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
             temp_dm = []
             temp_name = []
             temp_pos = []
+            temp_tie = []
             tiebreaker = []
             for dm_pos in row.idx:
                 ## DM OPERATIONS ##
@@ -625,12 +629,14 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 temp_dm.append(dm)
                 temp_name.append(row['name'])
                 temp_pos.append(dm_pos)
+                temp_tie.append(True)
         closest_proof += temp_proof
         closest_pfrags += temp_pfrags
         closest_dm += temp_dm
         closest_name += temp_name
         closest_pos += temp_pos
-    return(closest_proof, closest_pfrags, closest_dm, closest_name, closest_pos)
+        closest_tie += temp_tie
+    return(closest_proof, closest_pfrags, closest_dm, closest_name, closest_pos, closest_tie)
 
 def parallelFragging(query, parlist):
     m_proton = parlist[4]
@@ -652,7 +658,7 @@ def parallelFragging(query, parlist):
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
     exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
-    proof, pfrags, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
+    proof, pfrags, dm, name, position, tie = miniVseq(sub, plain_peptide, mod, pos,
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6],
@@ -670,7 +676,10 @@ def parallelFragging(query, parlist):
             pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
         else:
             if pfrags[i].size > 0:
-                hscore, isum = hyperscore(sub.Charge, exp_ions, proof[i], pfrags[i], parlist[1])
+                if tie[i]:
+                    hscore, isum = hyperscore(sub.Charge, exp_ions, proof[i], pfrags[i], parlist[1]+parlist[8])
+                else:
+                    hscore, isum = hyperscore(sub.Charge, exp_ions, proof[i], pfrags[i], parlist[1])
             else:
                 hscore = isum = 0
             #pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
