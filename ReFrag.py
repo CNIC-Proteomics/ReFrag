@@ -376,7 +376,7 @@ def addMod(spec, dm, pos, len_seq):
     spec[1] = spec[1][:ypos] + [y + dm for y in spec[1][ypos:]]
     return spec
     
-def errorMatrix(mz, theo_spec, m_proton):
+def errorMatrix(mz, theo_spec, m_proton, max_f_ch):
     '''
     Prepare ppm-error and experimental mass matrices.
     '''
@@ -390,10 +390,13 @@ def errorMatrix(mz, theo_spec, m_proton):
     mzs2 = np.transpose([np.array(mz)*2-m_proton]*(len(exp[0])))
     ## EXPERIMENTAL MASSES FOR CHARGE 3 ##
     mzs3 = np.transpose([np.array(mz)*3 - m_proton*2]*(len(exp[0])))
+    ## EXPERIMENTAL MASSES FOR CHARGE 4 ##
+    # mzs4 = np.transpose([np.array(mz)*4 - m_proton*3]*(len(exp[0])))
     ## PPM ERRORS ##
     terrors = np.absolute(np.divide(np.subtract(exp, theo_spec), theo_spec)*1000000)
     terrors2 = np.absolute(np.divide(np.subtract(mzs2, theo_spec), theo_spec)*1000000)
     terrors3 = np.absolute(np.divide(np.subtract(mzs3, theo_spec), theo_spec)*1000000)
+    # terrors4 = np.absolute(np.divide(np.subtract(mzs4, theo_spec), theo_spec)*1000000)
     
     exp = [i[0] for i in exp]
     
@@ -510,7 +513,8 @@ def findPos(dm_set, plainseq):
     return(dm_set)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
-             exp_spec, ions, spec_correction, m_proton, m_hydrogen, m_oxygen):
+             exp_spec, ions, spec_correction, m_proton, m_hydrogen, m_oxygen,
+             max_f_ch):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -522,7 +526,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     dm_set = findPos(dm_set, plainseq)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen)
-    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton)
+    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton, max_f_ch)
+    # TODO calculate errormatrix as much as max_fragment_charge requires
     closest_proof = []
     closest_pfrags = []
     closest_dm = []
@@ -542,7 +547,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
             ## PPM ERRORS ##
-            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
+            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton, max_f_ch)
+            # TODO calculate errormatrix as much as max_fragment_charge requires
             if sub.Charge == 2:
                 ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
                 if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
@@ -572,7 +578,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     return(closest_proof, closest_pfrags, closest_dm, closest_name, closest_pos)
 
 def parallelFragging(query, parlist):
-    m_proton = parlist[4]
+    m_proton = parlist[5]
     scan = query.scannum
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
@@ -594,7 +600,8 @@ def parallelFragging(query, parlist):
     proof, pfrags, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
-                                                 parlist[4], parlist[5], parlist[6])
+                                                 parlist[5], parlist[6], parlist[7],
+                                                 parlist[4])
     hyperscores = []
     hyperscores_label = []
     check = []
@@ -727,6 +734,7 @@ def main(args):
     chunks = int(mass._sections['Parameters']['batch_size'])
     ftol = float(mass._sections['Parameters']['f_tol'])
     dmtol = float(mass._sections['Parameters']['dm_tol'])
+    max_f_ch = float(mass._sections['Parameters']['max_fragment_charge'])
     decoy_label = str(mass._sections['Parameters']['decoy_label'])
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
@@ -775,7 +783,7 @@ def main(args):
         tqdm.pandas(position=0, leave=True)
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
-        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, dmdf2]
+        parlist = [mass, ftol, dmtol, dmdf, max_f_ch, m_proton, m_hydrogen, m_oxygen, dmdf2]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
