@@ -475,13 +475,9 @@ def makeAblines(texp, minv, assign, afrags, ions, tie=51):
     return(proof, pfrags)
 
 def findClosest(dm, dmdf, dmtol, pos):
-    exp = pd.DataFrame(['EXPERIMENTAL', dm, [pos], 0]).T
-    exp.columns = ['name', 'mass', 'site', 'distance']
-    dmdf["distance"] = abs(dmdf.mass - dm)
-    closest = dmdf[dmdf.distance<=dmtol]
-    closest = pd.concat([closest, exp])
-    closest.sort_values(by=['mass'], inplace=True, ascending=True)
-    closest.reset_index(drop=True, inplace=True)
+    cand = [i for i in range(len(dmdf[1])) if dmdf[1][i] > dm-dmtol and dmdf[1][i] < dm+dmtol]
+    closest = pd.DataFrame([dmdf[0][cand], dmdf[1][cand], dmdf[2][cand], dmdf[3][cand]]).T
+    closest.columns = ['name', 'mass', 'site', 'distance']
     return(closest)
 
 def findPos(dm_set, plainseq):
@@ -771,7 +767,7 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
     perc=str(round(len(df[df.REFRAG_name!='EXPERIMENTAL'])/len(df)*100,2)),
     refragt=str(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith('DECOY'))])),
     perct=str(round(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith('DECOY'))])/len(df[~df.protein.str.startswith(decoy)])*100,2)),
-    smods=lsmods))
+    smods=lsmods)
     
     with open(outpath, 'w') as f:
         f.write(summary)
@@ -822,8 +818,8 @@ def main(args):
         dmdf.columns = ["name", "mass", "site", "site_tiebreaker"]
         dmdf.site = dmdf.site.apply(literal_eval)
         dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
-        dmdf2 = dmdf.T.to_numpy()
-        dmdf2[3] = np.array([''.join(set(''.join(literal_eval(i)).replace('N-term', '0').replace('C-term', '1'))) for i in dmdf2[3]]) # Nt = 0, Ct = 1
+        dmdf = dmdf.T.to_numpy()
+        dmdf[3] = np.array([''.join(set(''.join(literal_eval(i)).replace('N-term', '0').replace('C-term', '1'))) for i in dmdf2[3]]) # Nt = 0, Ct = 1
         logging.info("\t" + str(len(dmdf)) + " theoretical DMs read.")
         # Prepare to parallelize
         logging.info("Refragging...")
