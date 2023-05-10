@@ -445,10 +445,10 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
 
     return(c_assign, frags[:5].flatten())
 
-def makeAblines(texp, minv, assign, afrags, ions):
+def makeAblines(texp, minv, assign, afrags, ions, tie=51):
     masses = np.array([texp, minv])
-    matches = np.array([masses[0][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)],
-                        masses[1][(masses[1]<51) & ((masses[0]+masses[1])>=0.001)]])
+    matches = np.array([masses[0][(masses[1]<tie) & ((masses[0]+masses[1])>=0.001)],
+                        masses[1][(masses[1]<tie) & ((masses[0]+masses[1])>=0.001)]])
     if len(matches[0]) <= 0:
         proof = np.array([[0],[0],[0]])
         pfrags = np.array([])
@@ -462,17 +462,17 @@ def makeAblines(texp, minv, assign, afrags, ions):
         proof = np.array([[0],[0],[0]])
         pfrags = np.array([])
         return(proof, pfrags)
-    temp_mi = temp_mi[check<=51]
+    temp_mi = temp_mi[check<=tie]
     proof = np.array([temp_mi,
-                      temp_mi1[check<=51],
+                      temp_mi1[check<=tie],
                       np.repeat(ions[1][np.isin(ions[0], temp_mi)], np.unique(temp_mi, return_counts=True)[1])])
-    pfrags = temp_ci1[check<=51]
+    pfrags = temp_ci1[check<=tie]
     if len(proof[0]) == 0:
         mzcycle = itertools.cycle([ions[0][0], ions[0][1]])
         proof = np.array([temp_mi,
-                          temp_mi1[check<=51],
+                          temp_mi1[check<=tie],
                           [next(mzcycle) for i in range(len(temp_mi))]])
-        pfrags = temp_ci1[check<=51]
+        pfrags = temp_ci1[check<=tie]
     return(proof, pfrags)
 
 def findClosest(dm, dmdf, dmtol, pos):
@@ -509,8 +509,8 @@ def findPos(dm_set, plainseq):
     dm_set = dm_set[dm_set.idx.apply(lambda x: len(x)) > 0]
     return(dm_set)
 
-def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
-             exp_spec, ions, spec_correction, m_proton, m_hydrogen, m_oxygen):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
+             spec_correction, m_proton, m_hydrogen, m_oxygen, ttol, tmin):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -530,6 +530,12 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
     closest_pos = []
     for index, row in dm_set.iterrows():
         dm = row.mass
+        temp_proof = []
+        temp_pfrags = []
+        temp_dm = []
+        temp_name = []
+        temp_pos = []
+        tiebreaker = []
         for dm_pos in row.idx:
             ## DM OPERATIONS ##
             if dm_pos == -1: # Non-modified
@@ -540,7 +546,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
             ## ASSIGN IONS WITHIN SPECTRA ##
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
-            # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
+            # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal and assign and minv are the only things that can change the proof)
             ## PPM ERRORS ##
             dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
             if sub.Charge == 2:
@@ -564,11 +570,66 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf,
                 proof = np.array([proof[0][proof[1] <= ftol],
                                   proof[1][proof[1] <= ftol],
                                   proof[2][proof[1] <= ftol]])
-            closest_proof.append(proof)
-            closest_pfrags.append(pfrags)
-            closest_dm.append(dm)
-            closest_name.append(row['name'])
-            closest_pos.append(dm_pos)
+            tiebreaker.append(''.join(list(pfrags)))
+            temp_proof.append(proof)
+            temp_pfrags.append(pfrags)
+            temp_dm.append(dm)
+            temp_name.append(row['name'])
+            temp_pos.append(dm_pos)
+        ## TIE-BREAKER ##
+        if len(set(tiebreaker)) <= len(plainseq)-len(plainseq)*tmin:
+            # TODO rescore only tied candidates?
+            temp_proof = []
+            temp_pfrags = []
+            temp_dm = []
+            temp_name = []
+            temp_pos = []
+            tiebreaker = []
+            for dm_pos in row.idx:
+                ## DM OPERATIONS ##
+                if dm_pos == -1: # Non-modified
+                    dm_theo_spec = theo_spec.copy()
+                    # dm_theo_spec = [x+dm for x in dm_theo_spec[0]] + [x+dm for x in dm_theo_spec[1]]
+                else:
+                    dm_theo_spec = theo_spec.copy()
+                    dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
+                ## ASSIGN IONS WITHIN SPECTRA ##
+                assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
+                # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
+                ## PPM ERRORS ##
+                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
+                if sub.Charge == 2:
+                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
+                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
+                elif sub.Charge < 2:
+                    ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
+                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
+                elif sub.Charge >= 3:
+                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
+                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
+                else:
+                    sys.exit('ERROR: Invalid charge value!')
+                minv = list(ppmfinal.min(axis=1))
+                ## ABLINES ##
+                proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, ftol+ttol)
+                if pfrags.size > 0:
+                    proof[2] = proof[2] * spec_correction
+                    proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
+                    pfrags = pfrags[proof[1] <= ftol+ttol]
+                    proof = np.array([proof[0][proof[1] <= ftol+ttol],
+                                      proof[1][proof[1] <= ftol+ttol],
+                                      proof[2][proof[1] <= ftol+ttol]])
+                tiebreaker.append(''.join(list(pfrags)))
+                temp_proof.append(proof)
+                temp_pfrags.append(pfrags)
+                temp_dm.append(dm)
+                temp_name.append(row['name'])
+                temp_pos.append(dm_pos)
+        closest_proof += temp_proof
+        closest_pfrags += temp_pfrags
+        closest_dm += temp_dm
+        closest_name += temp_name
+        closest_pos += temp_pos
     return(closest_proof, closest_pfrags, closest_dm, closest_name, closest_pos)
 
 def parallelFragging(query, parlist):
@@ -577,7 +638,7 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
-    dmdf = parlist[8]
+    dmdf = parlist[7]
     if pd.isnull(query.modification_info):
         sequence = plain_peptide
         mod = []
@@ -594,7 +655,8 @@ def parallelFragging(query, parlist):
     proof, pfrags, dm, name, position = miniVseq(sub, plain_peptide, mod, pos,
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
-                                                 parlist[4], parlist[5], parlist[6])
+                                                 parlist[4], parlist[5], parlist[6],
+                                                 parlist[8], parlist[9])
     hyperscores = []
     hyperscores_label = []
     check = []
@@ -726,6 +788,8 @@ def main(args):
     # Parameters
     chunks = int(mass._sections['Parameters']['batch_size'])
     ftol = float(mass._sections['Parameters']['f_tol'])
+    ttol = float(mass._sections['Parameters']['t_tol'])
+    tmin = float(mass._sections['Parameters']['t_min'])
     dmtol = float(mass._sections['Parameters']['dm_tol'])
     decoy_label = str(mass._sections['Parameters']['decoy_label'])
     m_proton = mass.getfloat('Masses', 'm_proton')
@@ -775,7 +839,7 @@ def main(args):
         tqdm.pandas(position=0, leave=True)
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
-        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, dmdf2]
+        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, dmdf2, ttol, tmin]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
