@@ -477,10 +477,11 @@ def makeAblines(texp, minv, assign, afrags, ions, tie=51):
 def findClosest(dm, dmdf, dmtol, pos):
     cand = [i for i in range(len(dmdf[1])) if dmdf[1][i] > dm-dmtol and dmdf[1][i] < dm+dmtol]
     closest = pd.DataFrame([dmdf[0][cand], dmdf[1][cand], dmdf[2][cand], dmdf[3][cand]]).T
-    closest.columns = ['name', 'mass', 'site', 'distance']
+    closest.columns = ['name', 'mass', 'site', 'site_tiebreaker']
+    closest = closest.append({'name':'EXPERIMENTAL', 'mass':dm, 'site':[pos], 'site_tiebreaker':[pos]}, ignore_index=True)
     return(closest)
 
-def findPos(dm_set, plainseq):
+def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead of DF
     def _where(sites, plainseq):
         sites = sites.site
         subpos = []
@@ -631,7 +632,7 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
-    dmdf = parlist[7]
+    dmdf = parlist[3]
     if pd.isnull(query.modification_info):
         sequence = plain_peptide
         mod = []
@@ -649,7 +650,7 @@ def parallelFragging(query, parlist):
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6],
-                                                 parlist[8], parlist[9])
+                                                 parlist[7], parlist[8])
     hyperscores = []
     hyperscores_label = []
     check = []
@@ -832,7 +833,7 @@ def main(args):
         tqdm.pandas(position=0, leave=True)
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
-        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, dmdf2, ttol, tmin]
+        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
