@@ -176,13 +176,13 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
     # temp = temp.drop_duplicates(subset='FRAGS', keep="first") # Count each kind of fragment only once
     if len(matched_ions[3][SERIES == 'b']) == 0:
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
-        i_b = 0
+        i_b = 1
     else:
         n_b = (SERIES_C == 'b').sum()
         i_b = matched_ions[3][SERIES == 'b'].sum()
     if len(matched_ions[3][SERIES == 'y']) == 0:
         n_y = 1 # So that hyperscore will not be 0 if one series is missing
-        i_y = 0
+        i_y = 1
     else:
         n_y = (SERIES_C == 'y').sum()
         i_y = matched_ions[3][SERIES == 'y'].sum()
