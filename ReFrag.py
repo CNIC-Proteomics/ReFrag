@@ -444,7 +444,17 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
 
     return(c_assign, frags[:5].flatten())
 
-def makeAblines(texp, minv, assign, afrags, ions, tie=51):
+def fragCheck(plainseq, blist, ylist, dm_pos):
+    ballowed = (['b'+str(i)+'*' for i in blist if i >= dm_pos+1] +
+                ['b'+str(i)+'*++' for i in blist if i >= dm_pos+1] +
+                ['b'+str(i)+'*+++' for i in blist if i >= dm_pos+1])
+    yallowed = (['y'+str(i)+'*' for i in ylist if i >= len(plainseq)-dm_pos] +
+                ['y'+str(i)+'*++' for i in ylist if i >= len(plainseq)-dm_pos] +
+                ['y'+str(i)+'*+++' for i in ylist if i >= len(plainseq)-dm_pos])
+    allowed = ballowed + yallowed
+    return(allowed)
+
+def makeAblines(texp, minv, assign, afrags, ions, allowed, tie=51):
     masses = np.array([texp, minv])
     matches = np.array([masses[0][(masses[1]<tie) & ((masses[0]+masses[1])>=0.001)],
                         masses[1][(masses[1]<tie) & ((masses[0]+masses[1])>=0.001)]])
@@ -472,7 +482,7 @@ def makeAblines(texp, minv, assign, afrags, ions, tie=51):
                           temp_mi1[check<=tie],
                           [next(mzcycle) for i in range(len(temp_mi))]])
         pfrags = temp_ci1[check<=tie]
-    # TODO: CLEAN UP PFRAGS BY 1) DUPLICATES  2) NONEXISTENT MODIFIED FRAGMENTS
+    # CLEAN UP PFRAGS BY 1) DUPLICATES 2) NONEXISTENT MODIFIED FRAGMENTS
     if len(set(pfrags)) < len(pfrags):
         sorting = pfrags.argsort()
         pfrags = pfrags[sorting]
@@ -494,14 +504,11 @@ def makeAblines(texp, minv, assign, afrags, ions, tie=51):
         proof[2] = proof[2][proof[0].argsort()]
         pfrags = np.array(list(set(pfrags)))
         pfrags = pfrags[proof[0].argsort()]
-        
-        # pfrags[pfrags.argsort()]
-        # pfrags[pfrags.argsort()]
-        # pfrags[pfrags.argsort()]
-        
-        # proof_mz_groups = np.split(proof[1,:], np.unique(proof[0,:], return_index=True)[1][1:])
-        # proof_ppm_groups = np.split(proof[1,:], np.unique(proof[0,:], return_index=True)[1][1:])
-        # proof_int_groups = np.split(proof[1,:], np.unique(proof[0,:], return_index=True)[1][1:])
+    fragfilter = [True if i not in allowed else False for i in pfrags]
+    pfrags = pfrags[fragfilter]
+    proof = np.array([proof[0][fragfilter],
+                      proof[1][fragfilter],
+                      proof[2][fragfilter]])
     return(proof, pfrags)
 
 def findClosest(dm, dmdf, dmtol, pos):
@@ -564,6 +571,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
         temp_pos = []
         tiebreaker = []
         for dm_pos in row.idx:
+            allowed = fragCheck(plainseq, blist, ylist, dm_pos)
             ## DM OPERATIONS ##
             if dm_pos == -1: # Non-modified
                 dm_theo_spec = theo_spec.copy()
@@ -589,7 +597,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 sys.exit('ERROR: Invalid charge value!')
             minv = list(ppmfinal.min(axis=1))
             ## ABLINES ##
-            proof, pfrags = makeAblines(texp, minv, assign, afrags, ions)
+            proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed)
             if pfrags.size > 0:
                 proof[2] = proof[2] * spec_correction
                 proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
@@ -633,7 +641,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                     sys.exit('ERROR: Invalid charge value!')
                 minv = list(ppmfinal.min(axis=1))
                 ## ABLINES ##
-                proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, ftol+ttol)
+                proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed, ftol+ttol)
                 if pfrags.size > 0:
                     proof[2] = proof[2] * spec_correction
                     proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
