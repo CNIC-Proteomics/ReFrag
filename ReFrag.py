@@ -472,6 +472,36 @@ def makeAblines(texp, minv, assign, afrags, ions, tie=51):
                           temp_mi1[check<=tie],
                           [next(mzcycle) for i in range(len(temp_mi))]])
         pfrags = temp_ci1[check<=tie]
+    # TODO: CLEAN UP PFRAGS BY 1) DUPLICATES  2) NONEXISTENT MODIFIED FRAGMENTS
+    if len(set(pfrags)) < len(pfrags):
+        sorting = pfrags.argsort()
+        pfrags = pfrags[sorting]
+        proof = np.array([proof[0][sorting], proof[1][sorting], proof[2][sorting]])
+        
+        proof_mz_groups = np.split(proof[0,:], np.unique(pfrags, return_index=True)[1][1:])
+        proof_ppm_groups = np.split(proof[1,:], np.unique(pfrags, return_index=True)[1][1:])
+        proof_int_groups = np.split(proof[2,:], np.unique(pfrags, return_index=True)[1][1:])
+        for i in range(len(proof_ppm_groups)):
+            if len(proof_ppm_groups[i]) > 1:
+                proof_mz_groups[i] = proof_mz_groups[np.argmin(proof_ppm_groups[i])]
+                proof_ppm_groups[i] = proof_ppm_groups[np.argmin(proof_ppm_groups[i])]
+                proof_int_groups[i] = proof_int_groups[np.argmin(proof_ppm_groups[i])]
+        proof = np.array([np.concatenate(proof_mz_groups),
+                          np.concatenate(proof_ppm_groups),
+                          np.concatenate(proof_int_groups)])
+        proof[0] = proof[0][proof[0].argsort()]
+        proof[1] = proof[1][proof[0].argsort()]
+        proof[2] = proof[2][proof[0].argsort()]
+        pfrags = np.array(list(set(pfrags)))
+        pfrags = pfrags[proof[0].argsort()]
+        
+        # pfrags[pfrags.argsort()]
+        # pfrags[pfrags.argsort()]
+        # pfrags[pfrags.argsort()]
+        
+        # proof_mz_groups = np.split(proof[1,:], np.unique(proof[0,:], return_index=True)[1][1:])
+        # proof_ppm_groups = np.split(proof[1,:], np.unique(proof[0,:], return_index=True)[1][1:])
+        # proof_int_groups = np.split(proof[1,:], np.unique(proof[0,:], return_index=True)[1][1:])
     return(proof, pfrags)
 
 def findClosest(dm, dmdf, dmtol, pos):
