@@ -178,13 +178,13 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
     else:
-        n_b = (SERIES_C == 'b').sum()
+        n_b = (SERIES == 'b').sum()
         i_b = matched_ions[3][SERIES == 'b'].sum()
     if len(matched_ions[3][SERIES == 'y']) == 0:
         n_y = 1 # So that hyperscore will not be 0 if one series is missing
         i_y = 1
     else:
-        n_y = (SERIES_C == 'y').sum()
+        n_y = (SERIES == 'y').sum()
         i_y = matched_ions[3][SERIES == 'y'].sum()
     try:
         hs = (math.log10(math.factorial(n_b) * math.factorial(n_y)) + math.log10(i_b * i_y))
