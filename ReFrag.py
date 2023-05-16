@@ -493,9 +493,11 @@ def makeAblines(texp, minv, assign, afrags, ions, allowed, tie=51):
         proof_int_groups = np.split(proof[2,:], np.unique(pfrags, return_index=True)[1][1:])
         for i in range(len(proof_ppm_groups)):
             if len(proof_ppm_groups[i]) > 1:
-                proof_mz_groups[i] = proof_mz_groups[np.argmin(proof_ppm_groups[i])]
-                proof_ppm_groups[i] = proof_ppm_groups[np.argmin(proof_ppm_groups[i])]
-                proof_int_groups[i] = proof_int_groups[np.argmin(proof_ppm_groups[i])]
+                amin = np.argmin(proof_ppm_groups[i])
+                proof_mz_groups[i] = np.array([proof_mz_groups[i][amin]])
+                proof_ppm_groups[i] = np.array([proof_ppm_groups[i][amin]])
+                proof_int_groups[i] = np.array([proof_int_groups[i][amin]])
+        # acheck = (len(np.concatenate(proof_mz_groups)) == len(np.concatenate(proof_ppm_groups)) == len(np.concatenate(proof_int_groups)))
         proof = np.array([np.concatenate(proof_mz_groups),
                           np.concatenate(proof_ppm_groups),
                           np.concatenate(proof_int_groups)])
