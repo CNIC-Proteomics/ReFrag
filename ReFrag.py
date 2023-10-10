@@ -757,7 +757,7 @@ def parallelFragging(query, parlist):
                         best_label = best_label[bool_check]
         # Keep closest to experimental # TODO mark several possible locations (same score)
         # best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
-        best_index = int(np.where(abs(best[0]-sub.DM) == min(abs(best[0]-sub.DM)))[0])
+        best_index = int(np.where(abs(best[0]-sub.DM) == min(abs(best[0]-sub.DM)))[0][0])
         best = np.array([best[0][best_index], best[1][best_index], best[2][best_index],
                          best[3][best_index], best[4][best_index], best[5][best_index]])
         best_label = np.array(best_label[best_index])
