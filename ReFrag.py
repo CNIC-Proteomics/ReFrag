@@ -755,9 +755,12 @@ def parallelFragging(query, parlist):
                     if sum(bool_check) > 0:
                         best = np.array([best[i][bool_check] for i in range(len(best))])
                         best_label = best_label[bool_check]
-        # Keep first after filtering # TODO mark several possible locations (same score)
-        best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
-        best_label = np.array(best_label[0])
+        # Keep closest to experimental # TODO mark several possible locations (same score)
+        # best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
+        best_index = int(np.where(abs(best[0]-sub.DM) == min(abs(best[0]-sub.DM)))[0])
+        best = np.array([best[0][best_index], best[1][best_index], best[2][best_index],
+                         best[3][best_index], best[4][best_index], best[5][best_index]])
+        best_label = np.array(best_label[best_index])
     elif len(best[0]) == 1:
         best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
         best_label = np.array(best_label[0])
@@ -933,6 +936,7 @@ if __name__ == '__main__':
         
     defaultconfig = os.path.join(os.path.dirname(__file__), "config/ReFrag.ini")
     
+    # TODO parameter: exclude DM range (consider as NM)= default (-3, 0)
     parser.add_argument('-i',  '--infile', required=True, help='MSFragger results file')
     parser.add_argument('-r',  '--rawfile', required=True, help='MS Data file (MGF or MZML)')
     parser.add_argument('-d',  '--dmfile', required=True, help='DeltaMass file')
