@@ -750,7 +750,9 @@ def parallelFragging(query, parlist):
                 if len(best[0]) > 1:
                     # Prefer cases where the AA location is possible according to UNIMOD
                     pos_check = np.array([plain_peptide[int(i)]+str(int(bool(i))) if i==0 or i==len(plain_peptide)-1 else plain_peptide[int(i)] for i in best[1]])
-                    name_check = np.array([dmdf[3][dmdf[1]==i][0] for i in best[0]])
+                    name_check = np.array([dmdf[3][dmdf[1]==i][0] if i!=0 else 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for i in best[0]])
+                    name_check[np.where(name_check=='C-term')] = plain_peptide[-1] # TODO consider AA in other positions that match the first/last AA
+                    name_check[np.where(name_check=='N-term')] = plain_peptide[0]
                     bool_check = [True if len(set(pos_check[i]).intersection(name_check[i]))>0 else False for i in range(len(pos_check))]
                     if sum(bool_check) > 0:
                         best = np.array([best[i][bool_check] for i in range(len(best))])
