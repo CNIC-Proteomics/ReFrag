@@ -894,7 +894,7 @@ def main(args):
         df = df.drop('spectrum', axis = 1)
         df['templist'] = refrags
         df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
-        df['REFRAG_MZ'] = (df.REFRAG_MH + (df.charge-1)*m_proton) / df.charge
+        df['REFRAG_exp_MZ'] = (df.REFRAG_MH + (df.charge-1)*m_proton) / df.charge
         df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
         df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
         df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
