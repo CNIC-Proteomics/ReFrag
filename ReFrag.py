@@ -119,16 +119,8 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz
         peaks = s.get_peaks()
         ions = np.array([peaks[0], peaks[1]])
     # Deisotope (experimental)
-    test_tolerance = 0.005
-    isoids = [np.isclose(ions[0], i-m_proton, atol=test_tolerance, rtol=0).any() for i in ions[0]]
+    isoids = [np.isclose(ions[0], i-m_proton, atol=0.005, rtol=0).any() for i in ions[0]]
     ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
-    #isoions = np.roll((ions[0] - m_proton), -1)
-    #isoions2 = np.roll((ions[0] - 2*m_proton), -1)
-    #isoions = np.concatenate((ions[0] - m_proton, ions[0] - 2*m_proton))
-    #np.where((abs(156.08546448-ions[0]) <= test_tolerance) & (abs(156.08546448-ions[0]) <= test_tolerance))
-    # isoids = np.array(list(set((list(np.where(np.isclose(ions[0], isoions, atol=test_tolerance, rtol=0))[0]) +
-    #                             list(np.where(np.isclose(ions[0], isoions2, atol=test_tolerance, rtol=0))[0])))))
-    # ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
     # Remove peaks below min_ratio
     cutoff = np.where(ions[1]/max(ions[1]) >= min_ratio)
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
@@ -143,48 +135,6 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz
     if cutoff < 0: cutoff = 0
     ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
     return(ions)
-
-# def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
-#     ## 1. Normalize intensity to 10^5
-#     MSF_INT = (ions[1] / ions[1].max()) * 10E4
-#     ## 2. Pick matched ions ##
-#     pfrags = pfrags[proof[1]<=ftol]
-#     proof = np.array([proof[0][proof[1]<=ftol],
-#                       proof[1][proof[1]<=ftol],
-#                       proof[2][proof[1]<=ftol]])
-#     matched_ions = np.array([proof[0], proof[1], proof[2], 
-#                              np.repeat(MSF_INT[np.isin(ions[0], proof[0])], np.unique(proof[0], return_counts=True)[1])])
-#     if (len(matched_ions[0]) == 0) or (len(pfrags) == 0):
-#         hs = 0
-#         return(hs, 0)
-#     ## 3. Adjust intensity
-#     matched_ions[3] = matched_ions[3] / 10E2
-#     ## 4. Hyperscore ## # Consider modified ions but not charged ions? unclear
-#     SERIES = pfrags.astype('<U1')
-#     SERIES_C = (np.unique(np.array([f.replace('*' , '') for f in pfrags]))).astype('<U1')
-#     # TRY use only charge less than 2maybe that's why only 3 and 4 have extra ions found.
-#     # temp = temp.drop_duplicates(subset='FRAGS', keep="first") # Count each kind of fragment only once
-#     if len(matched_ions[3][SERIES == 'b']) == 0:
-#         n_b = 1 # So that hyperscore will not be 0 if one series is missing
-#         i_b = 1
-#     else:
-#         n_b = (SERIES_C == 'b').sum()*2
-#         i_b = matched_ions[3][SERIES == 'b'].sum()
-#     if len(matched_ions[3][SERIES == 'y']) == 0:
-#         n_y = 1 # So that hyperscore will not be 0 if one series is missing
-#         i_y = 1
-#     else:
-#         n_y = (SERIES_C == 'y').sum()*2
-#         i_y = matched_ions[3][SERIES == 'y'].sum()
-#     try:
-#         hs = (math.log10(math.factorial(n_b) * math.factorial(n_y)) + math.log10(i_b * i_y))/ch
-#     except ValueError:
-#         hs = 0
-#     if hs < 0:
-#         hs = 0
-#     # TODO: CHARGE CORRECTION!!!
-#     # TODO: sequence length correction?
-#     return(hs, i_b+i_y)
 
 def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
     # def _stirling(x):
