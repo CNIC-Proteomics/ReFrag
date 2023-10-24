@@ -87,7 +87,8 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
-def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz, max_frag_mz, m_proton):
+def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio,
+               min_frag_mz, max_frag_mz, m_proton, deiso):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
         try:
@@ -119,8 +120,9 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz
         peaks = s.get_peaks()
         ions = np.array([peaks[0], peaks[1]])
     # Deisotope (experimental)
-    isoids = [np.isclose(ions[0], i-m_proton, atol=0.005, rtol=0).any() for i in ions[0]]
-    ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
+    if deiso:
+        isoids = [np.isclose(ions[0], i-m_proton, atol=0.005, rtol=0).any() for i in ions[0]]
+        ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
     # Remove peaks below min_ratio
     cutoff = np.where(ions[1]/max(ions[1]) >= min_ratio)
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
@@ -821,6 +823,7 @@ def main(args):
     min_ratio = float(mass._sections['Spectrum Processing']['min_ratio'])
     min_frag_mz = float(mass._sections['Spectrum Processing']['min_fragment_mz'])
     max_frag_mz = float(mass._sections['Spectrum Processing']['max_fragment_mz'])
+    deiso = eval(str(mass._sections['Spectrum Processing']['deisotope']).title())
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
@@ -869,7 +872,8 @@ def main(args):
         df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
                                                        spectra, index2, top_n,
                                                        min_ratio, min_frag_mz,
-                                                       max_frag_mz, m_proton),
+                                                       max_frag_mz, m_proton,
+                                                       deiso),
                                   axis=1)
         indices, rowSeries = zip(*df.iterrows())
         rowSeries = list(rowSeries)
