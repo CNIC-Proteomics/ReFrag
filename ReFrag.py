@@ -27,6 +27,14 @@ from tqdm import tqdm
 pd.options.mode.chained_assignment = None  # default='warn'
 shutup.please()
 
+def checkParams(mass):
+    min_frag_mz = int(mass._sections['Spectrum Processing']['min_fragment_mz'])
+    max_frag_mz = int(mass._sections['Spectrum Processing']['max_fragment_mz'])
+    if (max_frag_mz > 0) & (max_frag_mz <= min_frag_mz):
+        logging.error('max_frag_mz must be either 0 or a value greater than min_frag_mz')
+        return(1)
+    return(0)
+
 def preProcess(args):
     if os.path.isdir(args.infile):
         infiles = []
@@ -851,6 +859,10 @@ def main(args):
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
+    
+    checked = checkParams(mass)
+    if checked != 0:
+        sys.exit("ERROR: Invalid parameters.")
     
     infiles, rawfiles, rawbase = preProcess(args)
         
