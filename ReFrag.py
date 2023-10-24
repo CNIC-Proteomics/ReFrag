@@ -87,7 +87,7 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
-def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz, max_frag_mz):
+def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz, max_frag_mz, m_proton):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
         try:
@@ -118,10 +118,17 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz
             sys.exit()
         peaks = s.get_peaks()
         ions = np.array([peaks[0], peaks[1]])
-    # Return only top N peaks
-    cutoff = len(ions[0])-top_n
-    if cutoff < 0: cutoff = 0
-    ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
+    # Deisotope (experimental)
+    test_tolerance = 0.005
+    isoids = [np.isclose(ions[0], i-m_proton, atol=test_tolerance, rtol=0).any() for i in ions[0]]
+    ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
+    #isoions = np.roll((ions[0] - m_proton), -1)
+    #isoions2 = np.roll((ions[0] - 2*m_proton), -1)
+    #isoions = np.concatenate((ions[0] - m_proton, ions[0] - 2*m_proton))
+    #np.where((abs(156.08546448-ions[0]) <= test_tolerance) & (abs(156.08546448-ions[0]) <= test_tolerance))
+    # isoids = np.array(list(set((list(np.where(np.isclose(ions[0], isoions, atol=test_tolerance, rtol=0))[0]) +
+    #                             list(np.where(np.isclose(ions[0], isoions2, atol=test_tolerance, rtol=0))[0])))))
+    # ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
     # Remove peaks below min_ratio
     cutoff = np.where(ions[1]/max(ions[1]) >= min_ratio)
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
@@ -131,6 +138,10 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio, min_frag_mz
     else:
         cutoff = np.where(ions[0] >= min_frag_mz)
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
+    # Return only top N peaks
+    cutoff = len(ions[0])-top_n
+    if cutoff < 0: cutoff = 0
+    ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
     return(ions)
 
 # def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
@@ -908,7 +919,7 @@ def main(args):
         df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
                                                        spectra, index2, top_n,
                                                        min_ratio, min_frag_mz,
-                                                       max_frag_mz),
+                                                       max_frag_mz, m_proton),
                                   axis=1)
         indices, rowSeries = zip(*df.iterrows())
         rowSeries = list(rowSeries)
