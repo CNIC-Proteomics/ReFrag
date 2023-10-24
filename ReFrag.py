@@ -79,7 +79,7 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
-def locateScan(scan, mode, fr_ns, spectra, index2, top_n):
+def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
         try:
@@ -114,6 +114,9 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n):
     cutoff = len(ions[0])-top_n
     if cutoff < 0: cutoff = 0
     ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
+    # Remove peaks below min_ratio
+    cutoff = np.where(ions[1]/max(ions[1]) >= min_ratio)
+    ions = np.array([ions[0][cutoff], ions[1][cutoff]])
     return(ions)
 
 # def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
@@ -836,6 +839,7 @@ def main(args):
     dmtol = float(mass._sections['Parameters']['dm_tol'])
     decoy_label = str(mass._sections['Parameters']['decoy_label'])
     top_n = int(mass._sections['Parameters']['top_n'])
+    min_ratio = int(mass._sections['Parameters']['min_ratio'])
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
@@ -877,7 +881,9 @@ def main(args):
         logging.info("\t" + "Locating scans...")
         starttime = datetime.now()
         spectra = msdata.getSpectra()
-        df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata, spectra, index2, top_n), axis=1)
+        df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
+                                                       spectra, index2, top_n, min_ratio),
+                                  axis=1)
         indices, rowSeries = zip(*df.iterrows())
         rowSeries = list(rowSeries)
         tqdm.pandas(position=0, leave=True)
