@@ -355,13 +355,14 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
         # spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
     return(spec)
 
-def addMod(spec, dm, pos, len_seq):
+def addMod(spec, dm, pos, len_seq, blist, ylist):
     ## ADD MOD TO SITES ##
-    bpos = pos
-    ypos = len_seq-pos
-    spec[0] = spec[0][:bpos] + [b + dm for b in spec[0][bpos:]]
-    spec[1] = spec[1][:ypos] + [y + dm for y in spec[1][ypos:]]
-    return spec
+    bpos = [i >= pos+1 for i in blist]
+    ypos = [i >= len_seq-pos for i in ylist][::-1]
+    lr = list(range(0,len(spec[1])))
+    spec[0] = [spec[0][i]+dm if bpos[i]==True else spec[0][i] for i in lr]
+    spec[1] = [spec[1][i]+dm if ypos[i]==True else spec[1][i] for i in lr]
+    return(spec)
     
 def errorMatrix(mz, theo_spec, m_proton):
     '''
@@ -568,7 +569,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 # dm_theo_spec = [x+dm for x in dm_theo_spec[0]] + [x+dm for x in dm_theo_spec[1]]
             else:
                 dm_theo_spec = theo_spec.copy()
-                dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
+                dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq), blist, ylist)
             ## ASSIGN IONS WITHIN SPECTRA ##
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal and assign and minv are the only things that can change the proof)
