@@ -613,7 +613,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                     # dm_theo_spec = [x+dm for x in dm_theo_spec[0]] + [x+dm for x in dm_theo_spec[1]]
                 else:
                     dm_theo_spec = theo_spec.copy()
-                    dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq))
+                    dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq), blist, ylist)
                 ## ASSIGN IONS WITHIN SPECTRA ##
                 assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
                 # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
