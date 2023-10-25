@@ -490,11 +490,11 @@ def makeAblines(texp, minv, assign, afrags, ions, allowed, tie=51):
         proof = np.array([np.concatenate(proof_mz_groups),
                           np.concatenate(proof_ppm_groups),
                           np.concatenate(proof_int_groups)])
-        proof[0] = proof[0][proof[0].argsort()]
-        proof[1] = proof[1][proof[0].argsort()]
-        proof[2] = proof[2][proof[0].argsort()]
-        pfrags = np.array(list(set(pfrags)))
-        pfrags = pfrags[proof[0].argsort()]
+    proof[0] = proof[0][proof[0].argsort()]
+    proof[1] = proof[1][proof[0].argsort()]
+    proof[2] = proof[2][proof[0].argsort()]
+    pfrags = np.array(list(set(pfrags)))
+    pfrags = pfrags[proof[0].argsort()]
     fragfilter = [True if i not in allowed else False for i in pfrags]
     pfrags = pfrags[fragfilter]
     proof = np.array([proof[0][fragfilter],
