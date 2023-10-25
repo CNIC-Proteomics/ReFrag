@@ -596,6 +596,19 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 proof = np.array([proof[0][proof[1] <= ftol],
                                   proof[1][proof[1] <= ftol],
                                   proof[2][proof[1] <= ftol]])
+                # Choose only lowest error match for each peak
+                if len(np.unique(proof[0])) != len(proof[0]):
+                    #mask = np.unique(proof[0], return_inverse=True)[1]
+                    split0 = np.split(proof[0], np.unique(proof[0], return_index=True)[1][1:])
+                    split1 = np.split(proof[1], np.unique(proof[0], return_index=True)[1][1:])
+                    split2 = np.split(proof[2], np.unique(proof[0], return_index=True)[1][1:])
+                    splitf = np.split(pfrags, np.unique(proof[0], return_index=True)[1][1:])
+                    mins = [np.argmin(i) for i in split1]
+                    minl = list(range(0,len(mins)))
+                    proof = np.array([[split0[i][mins[i]] for i in minl],
+                                      [split1[i][mins[i]] for i in minl],
+                                      [split2[i][mins[i]] for i in minl]])
+                    pfrags = np.array([splitf[i][mins[i]] for i in minl])
             tiebreaker.append(''.join(list(pfrags)))
             temp_proof.append(proof)
             temp_pfrags.append(pfrags)
@@ -640,6 +653,19 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                     proof = np.array([proof[0][proof[1] <= ftol+ttol],
                                       proof[1][proof[1] <= ftol+ttol],
                                       proof[2][proof[1] <= ftol+ttol]])
+                    # Choose only lowest error match for each peak
+                    if len(np.unique(proof[0])) != len(proof[0]):
+                        #mask = np.unique(proof[0], return_inverse=True)[1]
+                        split0 = np.split(proof[0], np.unique(proof[0], return_index=True)[1][1:])
+                        split1 = np.split(proof[1], np.unique(proof[0], return_index=True)[1][1:])
+                        split2 = np.split(proof[2], np.unique(proof[0], return_index=True)[1][1:])
+                        splitf = np.split(pfrags, np.unique(proof[0], return_index=True)[1][1:])
+                        mins = [np.argmin(i) for i in split1]
+                        minl = list(range(0,len(mins)))
+                        proof = np.array([[split0[i][mins[i]] for i in minl],
+                                          [split1[i][mins[i]] for i in minl],
+                                          [split2[i][mins[i]] for i in minl]])
+                        pfrags = np.array([splitf[i][mins[i]] for i in minl])
                 temp_proof[i] = proof
                 temp_pfrags[i] = pfrags
                 temp_dm[i] = dm
