@@ -120,7 +120,7 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio,
         peaks = s.get_peaks()
         ions = np.array([peaks[0], peaks[1]])
     # Deisotope (experimental)
-    if deiso:
+    if deiso: # TODO: Intensity, 2C13
         isoids = [np.isclose(ions[0], i-m_proton, atol=0.005, rtol=0).any() for i in ions[0]]
         ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
     # Remove peaks below min_ratio
@@ -604,7 +604,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                     split2 = np.split(proof[2], np.unique(proof[0], return_index=True)[1][1:])
                     splitf = np.split(pfrags, np.unique(proof[0], return_index=True)[1][1:])
                     mins = [np.argmin(i) for i in split1]
-                    minl = list(range(0,len(mins)))
+                    minl = range(0,len(mins))
                     proof = np.array([[split0[i][mins[i]] for i in minl],
                                       [split1[i][mins[i]] for i in minl],
                                       [split2[i][mins[i]] for i in minl]])
@@ -661,7 +661,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                         split2 = np.split(proof[2], np.unique(proof[0], return_index=True)[1][1:])
                         splitf = np.split(pfrags, np.unique(proof[0], return_index=True)[1][1:])
                         mins = [np.argmin(i) for i in split1]
-                        minl = list(range(0,len(mins)))
+                        minl = range(0,len(mins))
                         proof = np.array([[split0[i][mins[i]] for i in minl],
                                           [split1[i][mins[i]] for i in minl],
                                           [split2[i][mins[i]] for i in minl]])
@@ -706,6 +706,19 @@ def parallelFragging(query, parlist):
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6],
                                                  parlist[7], parlist[8])
+    # TODO: always get a Non-modified score
+    # Remove cases where a DM is tried but no modified fragments have been matched
+    check = []
+    for i in range(0, len(pfrags)):
+        if name[i] not in ['EXPERIMENTAL', 'Non-modified']:
+            if ''.join(pfrags[i]).find('*') == -1:
+                check += [False]
+            else:
+                check += [True]
+        else:
+            check += [True]
+    proof, pfrags, dm, name, position, tie = list(itertools.compress(proof, check)), list(itertools.compress(pfrags, check)), list(itertools.compress(dm, check)), list(itertools.compress(name, check)), list(itertools.compress(position, check)), list(itertools.compress(tie, check))
+    
     hyperscores = []
     hyperscores_label = []
     check = []
