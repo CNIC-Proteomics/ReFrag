@@ -359,9 +359,8 @@ def addMod(spec, dm, pos, len_seq, blist, ylist):
     ## ADD MOD TO SITES ##
     bpos = [i >= pos+1 for i in blist]
     ypos = [i >= len_seq-pos for i in ylist][::-1]
-    lr = list(range(0,len(spec[1])))
-    spec[0] = [spec[0][i]+dm if bpos[i]==True else spec[0][i] for i in lr]
-    spec[1] = [spec[1][i]+dm if ypos[i]==True else spec[1][i] for i in lr]
+    spec[0] = [spec[0][i]+dm if bpos[i]==True else spec[0][i] for i in list(range(0,len(spec[0])))]
+    spec[1] = [spec[1][i]+dm if ypos[i]==True else spec[1][i] for i in list(range(0,len(spec[1])))]
     return(spec)
     
 def errorMatrix(mz, theo_spec, m_proton):
@@ -392,12 +391,12 @@ def makeFrags(seq): # TODO: SLOW
     Name all fragments.
     '''
     bp = bh = yp = yh = []
-    if 'P' in seq: # Cannot cut after
+    if 'P' in seq[:-1]: # Cannot cut after
         # Disallowed b ions
         bp = [pos+1 for pos, char in enumerate(seq) if char == 'P']
         # Disallowed y ions
         yp = [pos for pos, char in enumerate(seq[::-1]) if char == 'P']
-    if 'H' in seq: # Cannot cut before
+    if 'H' in seq[1:]: # Cannot cut before
         # Disallowed b ions
         bh = [pos for pos, char in enumerate(seq) if char == 'H']
         # Disallowed y ions
@@ -416,7 +415,6 @@ def makeFrags(seq): # TODO: SLOW
     return(frags, blist, ylist)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
-    
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
     dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
@@ -430,7 +428,6 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
                          #frags[:5].flatten(),
                          [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
                          #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
-
     return(c_assign, frags[:5].flatten())
 
 def fragCheck(plainseq, blist, ylist, dm_pos):
