@@ -25,7 +25,7 @@ carbamidomethylated Cys that undergoes beta-elimination and Michael addition of 
 2-amino-3-oxo-butanoic_acid	-2.01565	['Anywhere']	"['S', 'Y', 'T', 'K']"
 Lysine oxidation to aminoadipic semialdehyde	-1.031634	['Anywhere']	['K']
 Amidation	-0.984016	['Anywhere']	"['C-term', 'C-term']"
-Non-modified	0	['Anywhere']	['NM']
+Non-modified	0	['Anywhere']	['Non-modified']
 Deamidation	0.984016	['Anywhere']	"['Q', 'R', 'N', 'F']"
 tryptophan oxidation to kynurenin	3.994915	['Anywhere']	['W']
 In Bachi as Formylaspargine (typo?)	4.97893	['Anywhere']	['H']
