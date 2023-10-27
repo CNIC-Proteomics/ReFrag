@@ -142,8 +142,8 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
     # def _stirling(x):
     #     y = x * math.log(x) - x + 0.5 * math.log(x) + 0.5 * math.log(math.pi * 2.0 * x)
     #     return
-    ## 1. Normalize intensity to 10^5
-    MSF_INT = (ions[1] / ions[1].max()) * 10E4
+    ## 1. Normalize intensity
+    MSF_INT = (ions[1] / ions[1].max()) * 10E6
     ## 2. Pick matched ions ##
     pfrags = pfrags[proof[1]<=ftol]
     proof = np.array([proof[0][proof[1]<=ftol],
@@ -154,25 +154,21 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
     if (len(matched_ions[0]) == 0) or (len(pfrags) == 0):
         hs = 0
         return(hs, 0)
-    ## 3. Adjust intensity
-    #matched_ions[3] = matched_ions[3] / 10E2
-    ## 4. Hyperscore ## # Consider modified ions but not charged ions? unclear
+    ## 3. Hyperscore ##
     SERIES = pfrags.astype('<U1')
-    SERIES_C = (np.unique(np.array([f.replace('*' , '') for f in pfrags]))).astype('<U1')
-    # TRY use only charge less than 2maybe that's why only 3 and 4 have extra ions found.
-    # temp = temp.drop_duplicates(subset='FRAGS', keep="first") # Count each kind of fragment only once
+    SERIES_C = (np.unique(np.array([f.replace('+' , '') for f in pfrags]))).astype('<U1') # Group fragment charges
     if len(matched_ions[3][SERIES == 'b']) == 0:
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
     else:
         n_b = (SERIES_C == 'b').sum()
-        i_b = matched_ions[3][SERIES == 'b'].sum()/10
+        i_b = matched_ions[3][SERIES == 'b'].sum()
     if len(matched_ions[3][SERIES == 'y']) == 0:
         n_y = 1 # So that hyperscore will not be 0 if one series is missing
         i_y = 1
     else:
         n_y = (SERIES_C == 'y').sum()
-        i_y = matched_ions[3][SERIES == 'y'].sum()/10
+        i_y = matched_ions[3][SERIES == 'y'].sum()
     try:
         #hs = math.log(math.factorial(n_b) * math.factorial(n_y)) + math.log(i_b * i_y)
         hs = math.log((i_b + 1) * (i_y + 1)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
@@ -906,6 +902,7 @@ def main(args):
         logging.info("\t" + "Locating scans...")
         starttime = datetime.now()
         spectra = msdata.getSpectra()
+        df.scannum = df.scannum.astype(int)
         df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
                                                        spectra, index2, top_n,
                                                        min_ratio, min_frag_mz,
