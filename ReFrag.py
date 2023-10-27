@@ -143,7 +143,7 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
     #     y = x * math.log(x) - x + 0.5 * math.log(x) + 0.5 * math.log(math.pi * 2.0 * x)
     #     return
     ## 1. Normalize intensity
-    MSF_INT = (ions[1] / ions[1].max()) * 10E6
+    MSF_INT = (ions[1] / ions[1].max()) * 10E2
     ## 2. Pick matched ions ##
     pfrags = pfrags[proof[1]<=ftol]
     proof = np.array([proof[0][proof[1]<=ftol],
@@ -161,13 +161,13 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
     else:
-        n_b = (SERIES_C == 'b').sum()
+        n_b = (SERIES == 'b').sum()
         i_b = matched_ions[3][SERIES == 'b'].sum()
     if len(matched_ions[3][SERIES == 'y']) == 0:
         n_y = 1 # So that hyperscore will not be 0 if one series is missing
         i_y = 1
     else:
-        n_y = (SERIES_C == 'y').sum()
+        n_y = (SERIES == 'y').sum()
         i_y = matched_ions[3][SERIES == 'y'].sum()
     try:
         #hs = math.log(math.factorial(n_b) * math.factorial(n_y)) + math.log(i_b * i_y)
@@ -723,6 +723,7 @@ def parallelFragging(query, parlist):
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6],
                                                  parlist[7], parlist[8])
+    #matched_ions_names = pfrags.copy()
     # TODO: always get a Non-modified score
     # Remove cases where a DM is tried but no modified fragments have been matched
     check = []
@@ -825,6 +826,7 @@ def parallelFragging(query, parlist):
     except IndexError:
         best_label = str(best_label)
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
+    #matched_ions_names = matched_ions_names[np.where((hyperscores[0]==best[0])&(hyperscores[1]==best[1])&(hyperscores[2]==best[2])&(hyperscores[3]==best[3])&(hyperscores[4]==best[4])&(hyperscores[5]==best[5]))[0][0]]
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])), sp])
 
@@ -957,6 +959,7 @@ def main(args):
         df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
         df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
         df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
+        # TODO?: report mod and non mod ions in two columns (each with max = len_pep)
         df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
         df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
         df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
