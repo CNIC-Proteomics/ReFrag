@@ -412,19 +412,27 @@ def makeFrags(seq): # TODO: SLOW
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
-    dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
-    
-    assign = np.array([#frags[0],
-                       theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3,
-                       dm_theo_spec, (dm_theo_spec+m_proton)/2])
-    
-    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
-    c_assign = np.array([assign[0:].flatten(),
-                         #frags[:5].flatten(),
-                         [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
-                         #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
-    return(c_assign, frags[:5].flatten())
+    if dm == 0:
+        frags = frags[:3]
+        assign = np.array([#frags[0],
+                           theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3])
+        c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
+        c_assign = np.array([assign[0:].flatten(),
+                             #frags[:5].flatten(),
+                             [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
+                             #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
+    else:
+        frags = frags[3:]
+        dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
+        assign = np.array([#frags[0],
+                           dm_theo_spec, (dm_theo_spec+m_proton)/2, (dm_theo_spec+m_proton)/3])
+        c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
+        c_assign = np.array([assign[0:].flatten(),
+                             #frags[:5].flatten(),
+                             [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
+                             #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
+    return(c_assign, frags.flatten())
 
 def fragCheck(plainseq, blist, ylist, dm_pos):
     ballowed = (['b'+str(i)+'*' for i in blist if i >= dm_pos+1] +
@@ -510,7 +518,7 @@ def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead o
             if s == 'Anywhere' or s == 'exp':
                 subpos = list(range(0, len(plainseq)))
                 break
-            elif s == 'NM':
+            elif s == 'Non-modified':
                 subpos = [-1]
                 break
             elif s == 'N-term':
@@ -537,6 +545,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
+    if 0 in dm_set.mass.values:
+        dm_set.at[list(dm_set[dm_set.mass==0].index)[0],'idx'] = [0]
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen)
     terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton)
@@ -567,18 +577,25 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
             assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal and assign and minv are the only things that can change the proof)
             ## PPM ERRORS ##
-            dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
-            if sub.Charge == 2:
-                ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-                if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
-            elif sub.Charge < 2:
-                ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-                if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
-            elif sub.Charge >= 3:
-                ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-                if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
+            if dm != 0:
+                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
+                if sub.Charge == 2:
+                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2]).min(0))
+                elif sub.Charge < 2:
+                    ppmfinal = pd.DataFrame(np.array([dmterrors]).min(0))
+                elif sub.Charge >= 3:
+                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0))
+                else:
+                    sys.exit('ERROR: Invalid charge value!')
             else:
-                sys.exit('ERROR: Invalid charge value!')
+                if sub.Charge == 2:
+                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
+                elif sub.Charge < 2:
+                    ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
+                elif sub.Charge >= 3:
+                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
+                else:
+                    sys.exit('ERROR: Invalid charge value!')
             minv = list(ppmfinal.min(axis=1))
             ## ABLINES ##
             proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed)
@@ -624,18 +641,25 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
                 # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
                 ## PPM ERRORS ##
-                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
-                if sub.Charge == 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, dmterrors, dmterrors2]).min(0))
-                elif sub.Charge < 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, dmterrors]).min(0))
-                elif sub.Charge >= 3:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-                    if dm != 0: ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3, dmterrors, dmterrors2, dmterrors3]).min(0))
+                if dm != 0:
+                    dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
+                    if sub.Charge == 2:
+                        ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2]).min(0))
+                    elif sub.Charge < 2:
+                        ppmfinal = pd.DataFrame(np.array([dmterrors]).min(0))
+                    elif sub.Charge >= 3:
+                        ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0))
+                    else:
+                        sys.exit('ERROR: Invalid charge value!')
                 else:
-                    sys.exit('ERROR: Invalid charge value!')
+                    if sub.Charge == 2:
+                        ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
+                    elif sub.Charge < 2:
+                        ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
+                    elif sub.Charge >= 3:
+                        ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
+                    else:
+                        sys.exit('ERROR: Invalid charge value!')
                 minv = list(ppmfinal.min(axis=1))
                 ## ABLINES ##
                 proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed, ftol+ttol)
@@ -795,6 +819,7 @@ def parallelFragging(query, parlist):
                      exp[1][exp[3]==exp[3].max()][0],
                      exp[2][exp[3]==exp[3].max()][0],
                      exp[3][exp[3]==exp[3].max()][0]])
+    # TODO: also return Non-modified separately
     try:
         best_label = str(best_label[0])
     except IndexError:
