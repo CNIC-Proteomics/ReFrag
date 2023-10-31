@@ -828,7 +828,8 @@ def parallelFragging(query, parlist):
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     #matched_ions_names = matched_ions_names[np.where((hyperscores[0]==best[0])&(hyperscores[1]==best[1])&(hyperscores[2]==best[2])&(hyperscores[3]==best[3])&(hyperscores[4]==best[4])&(hyperscores[5]==best[5]))[0][0]]
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])), sp])
+            float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])),
+            sp, int(exp[2])])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
     
@@ -954,6 +955,7 @@ def main(args):
         df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
         df['REFRAG_exp_MZ'] = (df.REFRAG_MH + (df.charge-1)*m_proton) / df.charge
         df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
+        df['REFRAG_exp_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
         df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
         df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
         df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
