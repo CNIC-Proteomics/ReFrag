@@ -136,6 +136,11 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio,
     cutoff = len(ions[0])-top_n
     if cutoff < 0: cutoff = 0
     ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
+    if len(np.unique(ions[0])) != len(ions[0]): # Duplicate m/z measurement
+        ions = pd.DataFrame(ions).T
+        ions = ions[ions.groupby(0)[1].rank(ascending=False)<2]
+        ions.drop_duplicates(subset=0, inplace=True)
+        ions = np.array(ions.T)
     return(ions)
 
 def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
