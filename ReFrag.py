@@ -919,6 +919,9 @@ def main(args):
             logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
             df = df[(df.scannum>=args.scanrange[0])&(df.scannum<=args.scanrange[1])]
         logging.info("\t" + str(len(df)) + " lines read.")
+        if len(df) < 1:
+            logging.error("No scans to search. Stopping.")
+            sys.exit()
         # Read raw file
         msdata, mode, index2 = readRaw(Path(rawfile))
         # Read DM file
