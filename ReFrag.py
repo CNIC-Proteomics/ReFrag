@@ -134,7 +134,7 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio,
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
     # Return only top N peaks
     cutoff = len(ions[0])-top_n
-    if cutoff < 0: cutoff = 0
+    if (cutoff < 0) or (cutoff >= len(ions)): cutoff = 0
     ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
     if len(np.unique(ions[0])) != len(ions[0]): # Duplicate m/z measurement
         ions = pd.DataFrame(ions).T
