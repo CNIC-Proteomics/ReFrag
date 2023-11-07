@@ -440,12 +440,12 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     return(c_assign, frags.flatten())
 
 def fragCheck(plainseq, blist, ylist, dm_pos):
-    ballowed = (['b'+str(i)+'*' for i in blist if i >= dm_pos+1] +
-                ['b'+str(i)+'*++' for i in blist if i >= dm_pos+1] +
-                ['b'+str(i)+'*+++' for i in blist if i >= dm_pos+1])
-    yallowed = (['y'+str(i)+'*' for i in ylist if i >= len(plainseq)-dm_pos] +
-                ['y'+str(i)+'*++' for i in ylist if i >= len(plainseq)-dm_pos] +
-                ['y'+str(i)+'*+++' for i in ylist if i >= len(plainseq)-dm_pos])
+    ballowed = (['b'+str(i)+'*' if i >= dm_pos+1 else 'b'+str(i) for i in blist] +
+                ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
+                ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist])
+    yallowed = (['y'+str(i)+'*' if i >= len(plainseq)-dm_pos else 'y'+str(i) for i in ylist] +
+                ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
+                ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist])
     allowed = ballowed + yallowed
     return(allowed)
 
