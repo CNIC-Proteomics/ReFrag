@@ -783,14 +783,14 @@ def parallelFragging(query, parlist):
                      nm[1][nm[3]==nm[3].max()][0],
                      nm[2][nm[3]==nm[3].max()][0],
                      nm[3][nm[3]==nm[3].max()][0]])
-    if not (query.massdiff-parlist[2] <= 0 <= query.massdiff+parlist[2]):
-        hyperscores = np.array([np.delete(hyperscores[0], hyperscores_label == 'Non-modified'),
-                         np.delete(hyperscores[1], hyperscores_label == 'Non-modified'),
-                         np.delete(hyperscores[2], hyperscores_label == 'Non-modified'),
-                         np.delete(hyperscores[3], hyperscores_label == 'Non-modified'),
-                         np.delete(hyperscores[4], hyperscores_label == 'Non-modified'),
-                         np.delete(hyperscores[5], hyperscores_label == 'Non-modified')])
-        hyperscores_label = np.delete(hyperscores_label, hyperscores_label == 'Non-modified')
+    # if not (query.massdiff-parlist[2] <= 0 <= query.massdiff+parlist[2]):
+    #     hyperscores = np.array([np.delete(hyperscores[0], hyperscores_label == 'Non-modified'),
+    #                      np.delete(hyperscores[1], hyperscores_label == 'Non-modified'),
+    #                      np.delete(hyperscores[2], hyperscores_label == 'Non-modified'),
+    #                      np.delete(hyperscores[3], hyperscores_label == 'Non-modified'),
+    #                      np.delete(hyperscores[4], hyperscores_label == 'Non-modified'),
+    #                      np.delete(hyperscores[5], hyperscores_label == 'Non-modified')])
+    #     hyperscores_label = np.delete(hyperscores_label, hyperscores_label == 'Non-modified')
     best = np.array([hyperscores[0][hyperscores[3]==hyperscores[3].max()],
                      hyperscores[1][hyperscores[3]==hyperscores[3].max()],
                      hyperscores[2][hyperscores[3]==hyperscores[3].max()],
