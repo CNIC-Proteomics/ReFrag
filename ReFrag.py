@@ -552,6 +552,9 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     dm_set = findPos(dm_set, plainseq)
     if 0 in dm_set.mass.values:
         dm_set.at[list(dm_set[dm_set.mass==0].index)[0],'idx'] = [0]
+    else:
+        dm_set = pd.concat([dm_set,
+                            pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[0]}).to_frame().T], ignore_index=True)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen)
     terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton)
@@ -772,6 +775,22 @@ def parallelFragging(query, parlist):
     # best = hyperscores[[i[4] for i in hyperscores].index(max([i[4] for i in hyperscores]))]
     hyperscores = np.transpose(np.array(hyperscores))
     hyperscores_label = np.array(hyperscores_label)
+    nm = np.array([hyperscores[0][hyperscores_label == 'Non-modified'],
+                   hyperscores[1][hyperscores_label == 'Non-modified'],
+                   hyperscores[2][hyperscores_label == 'Non-modified'],
+                   hyperscores[3][hyperscores_label == 'Non-modified']])
+    nm = np.array([nm[0][nm[3]==nm[3].max()][0],
+                     nm[1][nm[3]==nm[3].max()][0],
+                     nm[2][nm[3]==nm[3].max()][0],
+                     nm[3][nm[3]==nm[3].max()][0]])
+    if query.massdiff-parlist[2] <= 0 <= query.massdiff+parlist[2]:
+        hyperscores = np.array([np.delete(hyperscores[0], hyperscores_label == 'Non-modified'),
+                         np.delete(hyperscores[1], hyperscores_label == 'Non-modified'),
+                         np.delete(hyperscores[2], hyperscores_label == 'Non-modified'),
+                         np.delete(hyperscores[3], hyperscores_label == 'Non-modified'),
+                         np.delete(hyperscores[4], hyperscores_label == 'Non-modified'),
+                         np.delete(hyperscores[5], hyperscores_label == 'Non-modified')])
+        hyperscores_label = np.delete(hyperscores_label, hyperscores_label == 'Non-modified')
     best = np.array([hyperscores[0][hyperscores[3]==hyperscores[3].max()],
                      hyperscores[1][hyperscores[3]==hyperscores[3].max()],
                      hyperscores[2][hyperscores[3]==hyperscores[3].max()],
@@ -825,7 +844,6 @@ def parallelFragging(query, parlist):
                      exp[1][exp[3]==exp[3].max()][0],
                      exp[2][exp[3]==exp[3].max()][0],
                      exp[3][exp[3]==exp[3].max()][0]])
-    # TODO: also return Non-modified separately
     try:
         best_label = str(best_label[0])
     except IndexError:
@@ -834,7 +852,7 @@ def parallelFragging(query, parlist):
     #matched_ions_names = matched_ions_names[np.where((hyperscores[0]==best[0])&(hyperscores[1]==best[1])&(hyperscores[2]==best[2])&(hyperscores[3]==best[3])&(hyperscores[4]==best[4])&(hyperscores[5]==best[5]))[0][0]]
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])),
-            sp, int(exp[2])])
+            sp, int(exp[2]), float(nm[3]), int(nm[2])])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
     
@@ -965,11 +983,12 @@ def main(args):
         df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
         df['REFRAG_exp_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
         df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
+        df['REFRAG_nm_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 12]. tolist()
+        df['REFRAG_nm_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 11]. tolist()
         df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
         df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
         df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
         df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
-        # TODO?: report mod and non mod ions in two columns (each with max = len_pep)
         df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
         df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
         df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
