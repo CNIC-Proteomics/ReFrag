@@ -851,7 +851,7 @@ def parallelFragging(query, parlist):
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     #matched_ions_names = matched_ions_names[np.where((hyperscores[0]==best[0])&(hyperscores[1]==best[1])&(hyperscores[2]==best[2])&(hyperscores[3]==best[3])&(hyperscores[4]==best[4])&(hyperscores[5]==best[5]))[0][0]]
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1])),
+            float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1]+1)),
             sp, int(exp[2]), float(nm[3]), int(nm[2])])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
