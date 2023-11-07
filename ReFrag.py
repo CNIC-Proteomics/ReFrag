@@ -783,7 +783,7 @@ def parallelFragging(query, parlist):
                      nm[1][nm[3]==nm[3].max()][0],
                      nm[2][nm[3]==nm[3].max()][0],
                      nm[3][nm[3]==nm[3].max()][0]])
-    if query.massdiff-parlist[2] <= 0 <= query.massdiff+parlist[2]:
+    if not (query.massdiff-parlist[2] <= 0 <= query.massdiff+parlist[2]):
         hyperscores = np.array([np.delete(hyperscores[0], hyperscores_label == 'Non-modified'),
                          np.delete(hyperscores[1], hyperscores_label == 'Non-modified'),
                          np.delete(hyperscores[2], hyperscores_label == 'Non-modified'),
