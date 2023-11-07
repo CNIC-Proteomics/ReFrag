@@ -883,8 +883,8 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
     target=str(len(df[~df.protein.str.startswith(decoy)])),
     refrag=str(len(df[df.REFRAG_name!='EXPERIMENTAL'])),
     perc=str(round(len(df[df.REFRAG_name!='EXPERIMENTAL'])/len(df)*100,2)),
-    refragt=str(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith('DECOY'))])),
-    perct=str(round(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith('DECOY'))])/len(df[~df.protein.str.startswith(decoy)])*100,2)),
+    refragt=str(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith(decoy))])),
+    perct=str(round(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith(decoy))])/len(df[~df.protein.str.startswith(decoy)])*100,2)),
     smods=lsmods)
     
     with open(outpath, 'w') as f:
