@@ -161,7 +161,7 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
         return(hs, 0)
     ## 3. Hyperscore ##
     SERIES = pfrags.astype('<U1')
-    SERIES_C = (np.unique(np.array([f.replace('+' , '') for f in pfrags]))).astype('<U1') # Group fragment charges
+    #SERIES_C = (np.unique(np.array([f.replace('+' , '') for f in pfrags]))).astype('<U1') # Group fragment charges
     if len(matched_ions[3][SERIES == 'b']) == 0:
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
@@ -993,8 +993,8 @@ def main(args):
         outsum = Path(os.path.splitext(infile)[0] + "_SUMMARY.tsv")
         if len(args.scanrange) > 0:
             outsum = Path(os.path.splitext(infile)[0] + "_" +
-                           str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
-                           "_SUMMARY.tsv")
+                          str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
+                          "_SUMMARY.tsv")
         makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_label)
         logging.info("Done.")
     return
