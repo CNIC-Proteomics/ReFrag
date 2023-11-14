@@ -87,7 +87,7 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
-def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio,
+def locateScan(scan, mode, fr_ns, spectra, index2, top_n, bin_top_n, min_ratio,
                min_frag_mz, max_frag_mz, m_proton, deiso):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
@@ -133,9 +133,19 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, min_ratio,
         cutoff = np.where(ions[0] >= min_frag_mz)
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
     # Return only top N peaks
-    cutoff = len(ions[0])-top_n
-    if (cutoff < 0) or (cutoff >= len(ions)): cutoff = 0
-    ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
+    if bin_top_n:
+        bins = np.digitize(ions[0], np.arange(55,max(ions[0]),110))
+        ions_f = []
+        for i in np.unique(bins):
+            ions_t = np.array([ions[0][np.where(bins==i)], ions[1][np.where(bins==i)]])
+            cutoff = len(ions_t[0])-top_n
+            if (cutoff < 0) or (cutoff >= len(ions_t[0])): cutoff = 0
+            ions_f += [np.array([ions_t[0][ions_t[1].argsort()][cutoff:], ions_t[1][ions_t[1].argsort()][cutoff:]])]
+        ions = np.concatenate(ions_f, axis=1)
+    else:
+        cutoff = len(ions[0])-top_n
+        if (cutoff < 0) or (cutoff >= len(ions[0])): cutoff = 0
+        ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
     if len(np.unique(ions[0])) != len(ions[0]): # Duplicate m/z measurement
         ions = pd.DataFrame(ions).T
         ions = ions[ions.groupby(0)[1].rank(ascending=False)<2]
@@ -904,6 +914,7 @@ def main(args):
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_label = str(mass._sections['Search']['decoy_label'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
+    bin_top_n = eval(str(mass._sections['Spectrum Processing']['bin_top_n']).title())
     min_ratio = float(mass._sections['Spectrum Processing']['min_ratio'])
     min_frag_mz = float(mass._sections['Spectrum Processing']['min_fragment_mz'])
     max_frag_mz = float(mass._sections['Spectrum Processing']['max_fragment_mz'])
@@ -971,9 +982,9 @@ def main(args):
         df.scannum = df.scannum.astype(int)
         df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
                                                        spectra, index2, top_n,
-                                                       min_ratio, min_frag_mz,
-                                                       max_frag_mz, m_proton,
-                                                       deiso),
+                                                       bin_top_n, min_ratio,
+                                                       min_frag_mz, max_frag_mz,
+                                                       m_proton, deiso),
                                   axis=1)
         indices, rowSeries = zip(*df.iterrows())
         rowSeries = list(rowSeries)
