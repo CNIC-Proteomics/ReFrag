@@ -929,10 +929,22 @@ def main(args):
         # Read results file from MSFragger
         if len(args.dia) > 0:
             logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile[0:-8] + infile[-4:]))) + ")...")
-            df = pd.read_csv(Path(infile[0:-8] + infile[-4:]), sep="\t")
+            try: df = pd.read_csv(Path(infile[0:-8] + infile[-4:]), sep="\t")
+            except pd.errors.ParserError:
+                sep = '\t'
+                coln = pd.read_csv(Path(infile[0:-8] + infile[-4:]), sep=sep, nrows=1).columns.tolist()
+                max_columns = max(open(Path(infile[0:-8] + infile[-4:]), 'r'), key = lambda x: x.count(sep)).count(sep) + 1
+                coln += ['extra_column_' + str(i) for i in range(0,(max_columns-len(coln)))]
+                df = pd.read_csv(Path(infile[0:-8] + infile[-4:]), header=None, sep=sep, skiprows=1, names=coln)
         else:
             logging.info("Reading MSFragger file (" + str(os.path.basename(Path(infile))) + ")...")
-            df = pd.read_csv(Path(infile), sep="\t")
+            try: df = pd.read_csv(Path(infile), sep="\t")
+            except pd.errors.ParserError:
+                sep = '\t'
+                coln = pd.read_csv(Path(infile), sep=sep, nrows=1).columns.tolist()
+                max_columns = max(open(Path(infile), 'r'), key = lambda x: x.count(sep)).count(sep) + 1
+                coln += ['extra_column_' + str(i) for i in range(0,(max_columns-len(coln)))]
+                df = pd.read_csv(Path(infile), header=None, sep=sep, skiprows=1, names=coln)
         if len(args.scanrange) > 0:
             logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
             df = df[(df.scannum>=args.scanrange[0])&(df.scannum<=args.scanrange[1])]
