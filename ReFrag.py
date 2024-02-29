@@ -730,7 +730,7 @@ def parallelFragging(query, parlist):
     else:
         sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     if parlist[9]=="mzml":
-        spectrum = spectra[np.where(np.array(spectra_n)==scan)[0][0]]
+        spectrum = parlist[11][np.where(np.array(parlist[10])==scan)[0][0]]
     else:
         spectrum = query.spectrum
     dm = query.massdiff
