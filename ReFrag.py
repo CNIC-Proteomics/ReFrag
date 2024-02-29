@@ -1042,7 +1042,8 @@ def main(args):
                                              itertools.repeat(parlist),
                                              chunksize=chunks),
                                 total=len(rowSeries)))
-        df = df.drop('spectrum', axis = 1)
+        if 'spectrum' in df.columns:
+            df = df.drop('spectrum', axis = 1)
         df['templist'] = refrags
         df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
         df['REFRAG_exp_MZ'] = (df.REFRAG_MH + (df.charge-1)*m_proton) / df.charge
