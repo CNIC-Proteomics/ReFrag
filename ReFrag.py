@@ -113,7 +113,7 @@ def locateScan(scan, mode, fr_ns, spectra, index2, top_n, bin_top_n, min_ratio,
             ions = ions.apply(pd.to_numeric)
     elif mode == "mzml":
         try:
-            s = spectra[scan-1]
+            s = spectra[spectra_n.index(scan)]
         except AssertionError or OverflowError:
             logging.info("\tERROR: Scan number " + str(scan) + " not found in mzML file.")
             sys.exit()
@@ -729,7 +729,10 @@ def parallelFragging(query, parlist):
         pos = []
     else:
         sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
-    spectrum = query.spectrum
+    if parlist[9]=="mzml":
+        spectrum = spectra[np.where(np.array(spectra_n)==scan)[0][0]]
+    else:
+        spectrum = query.spectrum
     dm = query.massdiff
     # TODO use calc neutral mass?
     # Make a Vseq-style query
@@ -979,19 +982,59 @@ def main(args):
         logging.info("\t" + "Locating scans...")
         starttime = datetime.now()
         spectra = msdata.getSpectra()
-        df.scannum = df.scannum.astype(int)
-        df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
-                                                       spectra, index2, top_n,
-                                                       bin_top_n, min_ratio,
-                                                       min_frag_mz, max_frag_mz,
-                                                       m_proton, deiso),
-                                  axis=1)
+        if mode == "mzml":
+            spectra_n = np.array([int(s.getNativeID().split("=")[-1]) for s in spectra])
+            if len(args.scanrange) > 0:
+                logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
+                spectra = spectra[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
+                spectra_n = spectra_n[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
+            peaks = [s.get_peaks() for s in spectra]
+            ions = [np.array([p[0], p[1]]) for p in peaks]
+            ions0 = [np.array(p[0]) for p in peaks]
+            ions1 = [np.array(p[1]) for p in peaks]
+            # Remove peaks below min_ratio
+            logging.info("\t" + "Filter by ratio...")
+            cutoff1 = [i/max(i) >= min_ratio for i in ions1]
+            ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
+            ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+            # Return only top N peaks
+            logging.info("\t" + "Filter top N...")
+            cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
+            ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
+            ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+            ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
+            # # Duplicate m/z measurement
+            logging.info("\t" + "Filter duplicate m/z measurements...")
+            check = [len(np.unique(i)) != len(i) for i in ions0]
+            for i in range(len(check)):
+                if check[i] == True:
+                    temp = ions[i].copy()
+                    temp = pd.DataFrame(temp).T
+                    temp = temp[temp.groupby(0)[1].rank(ascending=False)<2]
+                    temp.drop_duplicates(subset=0, inplace=True)
+                    ions[i] = np.array(temp.T)
+            cc = 0
+            for i in ions:
+                if len(i[0])<2:
+                    cc += 1
+            logging.info("\t" + str(cc) + " empty spectra...")
+        else:
+            df.scannum = df.scannum.astype(int)
+            df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
+                                                           spectra, index2, top_n,
+                                                           bin_top_n, min_ratio,
+                                                           min_frag_mz, max_frag_mz,
+                                                           m_proton, deiso),
+                                      axis=1)
         indices, rowSeries = zip(*df.iterrows())
         rowSeries = list(rowSeries)
         tqdm.pandas(position=0, leave=True)
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
-        parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin]
+        if mode == "mzml":
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions]
+        else:
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
