@@ -902,7 +902,7 @@ def main(args):
     ttol = float(mass._sections['Search']['t_tol'])
     tmin = float(mass._sections['Search']['t_min'])
     dmtol = float(mass._sections['Search']['dm_tol'])
-    decoy_label = str(mass._sections['Search']['decoy_label'])
+    decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
     min_ratio = float(mass._sections['Spectrum Processing']['min_ratio'])
     min_frag_mz = float(mass._sections['Spectrum Processing']['min_fragment_mz'])
@@ -1014,7 +1014,7 @@ def main(args):
             outsum = Path(os.path.splitext(infile)[0] + "_" +
                           str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
                           "_SUMMARY.tsv")
-        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_label)
+        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_prefix)
         logging.info("Done.")
     return
 
