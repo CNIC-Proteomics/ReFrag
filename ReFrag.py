@@ -87,7 +87,7 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
-def locateScan(scan, mode, fr_ns, spectra, index2, top_n, bin_top_n, min_ratio,
+def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, min_ratio,
                min_frag_mz, max_frag_mz, m_proton, deiso):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
@@ -1021,7 +1021,7 @@ def main(args):
         else:
             df.scannum = df.scannum.astype(int)
             df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
-                                                           spectra, index2, top_n,
+                                                           spectra, spectra_n, index2, top_n,
                                                            bin_top_n, min_ratio,
                                                            min_frag_mz, max_frag_mz,
                                                            m_proton, deiso),
