@@ -981,8 +981,8 @@ def main(args):
         logging.info("Refragging...")
         logging.info("\t" + "Locating scans...")
         starttime = datetime.now()
-        spectra = msdata.getSpectra()
         if mode == "mzml":
+            spectra = msdata.getSpectra()
             spectra_n = np.array([int(s.getNativeID().split("=")[-1]) for s in spectra])
             if len(args.scanrange) > 0:
                 logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
@@ -1021,7 +1021,7 @@ def main(args):
         else:
             df.scannum = df.scannum.astype(int)
             df["spectrum"] = df.apply(lambda x: locateScan(x.scannum, mode, msdata,
-                                                           spectra, spectra_n, index2, top_n,
+                                                           0, 0, index2, top_n,
                                                            bin_top_n, min_ratio,
                                                            min_frag_mz, max_frag_mz,
                                                            m_proton, deiso),
@@ -1034,7 +1034,7 @@ def main(args):
         if mode == "mzml":
             parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions]
         else:
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
