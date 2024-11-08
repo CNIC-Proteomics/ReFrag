@@ -423,7 +423,7 @@ def makeFrags(seq): # TODO: SLOW
                       ["b" + str(i) + "+++" for i in blist] + ["y" + str(i) + "+++" for i in ylist],
                       ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
                       ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
-                      ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*++" for i in ylist]])
+                      ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
     return(frags, blist, ylist)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
