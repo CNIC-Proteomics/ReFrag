@@ -111,6 +111,7 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
             ions[['MZ','INT']] = ions[0].str.split(" ",expand=True,)
             ions = ions.drop(ions.columns[0], axis=1)
             ions = ions.apply(pd.to_numeric)
+        ions = np.array(ions.T)
     elif mode == "mzml":
         try:
             s = spectra[spectra_n.index(scan)]
