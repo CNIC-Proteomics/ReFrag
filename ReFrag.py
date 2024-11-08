@@ -821,6 +821,15 @@ def parallelFragging(query, parlist):
                          best[3][best[2]==best[2].max()],
                          best[4][best[2]==best[2].max()],
                          best[5][best[2]==best[2].max()]])
+        # In case of tie, keep highest intensity
+        if len(best[0]) > 1:
+            best_label = best_label[best[5]==best[5].max()]
+            best = np.array([best[0][best[5]==best[5].max()],
+                             best[1][best[5]==best[5].max()],
+                             best[2][best[5]==best[5].max()],
+                             best[3][best[5]==best[5].max()],
+                             best[4][best[5]==best[5].max()],
+                             best[5][best[5]==best[5].max()]])
         if len(best[0]) > 1:
             # Prefer theoretical rather than experimental # TODO
             if 0 < (best_label == 'EXPERIMENTAL').sum() < len(best_label):
