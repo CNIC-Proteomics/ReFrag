@@ -87,8 +87,25 @@ def readRaw(msdata):
         sys.exit()
     return(fr_ns, mode, index2)
 
+def deisotope(ions, m_proton, max_charge):
+    # Sort by descending intensity
+    ions = np.array([ions[0][ions[1].argsort()][::-1], ions[1][ions[1].argsort()][::-1]])
+    if len(ions[0]) > 1000: # Remove low intensity peaks
+        ions = np.array([ions[0][:999], ions[1][:999]])
+    # Sort by ascending m/z
+    ions = np.array([ions[0][ions[0].argsort()], ions[1][ions[0].argsort()]])
+    isoids = []
+    for i in range(1, max_charge): # Consider charges up to precursor charge state - 1
+        isoids1 = [np.isclose(ions[0], j-(m_proton/i), atol=0.005, rtol=0).any() for j in ions[0]]
+        isoids2 = [np.isclose(ions[0], j-((m_proton*2)/i), atol=0.005, rtol=0).any() for j in ions[0]]
+        isoids3 = [np.isclose(ions[0], j-((m_proton*2)/i), atol=0.005, rtol=0).any() for j in ions[0]]
+        isoids += [np.logical_or.reduce((isoids1, isoids2, isoids3))]
+    isoids = np.logical_or.reduce(isoids)
+    ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
+    return(ions)
+
 def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, min_ratio,
-               min_frag_mz, max_frag_mz, m_proton, deiso):
+               min_frag_mz, max_frag_mz, m_proton, deiso, max_charge):
     if mode == "mgf":
         # index1 = fr_ns.to_numpy() == 'SCANS='+str(int(scan))
         try:
@@ -122,8 +139,7 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
         ions = np.array([peaks[0], peaks[1]])
     # Deisotope (experimental)
     if deiso: # TODO: Intensity, 2C13
-        isoids = [np.isclose(ions[0], i-m_proton, atol=0.005, rtol=0).any() for i in ions[0]]
-        ions = np.array([np.delete(ions[0], isoids), np.delete(ions[1], isoids)])
+        ions = deisotope(ions, m_proton, max_charge)
     # Remove peaks below min_ratio
     cutoff = np.where(ions[1]/max(ions[1]) >= min_ratio)
     ions = np.array([ions[0][cutoff], ions[1][cutoff]])
@@ -1034,7 +1050,7 @@ def main(args):
                                                            0, 0, index2, top_n,
                                                            bin_top_n, min_ratio,
                                                            min_frag_mz, max_frag_mz,
-                                                           m_proton, deiso),
+                                                           m_proton, deiso, x.charge),
                                       axis=1)
         indices, rowSeries = zip(*df.iterrows())
         rowSeries = list(rowSeries)
