@@ -419,16 +419,16 @@ def makeFrags(seq): # TODO: SLOW
     Name all fragments.
     '''
     bp = bh = yp = yh = []
-    if 'P' in seq[:-1]: # Cannot cut after
-        # Disallowed b ions
-        bp = [pos+1 for pos, char in enumerate(seq) if char == 'P']
-        # Disallowed y ions
-        yp = [pos for pos, char in enumerate(seq[::-1]) if char == 'P']
-    if 'H' in seq[1:]: # Cannot cut before
-        # Disallowed b ions
-        bh = [pos for pos, char in enumerate(seq) if char == 'H']
-        # Disallowed y ions
-        yh = [pos+1 for pos, char in enumerate(seq[::-1]) if char == 'H']
+    # if 'P' in seq[:-1]: # Cannot cut after
+    #     # Disallowed b ions
+    #     bp = [pos+1 for pos, char in enumerate(seq) if char == 'P']
+    #     # Disallowed y ions
+    #     yp = [pos for pos, char in enumerate(seq[::-1]) if char == 'P']
+    # if 'H' in seq[1:]: # Cannot cut before
+    #     # Disallowed b ions
+    #     bh = [pos for pos, char in enumerate(seq) if char == 'H']
+    #     # Disallowed y ions
+    #     yh = [pos+1 for pos, char in enumerate(seq[::-1]) if char == 'H']
     seq_len = len(seq)
     blist = list(range(2,seq_len+1))
     blist = [i for i in blist if i not in bp + bh]
