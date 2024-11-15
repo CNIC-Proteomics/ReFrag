@@ -676,25 +676,25 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
                 # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
                 ## PPM ERRORS ##
-                if dm != 0:
-                    dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
-                    if sub.Charge == 2:
-                        ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2]).min(0))
-                    elif sub.Charge < 2:
-                        ppmfinal = pd.DataFrame(np.array([dmterrors]).min(0))
-                    elif sub.Charge >= 3:
-                        ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0))
-                    else:
-                        sys.exit('ERROR: Invalid charge value!')
+                # if dm != 0:
+                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
+                if sub.Charge == 2:
+                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2]).min(0))
+                elif sub.Charge < 2:
+                    ppmfinal = pd.DataFrame(np.array([dmterrors]).min(0))
+                elif sub.Charge >= 3:
+                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0))
                 else:
-                    if sub.Charge == 2:
-                        ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-                    elif sub.Charge < 2:
-                        ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-                    elif sub.Charge >= 3:
-                        ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-                    else:
-                        sys.exit('ERROR: Invalid charge value!')
+                    sys.exit('ERROR: Invalid charge value!')
+                # else:
+                #     if sub.Charge == 2:
+                #         ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
+                #     elif sub.Charge < 2:
+                #         ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
+                #     elif sub.Charge >= 3:
+                #         ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
+                #     else:
+                #         sys.exit('ERROR: Invalid charge value!')
                 minv = list(ppmfinal.min(axis=1))
                 ## ABLINES ##
                 proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed, ftol+ttol)
