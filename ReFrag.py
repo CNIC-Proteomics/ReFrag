@@ -445,25 +445,25 @@ def makeFrags(seq): # TODO: SLOW
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
-    if dm == 0:
-        frags = frags[:3]
-        assign = np.array([#frags[0],
-                           theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3])
-        c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
-        c_assign = np.array([assign[0:].flatten(),
-                             #frags[:5].flatten(),
-                             [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
-                             #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
-    else:
-        frags = frags[3:]
-        dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
-        assign = np.array([#frags[0],
-                           dm_theo_spec, (dm_theo_spec+m_proton)/2, (dm_theo_spec+m_proton)/3])
-        c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
-        c_assign = np.array([assign[0:].flatten(),
-                             #frags[:5].flatten(),
-                             [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
-                             #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
+    # if dm == 0:
+    #     frags = frags[:3]
+    #     assign = np.array([#frags[0],
+    #                        theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3])
+    #     c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
+    #     c_assign = np.array([assign[0:].flatten(),
+    #                          #frags[:5].flatten(),
+    #                          [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
+    #                          #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
+    # else:
+    frags = frags[3:]
+    dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
+    assign = np.array([#frags[0],
+                       dm_theo_spec, (dm_theo_spec+m_proton)/2, (dm_theo_spec+m_proton)/3])
+    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
+    c_assign = np.array([assign[0:].flatten(),
+                         #frags[:5].flatten(),
+                         [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
+                         #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
     return(c_assign, frags.flatten())
 
 def fragCheck(plainseq, blist, ylist, dm_pos):
