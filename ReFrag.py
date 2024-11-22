@@ -577,11 +577,11 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    if 0 in dm_set.mass.values:
-        dm_set.at[list(dm_set[dm_set.mass==0].index)[0],'idx'] = [0]
-    else:
-        dm_set = pd.concat([dm_set,
-                            pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[0]}).to_frame().T], ignore_index=True)
+    # if 0 in dm_set.mass.values:
+    #     dm_set.at[list(dm_set[dm_set.mass==0].index)[0],'idx'] = [0]
+    # else:
+    dm_set = pd.concat([dm_set,
+                        pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[0]}).to_frame().T], ignore_index=True)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen)
     terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton)
