@@ -21,6 +21,7 @@ import pyopenms
 import re
 import scipy.stats
 import statistics
+import string
 import sys
 import shutup
 from tqdm import tqdm
@@ -856,16 +857,25 @@ def parallelFragging(query, parlist):
                                  np.delete(best[4], best_label == 'EXPERIMENTAL'),
                                  np.delete(best[5], best_label == 'EXPERIMENTAL')])
                 best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
-                if len(best[0]) > 1:
-                    # Prefer cases where the AA location is possible according to UNIMOD
-                    pos_check = np.array([plain_peptide[int(i)]+str(int(bool(i))) if i==0 or i==len(plain_peptide)-1 else plain_peptide[int(i)] for i in best[1]])
-                    name_check = np.array([dmdf[3][dmdf[1]==i][0] if i!=0 else 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for i in best[0]])
-                    name_check[np.where(name_check=='C-term')] = plain_peptide[-1] # TODO consider AA in other positions that match the first/last AA
-                    name_check[np.where(name_check=='N-term')] = plain_peptide[0]
-                    bool_check = [True if len(set(pos_check[i]).intersection(name_check[i]))>0 else False for i in range(len(pos_check))]
-                    if sum(bool_check) > 0:
-                        best = np.array([best[i][bool_check] for i in range(len(best))])
-                        best_label = best_label[bool_check]
+            # Prefer NM rather than modified
+            if 0 < (best_label == 'Non-modified').sum() < len(best_label):
+                best = np.array([np.delete(best[0], best_label != 'Non-modified'),
+                                 np.delete(best[1], best_label != 'Non-modified'),
+                                 np.delete(best[2], best_label != 'Non-modified'),
+                                 np.delete(best[3], best_label != 'Non-modified'),
+                                 np.delete(best[4], best_label != 'Non-modified'),
+                                 np.delete(best[5], best_label != 'Non-modified')])
+                best_label = np.delete(best_label, best_label != 'Non-modified')
+            if len(best[0]) > 1:
+                # Prefer cases where the AA location is possible according to UNIMOD
+                pos_check = np.array([plain_peptide[int(i)]+str(int(bool(i))) if i==0 or i==len(plain_peptide)-1 else plain_peptide[int(i)] for i in best[1]])
+                name_check = np.array([dmdf[3][dmdf[1]==i][0] if i!=0 else string.ascii_uppercase for i in best[0]])
+                name_check[np.where(name_check=='C-term')] = plain_peptide[-1] # TODO consider AA in other positions that match the first/last AA
+                name_check[np.where(name_check=='N-term')] = plain_peptide[0]
+                bool_check = [True if len(set(pos_check[i]).intersection(name_check[i]))>0 else False for i in range(len(pos_check))]
+                if sum(bool_check) > 0:
+                    best = np.array([best[i][bool_check] for i in range(len(best))])
+                    best_label = best_label[bool_check]
         # Keep closest to experimental # TODO mark several possible locations (same score)
         # best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
         best_index = int(np.where(abs(best[0]-sub.DM) == min(abs(best[0]-sub.DM)))[0][0])
@@ -889,8 +899,11 @@ def parallelFragging(query, parlist):
         best_label = str(best_label)
     sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
     #matched_ions_names = matched_ions_names[np.where((hyperscores[0]==best[0])&(hyperscores[1]==best[1])&(hyperscores[2]==best[2])&(hyperscores[3]==best[3])&(hyperscores[4]==best[4])&(hyperscores[5]==best[5]))[0][0]]
+    best_pos = plain_peptide[int(best[1])]+str(int(best[1]+1))
+    if best_label == 'Non-modified':
+        best_pos = ''
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            float(exp[0]), float(exp[3]), plain_peptide[int(best[1])]+str(int(best[1]+1)),
+            float(exp[0]), float(exp[3]), best_pos,
             sp, int(exp[2]), float(nm[3]), int(nm[2]), float(best[5])])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
