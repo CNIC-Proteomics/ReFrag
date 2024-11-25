@@ -7,6 +7,7 @@ Created on Mon Jun 27 16:55:52 2022
 
 from ast import literal_eval
 import argparse
+from collections import defaultdict
 import concurrent.futures
 import configparser
 from datetime import datetime
@@ -187,21 +188,30 @@ def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ion
     if (len(matched_ions[0]) == 0) or (len(pfrags) == 0):
         hs = 0
         return(hs, 0)
+    ## Deconvolute charges ##
+    SERIES = [''.join(filter(str.isalnum, i)) for i in pfrags]
+    SERIES = np.transpose(np.array([SERIES, matched_ions[3]]))
+    lookup = defaultdict(lambda: 0)
+    for f, i in SERIES:
+        lookup[f] = float(lookup[f]) + float(i)
+    SERIES = np.transpose([[f, i] for f, i in lookup.items()])
+    INTENS = np.array([float(i) for i in SERIES[1]])
+    SERIES = SERIES[0].astype('<U1')
     ## 3. Hyperscore ##
-    SERIES = pfrags.astype('<U1')
+    # SERIES = pfrags.astype('<U1')
     #SERIES_C = (np.unique(np.array([f.replace('+' , '') for f in pfrags]))).astype('<U1') # Group fragment charges
-    if len(matched_ions[3][SERIES == 'b']) == 0:
+    if len(INTENS[SERIES == 'b']) == 0:
         n_b = 1 # So that hyperscore will not be 0 if one series is missing
         i_b = 1
     else:
         n_b = (SERIES == 'b').sum()
-        i_b = matched_ions[3][SERIES == 'b'].sum()
-    if len(matched_ions[3][SERIES == 'y']) == 0:
+        i_b = INTENS[SERIES == 'b'].sum()
+    if len(INTENS[SERIES == 'y']) == 0:
         n_y = 1 # So that hyperscore will not be 0 if one series is missing
         i_y = 1
     else:
         n_y = (SERIES == 'y').sum()
-        i_y = matched_ions[3][SERIES == 'y'].sum()
+        i_y = INTENS[SERIES == 'y'].sum()
     try:
         #hs = math.log(math.factorial(n_b) * math.factorial(n_y)) + math.log(i_b * i_y)
         hs = math.log((i_b + 1) * (i_y + 1)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
