@@ -878,13 +878,13 @@ def parallelFragging(query, parlist):
                 best_label = np.delete(best_label, best_label != 'Non-modified')
             if len(best[0]) > 1:
                 # Prefer cases where the AA location is possible according to UNIMOD
-                pos_check = np.array([plain_peptide[int(i)]+str(int(bool(i))) if i==0 or i==len(plain_peptide)-1 else plain_peptide[int(i)] for i in best[1]])
-                name_check = np.array([dmdf[3][dmdf[1]==i][0] if i!=0 else string.ascii_uppercase for i in best[0]])
+                pos_check = np.array([plain_peptide[int(j)]+str(int(bool(j))) if j==0 or j==len(plain_peptide)-1 else plain_peptide[int(j)] for j in best[1]])
+                name_check = np.array([dmdf[3][dmdf[1]==k][0] if (k!=0)&(len(dmdf[3][dmdf[1]==k])>0) else string.ascii_uppercase for k in best[0]])
                 name_check[np.where(name_check=='C-term')] = plain_peptide[-1] # TODO consider AA in other positions that match the first/last AA
                 name_check[np.where(name_check=='N-term')] = plain_peptide[0]
-                bool_check = [True if len(set(pos_check[i]).intersection(name_check[i]))>0 else False for i in range(len(pos_check))]
+                bool_check = [True if len(set(pos_check[l]).intersection(name_check[l]))>0 else False for l in range(len(pos_check))]
                 if sum(bool_check) > 0:
-                    best = np.array([best[i][bool_check] for i in range(len(best))])
+                    best = np.array([best[m][bool_check] for m in range(len(best))])
                     best_label = best_label[bool_check]
         # Keep closest to experimental # TODO mark several possible locations (same score)
         # best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
