@@ -797,7 +797,7 @@ def parallelFragging(query, parlist):
     hss = []
     ufrags = []
     for i in list(range(0, len(dm))):
-        total = proof[i][0].sum() + proof[i][2].sum()
+        total = proof[i][0].sum() + proof[i][2].sum() # TODO this is not the proper comparison
         if total in check:
             hscore = hss[check.index(total)]
             frags = ufrags[check.index(total)]
@@ -813,7 +813,7 @@ def parallelFragging(query, parlist):
             #pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
             pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
             frags = len(np.unique(np.array([f.replace('+' , '') for f in pfrags[i]])))
-            check += [total]
+            # check += [total]
             hss += [hscore]
             ufrags += [frags]
         hyperscores += [[dm[i], position[i], frags, hscore, i, isum]]
