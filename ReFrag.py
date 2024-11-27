@@ -119,7 +119,7 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
         index3 = np.where(index2)[0]
         index3 = index3[np.searchsorted(index3,[index1,],side='right')[0]]
         try:
-            ions = fr_ns.iloc[index1+1:index3,:]
+            ions = fr_ns.iloc[index1:index3,:]
             ions[0] = ions[0].str.strip()
             ions[['MZ','INT']] = ions[0].str.split(" ",expand=True,)
             ions = ions.drop(ions.columns[0], axis=1)
