@@ -441,9 +441,9 @@ def makeFrags(seq): # TODO: SLOW
     #     # Disallowed y ions
     #     yh = [pos+1 for pos, char in enumerate(seq[::-1]) if char == 'H']
     seq_len = len(seq)
-    blist = list(range(2,seq_len+1))
+    blist = list(range(1,seq_len+1))
     blist = [i for i in blist if i not in bp + bh]
-    ylist = list(range(2,seq_len+1))[::-1]
+    ylist = list(range(1,seq_len+1))[::-1]
     ylist = [i for i in ylist if i not in yp + yh]
     frags = np.array([["b" + str(i) for i in blist] + ["y" + str(i) for i in ylist],
                       ["b" + str(i) + "++" for i in blist] + ["y" + str(i) + "++" for i in ylist],
