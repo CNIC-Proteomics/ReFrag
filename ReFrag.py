@@ -628,11 +628,14 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
             if dm != 0:
                 dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
                 if sub.Charge == 2:
-                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2]).min(0))
+                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2,
+                                                      dmterrors, dmterrors2]).min(0))
                 elif sub.Charge < 2:
-                    ppmfinal = pd.DataFrame(np.array([dmterrors]).min(0))
+                    ppmfinal = pd.DataFrame(np.array([terrors,
+                                                      dmterrors]).min(0))
                 elif sub.Charge >= 3:
-                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0))
+                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3,
+                                                      dmterrors, dmterrors2, dmterrors3]).min(0))
                 else:
                     sys.exit('ERROR: Invalid charge value!')
             else:
