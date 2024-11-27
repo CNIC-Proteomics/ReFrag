@@ -354,6 +354,8 @@ def expSpectrum(ions):
     if len(ions) > 0 and len(normspec) > 0:
         spec_correction = max(ions[1])/statistics.mean(normspec)
     else: spec_correction = 0
+    order = np.argsort(np.array(ions)[0])
+    ions = [i[order] for i in ions]
     return(spec, ions, spec_correction)
 
 def theoSpectrum(seq, blist, ylist, mods, pos, mass,
