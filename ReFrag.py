@@ -73,7 +73,7 @@ def readRaw(msdata):
     if os.path.splitext(msdata)[1].lower() == ".mzml":
         mode = "mzml"
         logging.info("Reading mzML file (" + str(os.path.basename(Path(msdata))) + ")...")
-        fr_ns = pyopenms.MSExperiment()
+        fr_ns = pyopenms.MSExperiment() # TODO: use OnDiscMSExperiment() to manage memory usage
         pyopenms.MzMLFile().load(str(msdata), fr_ns)
         index2 = 0
         logging.info("\t" + str(fr_ns.getNrSpectra()) + " spectra read.")
@@ -1048,15 +1048,17 @@ def main(args):
             ions1 = [np.array(p[1]) for p in peaks]
             # Remove peaks below min_ratio
             logging.info("\t" + "Filter by ratio...")
-            cutoff1 = [i/max(i) >= min_ratio for i in ions1]
-            ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
-            ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+            if min_ratio > 0:
+                cutoff1 = [i/max(i) >= min_ratio for i in ions1]
+                ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
+                ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
             # Return only top N peaks
             logging.info("\t" + "Filter top N...")
-            cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
-            ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
-            ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
-            ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
+            if top_n > 0:
+                cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
+                ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
+                ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+                ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
             # # Duplicate m/z measurement
             logging.info("\t" + "Filter duplicate m/z measurements...")
             check = [len(np.unique(i)) != len(i) for i in ions0]
