@@ -921,7 +921,7 @@ def parallelFragging(query, parlist):
             float(exp[0]), float(exp[3]), best_pos,
             sp, int(exp[2]), float(nm[3]), int(nm[2]), float(best[5])])
 
-def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
+def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy, protein):
     
     smods = df.REFRAG_name.value_counts()
     smods = smods[smods.index!='EXPERIMENTAL']
@@ -947,11 +947,11 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy):
     dmlist=str(dmlist),
     time=str(endt-startt),
     total=str(len(df)),
-    target=str(len(df[~df.protein.str.startswith(decoy)])),
+    target=str(len(df[~df[protein].str.startswith(decoy)])),
     refrag=str(len(df[df.REFRAG_name!='EXPERIMENTAL'])),
     perc=str(round(len(df[df.REFRAG_name!='EXPERIMENTAL'])/len(df)*100,2)),
-    refragt=str(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith(decoy))])),
-    perct=str(round(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df.protein.str.startswith(decoy))])/len(df[~df.protein.str.startswith(decoy)])*100,2)),
+    refragt=str(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df[protein].str.startswith(decoy))])),
+    perct=str(round(len(df[(df.REFRAG_name!='EXPERIMENTAL')&(~df[protein].str.startswith(decoy))])/len(df[~df[protein].str.startswith(decoy)])*100,2)),
     smods=lsmods)
     
     with open(outpath, 'w') as f:
@@ -970,6 +970,7 @@ def main(args):
     tmin = float(mass._sections['Search']['t_min'])
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
+    prot_column = str(mass._sections['Summary']['prot_column'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
     bin_top_n = eval(str(mass._sections['Spectrum Processing']['bin_top_n']).title())
     min_ratio = float(mass._sections['Spectrum Processing']['min_ratio'])
@@ -1138,7 +1139,7 @@ def main(args):
             outsum = Path(os.path.splitext(infile)[0] + "_" +
                           str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
                           "_SUMMARY.tsv")
-        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_prefix)
+        makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_prefix, prot_column)
         logging.info("Done.")
     return
 
