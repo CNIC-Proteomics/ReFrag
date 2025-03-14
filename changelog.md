@@ -5,6 +5,9 @@ ___
 
 ### Changes in the detail
 
++ tqdm CLI arguments injection attack: We have change to 4.66.3
+https://github.com/tqdm/tqdm/releases/tag/v4.66.3
+
 + Create parameter for protein column name
 + Filter ions only if threshold > 0
 + Revert "disable deisotoping"
@@ -27,7 +30,6 @@ ___
 + Report intensity of matched fragments
 + Fix mgf mode
 + Access scans by number in mzml files
-
 
 ___
 ## v0.4.4
