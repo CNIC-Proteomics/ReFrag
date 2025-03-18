@@ -5,6 +5,8 @@ ___
 
 ### Changes in the detail
 
++ The output file has the '_REFMOD.tsv' suffix.
+
 + tqdm CLI arguments injection attack: We have change to 4.66.3
 https://github.com/tqdm/tqdm/releases/tag/v4.66.3
 

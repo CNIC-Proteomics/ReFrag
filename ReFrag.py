@@ -1126,11 +1126,11 @@ def main(args):
         logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
         endtime = datetime.now()
         logging.info("Writing output file...")
-        outpath = Path(os.path.splitext(infile)[0] + "_REFRAG.tsv")
+        outpath = Path(os.path.splitext(infile)[0] + "_REFMOD.tsv")
         if len(args.scanrange) > 0:
             outpath = Path(os.path.splitext(infile)[0] + "_" +
                            str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
-                           "_REFRAG.tsv")
+                           "_REFMOD.tsv")
         df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
         logging.info("Done.")
         logging.info("Writing summary file...")
