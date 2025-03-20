@@ -1125,22 +1125,29 @@ def main(args):
         prefragged = round((refragged/len(df))*100,2)
         logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
         endtime = datetime.now()
-        logging.info("Writing output file...")
-        outpath = Path(os.path.splitext(infile)[0] + "_REFMOD.tsv")
+
+        logging.info("Prepering workspace...")
+        # get the name of script
+        script_name = os.path.splitext( os.path.basename(__file__) )[0].upper()
+        # if output directory is not defined, get the folder from given file + script name
+        outdir = args.outdir if args.outdir else os.path.join(os.path.dirname(infile), script_name.lower())
+        os.makedirs(outdir, exist_ok=True)
+        basename = os.path.basename(infile)
+        outpath = Path(outdir)/basename
+        outsum = Path(outdir) / f"{Path(basename).stem}_SUMMARY{Path(basename).suffix}"
+
+        logging.info(f"Writing output file {outpath}...")
         if len(args.scanrange) > 0:
-            outpath = Path(os.path.splitext(infile)[0] + "_" +
-                           str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
-                           "_REFMOD.tsv")
+            outpath = f"{outpath.stem}{str(args.scanrange[0]) + '-' + str(args.scanrange[1])}{outpath.suffix}"
         df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
         logging.info("Done.")
-        logging.info("Writing summary file...")
-        outsum = Path(os.path.splitext(infile)[0] + "_SUMMARY.tsv")
+
+        logging.info(f"Writing summary file {outsum}...")
         if len(args.scanrange) > 0:
-            outsum = Path(os.path.splitext(infile)[0] + "_" +
-                          str(args.scanrange[0]) + "-" + str(args.scanrange[1]) +
-                          "_SUMMARY.tsv")
+            outsum = f"{outsum.stem}{str(args.scanrange[0]) + '-' + str(args.scanrange[1])}{outsum.suffix}"
         makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_prefix, prot_column)
         logging.info("Done.")
+
     return
 
 if __name__ == '__main__':
@@ -1165,6 +1172,7 @@ if __name__ == '__main__':
                         type=lambda s: [int(item) for item in s.split(',')])
     parser.add_argument('-s', '--scanrange', default=[], help='Scan range to search',
                         type=lambda s: [int(item) for item in s.split(',')])
+    parser.add_argument('-o', '--outdir', help='Path to the output directory')
     parser.add_argument('-c', '--config', default=defaultconfig, help='Path to custom config.ini file')
     parser.add_argument('-w',  '--n_workers', type=int, default=os.cpu_count(), help='Number of threads/n_workers')
     parser.add_argument('-v', dest='verbose', action='store_true', help="Increase output verbosity")
