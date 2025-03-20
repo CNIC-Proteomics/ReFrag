@@ -5,7 +5,7 @@ ___
 
 ### Changes in the detail
 
-+ The output file has the '_REFMOD.tsv' suffix.
++ The output files are saved in the output directory. If the output directory is not provided as an input parameter, a default folder (refrag) is created in the same folder as the input files.
 
 + tqdm CLI arguments injection attack: We have change to 4.66.3
 https://github.com/tqdm/tqdm/releases/tag/v4.66.3
