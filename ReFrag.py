@@ -11,6 +11,7 @@ from collections import defaultdict
 import concurrent.futures
 import configparser
 from datetime import datetime
+import glob
 import itertools
 import logging
 import math
@@ -48,6 +49,14 @@ def preProcess(args):
                     infiles += [os.path.join(args.infile, f)]
         if len(infiles) == 0:
             sys.exit("ERROR: No TSV files found in directory " + str(args.infile))
+    elif '*' in args.infile:
+        infiles_t = glob.glob(args.infile)
+        infiles = []
+        if len(args.dia) > 0:
+            for f in infiles_t:
+                infiles += [os.path.join(args.infile, os.path.basename(f).split(sep=".")[0] + "_ch" + str(c) + ".tsv") for c in args.dia]
+        else:
+            infiles = infiles_t
     else:
         if len(args.dia) > 0:
             infiles = [os.path.join(os.path.dirname(args.infile), os.path.basename(args.infile).split(sep=".")[0] + "_ch" + str(c) + ".tsv") for c in args.dia]
@@ -1193,6 +1202,9 @@ if __name__ == '__main__':
     if os.path.isdir(args.infile):
         log_file = os.path.join(args.infile + '/ReFrag.log')
         log_file_debug = os.path.join(args.infile + '/ReFrag_debug.log')
+    elif '*' in args.infile:
+        log_file = os.path.join(os.path.dirname(args.infile) + '/' + os.path.basename(args.infile).replace("*", "") + '_ReFrag.log')
+        log_file_debug = os.path.join(os.path.dirname(args.infile) + '/' + os.path.basename(args.infile).replace("*", "") + '_ReFrag_debug.log')
     else:
         log_file = args.infile[:-4] + '_ReFrag.log'
         log_file_debug = args.infile[:-4] + '_ReFrag_debug.log'
