@@ -1122,7 +1122,7 @@ def main(args):
         df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
         df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
         df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
-        df['REFRAG_sum_intenisty'] = pd.DataFrame(df.templist.tolist()).iloc[:, 13]. tolist()
+        df['REFRAG_sum_intensity'] = pd.DataFrame(df.templist.tolist()).iloc[:, 13]. tolist()
         df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
         df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
         df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
