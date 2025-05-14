@@ -1135,7 +1135,7 @@ def main(args):
         logging.info("\t" + str(refragged) + " (" + str(prefragged) + "%) refragged PSMs.")
         endtime = datetime.now()
 
-        logging.info("Prepering workspace...")
+        logging.info("Preparing workspace...")
         # get the name of script
         script_name = os.path.splitext( os.path.basename(__file__) )[0].upper()
         # if output directory is not defined, get the folder from given file + script name
