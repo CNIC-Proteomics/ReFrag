@@ -979,6 +979,7 @@ def main(args):
     tmin = float(mass._sections['Search']['t_min'])
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
+    labile = bool(mass._sections['Search']['labile_mode'])
     prot_column = str(mass._sections['Summary']['prot_column'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
     bin_top_n = eval(str(mass._sections['Spectrum Processing']['bin_top_n']).title())
