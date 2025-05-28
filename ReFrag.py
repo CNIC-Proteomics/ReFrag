@@ -589,7 +589,7 @@ def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead o
     return(dm_set)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
-             spec_correction, m_proton, m_hydrogen, m_oxygen, ttol, tmin):
+             spec_correction, m_proton, m_hydrogen, m_oxygen, ttol, tmin, labile):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -773,8 +773,10 @@ def parallelFragging(query, parlist):
         sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     if parlist[9]=="mzml":
         spectrum = parlist[11][np.where(np.array(parlist[10])==scan)[0][0]]
+        labile = parlist[12]
     else:
         spectrum = query.spectrum
+        labile = parlist[10]
     dm = query.massdiff
     # TODO use calc neutral mass?
     # Make a Vseq-style query
@@ -785,7 +787,7 @@ def parallelFragging(query, parlist):
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6],
-                                                 parlist[7], parlist[8])
+                                                 parlist[7], parlist[8], labile)
     #matched_ions_names = pfrags.copy()
     # TODO: always get a Non-modified score
     # Remove cases where a DM is tried but no modified fragments have been matched
@@ -1102,9 +1104,9 @@ def main(args):
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
         if mode == "mzml":
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, labile]
         else:
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, labile]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
