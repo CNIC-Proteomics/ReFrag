@@ -424,7 +424,7 @@ def errorMatrix(mz, theo_spec, m_proton):
     exp = np.transpose(np.array([mz]*len(theo_spec[0])))
     
     ## EXPERIMENTAL MASSES FOR CHARGE 2 ##
-    mzs2 = np.transpose([np.array(mz)*2-m_proton]*(len(exp[0])))
+    mzs2 = np.transpose([np.array(mz)*2 - m_proton]*(len(exp[0])))
     ## EXPERIMENTAL MASSES FOR CHARGE 3 ##
     mzs3 = np.transpose([np.array(mz)*3 - m_proton*2]*(len(exp[0])))
     ## PPM ERRORS ##
@@ -436,7 +436,7 @@ def errorMatrix(mz, theo_spec, m_proton):
     
     return(terrors, terrors2, terrors3, exp)
 
-def makeFrags(seq): # TODO: SLOW
+def makeFrags(seq, ch): # TODO: SLOW
     '''
     Name all fragments.
     '''
@@ -456,12 +456,20 @@ def makeFrags(seq): # TODO: SLOW
     blist = [i for i in blist if i not in bp + bh]
     ylist = list(range(1,seq_len+1))[::-1]
     ylist = [i for i in ylist if i not in yp + yh]
-    frags = np.array([["b" + str(i) for i in blist] + ["y" + str(i) for i in ylist],
-                      ["b" + str(i) + "++" for i in blist] + ["y" + str(i) + "++" for i in ylist],
-                      ["b" + str(i) + "+++" for i in blist] + ["y" + str(i) + "+++" for i in ylist],
-                      ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
-                      ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
-                      ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
+    # frags = np.array([["b" + str(i) for i in blist] + ["y" + str(i) for i in ylist],
+    #                   ["b" + str(i) + "++" for i in blist] + ["y" + str(i) + "++" for i in ylist],
+    #                   ["b" + str(i) + "+++" for i in blist] + ["y" + str(i) + "+++" for i in ylist],
+    #                   ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
+    #                   ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
+    #                   ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
+    if ch >= 3: ch = 3 # TODO support higher charge states
+    max_length = ch + 5 # 1 = series, 2:4 = number, 5= mod, supports peptides up to 999 in length
+    frags = np.empty((ch*2, len(blist)+len(ylist)), dtype=f"<U{max_length}")
+    step = 0
+    for c in range(1, ch+1):
+        frags[step] = np.array(["b" + str(i) + "+"*c for i in blist] + ["y" + str(i) + "+"*c for i in ylist])
+        frags[step+2] = np.array(["b" + str(i) + "*" + "+"*c for i in blist] + ["y" + str(i) + "*" + "+"*c for i in ylist])
+        step += 1
     return(frags, blist, ylist)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
@@ -488,13 +496,23 @@ def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
                          #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
     return(c_assign, frags.flatten())
 
-def fragCheck(plainseq, blist, ylist, dm_pos):
-    ballowed = (['b'+str(i)+'*' if i >= dm_pos+1 else 'b'+str(i) for i in blist] +
-                ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
-                ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist])
-    yallowed = (['y'+str(i)+'*' if i >= len(plainseq)-dm_pos else 'y'+str(i) for i in ylist] +
-                ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
-                ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist])
+def fragCheck(plainseq, blist, ylist, dm_pos, charge):
+    # ballowed = ['b'+str(i)+'*' if i >= dm_pos+1 else 'b'+str(i) for i in blist] * charge
+    # yallowed = ['y'+str(i)+'*' if i >= len(plainseq)-dm_pos else 'y'+str(i) for i in ylist] * charge
+    # cballowed = list(itertools.chain.from_iterable([['+'*i]*len(blist) for i in range(1,charge+1)]))
+    # cyallowed = [['+'*i]*len(ylist) for i in range(1,charge+1)]
+    if charge < 3:
+        ballowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
+                    ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist])
+        yallowed = (['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
+                    ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist])
+    else:
+        ballowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
+                    ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
+                    ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist])
+        yallowed = (['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
+                    ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
+                    ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist])
     allowed = ballowed + yallowed
     return(allowed)
 
@@ -594,7 +612,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     # assigndblist = []
     # assigndb = []
     ## FRAGMENT NAMES ##
-    frags, blist, ylist = makeFrags(plainseq)
+    frags, blist, ylist = makeFrags(plainseq, sub.Charge)
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
@@ -606,7 +624,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                         pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[0]}).to_frame().T], ignore_index=True)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen)
-    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton)
+    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton) # TODO support higher charge states
     closest_proof = []
     closest_pfrags = []
     closest_dm = []
@@ -622,7 +640,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
         temp_pos = []
         tiebreaker = []
         for dm_pos in row.idx:
-            allowed = fragCheck(plainseq, blist, ylist, dm_pos)
+            allowed = fragCheck(plainseq, blist, ylist, dm_pos, sub.Charge) # TODO support higher charge states
             ## DM OPERATIONS ##
             if dm_pos == -1: # Non-modified
                 dm_theo_spec = theo_spec.copy()
@@ -631,11 +649,11 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 dm_theo_spec = theo_spec.copy()
                 dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq), blist, ylist)
             ## ASSIGN IONS WITHIN SPECTRA ##
-            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
+            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass, labile) # TODO CHECK ASSIGNATION
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal and assign and minv are the only things that can change the proof)
             ## PPM ERRORS ##
             if dm != 0:
-                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
+                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton) # TODO support higher charge states
                 if sub.Charge == 2:
                     ppmfinal = pd.DataFrame(np.array([terrors, terrors2,
                                                       dmterrors, dmterrors2]).min(0))
