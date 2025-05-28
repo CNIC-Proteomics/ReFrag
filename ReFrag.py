@@ -377,7 +377,7 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
     for i in ylist:
         # yn = list(seq[i:])
         yn = list(seq[-i:])
-        if i > 0: nt = False
+        if i < len(seq): nt = False
         else: nt = True
         fragy = getTheoMH(yn,nt,True,mass,
                           m_proton,m_hydrogen,m_oxygen) + 2*m_hydrogen + m_oxygen + dm
