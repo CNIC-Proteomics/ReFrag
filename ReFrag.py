@@ -1056,6 +1056,9 @@ def main(args):
             ions = [np.array([p[0], p[1]]) for p in peaks]
             ions0 = [np.array(p[0]) for p in peaks]
             ions1 = [np.array(p[1]) for p in peaks]
+            # Normalize intensity
+            logging.info("\t" + "Normalise intensity...")
+            ions1 = [(ions1[i]/max(ions1[i]))*100 for i in range(len(ions))]
             # Remove peaks below min_ratio
             logging.info("\t" + "Filter by ratio...")
             if min_ratio > 0:
