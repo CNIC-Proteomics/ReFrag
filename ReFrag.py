@@ -368,7 +368,7 @@ def expSpectrum(ions):
     return(spec, ions, spec_correction)
 
 def theoSpectrum(seq, blist, ylist, mods, pos, mass,
-                 m_proton, m_hydrogen, m_oxygen, dm=0):
+                 m_proton, m_hydrogen, m_oxygen, charge, dm=0):
     # blist = [i - 2 for i in blist]
     # ylist = [len(seq)-i for i in ylist]
     ## Y SERIES ##
@@ -462,7 +462,6 @@ def makeFrags(seq, ch): # TODO: SLOW
     #                   ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
     #                   ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
     #                   ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
-    if ch >= 4: ch = 4 # TODO support higher charge states
     max_length = ch + 5 # 1 = series, 2:4 = number, 5= mod, supports peptides up to 999 in length
     frags = np.empty((ch*2, len(blist)+len(ylist)), dtype=f"<U{max_length}")
     step = 0
@@ -612,7 +611,9 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     # assigndblist = []
     # assigndb = []
     ## FRAGMENT NAMES ##
-    frags, blist, ylist = makeFrags(plainseq, sub.Charge)
+    charge = sub.Charge
+    if charge >= 4: charge = 4
+    frags, blist, ylist = makeFrags(plainseq, charge)
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
@@ -623,8 +624,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
     dm_set = pd.concat([dm_set,
                         pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[0]}).to_frame().T], ignore_index=True)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
-                             m_proton, m_hydrogen, m_oxygen)
     terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton) # TODO support higher charge states
+                             m_proton, m_hydrogen, m_oxygen, charge)
     closest_proof = []
     closest_pfrags = []
     closest_dm = []
@@ -640,7 +641,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
         temp_pos = []
         tiebreaker = []
         for dm_pos in row.idx:
-            allowed = fragCheck(plainseq, blist, ylist, dm_pos, sub.Charge) # TODO support higher charge states
+            allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support higher charge states
             ## DM OPERATIONS ##
             if dm_pos == -1: # Non-modified
                 dm_theo_spec = theo_spec.copy()
