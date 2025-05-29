@@ -472,7 +472,7 @@ def makeFrags(seq, ch): # TODO: SLOW
         step += 1
     return(frags, blist, ylist)
 
-def assignIons(theo_spec, dm_theo_spec, frags, dm, mass):
+def assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, charge):
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
     # if dm == 0:
@@ -607,7 +607,7 @@ def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead o
     return(dm_set)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
-             spec_correction, m_proton, m_hydrogen, m_oxygen, ttol, tmin, labile):
+             spec_correction, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -649,7 +649,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
                 dm_theo_spec = theo_spec.copy()
                 dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq), blist, ylist)
             ## ASSIGN IONS WITHIN SPECTRA ##
-            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
+            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, sub.Charge)
             # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal and assign and minv are the only things that can change the proof)
             ## PPM ERRORS ##
             if dm != 0:
@@ -791,10 +791,10 @@ def parallelFragging(query, parlist):
         sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
     if parlist[9]=="mzml":
         spectrum = parlist[11][np.where(np.array(parlist[10])==scan)[0][0]]
-        labile = parlist[12]
+        score_mode = parlist[12]
     else:
         spectrum = query.spectrum
-        labile = parlist[10]
+        score_mode = parlist[10]
     dm = query.massdiff
     # TODO use calc neutral mass?
     # Make a Vseq-style query
@@ -805,7 +805,7 @@ def parallelFragging(query, parlist):
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], exp_spec, exp_ions, spec_correction,
                                                  parlist[4], parlist[5], parlist[6],
-                                                 parlist[7], parlist[8], labile)
+                                                 parlist[7], parlist[8], score_mode)
     #matched_ions_names = pfrags.copy()
     # TODO: always get a Non-modified score
     # Remove cases where a DM is tried but no modified fragments have been matched
@@ -999,7 +999,7 @@ def main(args):
     tmin = float(mass._sections['Search']['t_min'])
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
-    labile = bool(int(mass._sections['Search']['labile_mode']))
+    score_mode = int(mass._sections['Search']['score_mode'])
     prot_column = str(mass._sections['Summary']['prot_column'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
     bin_top_n = eval(str(mass._sections['Spectrum Processing']['bin_top_n']).title())
@@ -1122,9 +1122,9 @@ def main(args):
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
         if mode == "mzml":
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, labile]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, score_mode]
         else:
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, labile]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, score_mode]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
