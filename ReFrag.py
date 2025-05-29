@@ -410,7 +410,7 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
             couty = [(i+(c-1)*m_proton)/c for i in outy]
         else:
             coutb, couty = outb, outy
-        spec += [[coutb, couty[::-1]]]
+        spec += [[coutb, couty]]
     return(spec)
 
 def addMod(spec, dm, pos, len_seq, blist, ylist):
