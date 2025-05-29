@@ -462,7 +462,7 @@ def makeFrags(seq, ch): # TODO: SLOW
     #                   ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
     #                   ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
     #                   ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
-    if ch >= 3: ch = 3 # TODO support higher charge states
+    if ch >= 4: ch = 4 # TODO support higher charge states
     max_length = ch + 5 # 1 = series, 2:4 = number, 5= mod, supports peptides up to 999 in length
     frags = np.empty((ch*2, len(blist)+len(ylist)), dtype=f"<U{max_length}")
     step = 0
