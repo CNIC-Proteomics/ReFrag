@@ -7,6 +7,7 @@ Created on Mon Jun 27 16:55:52 2022
 
 from ast import literal_eval
 import argparse
+from bisect import bisect_left
 from collections import defaultdict
 import concurrent.futures
 import configparser
@@ -625,12 +626,26 @@ def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead o
     dm_set = dm_set[dm_set.idx.apply(lambda x: len(x)) > 0]
     return(dm_set)
 
+def getClosestIon(spectrum, ion):
+    pos = bisect_left(spectrum, ion)
+    if pos == 0:
+        return spectrum[0]
+    if pos == len(spectrum):
+        return spectrum[-1]
+    before = spectrum[pos - 1]
+    after = spectrum[pos]
+    if after - ion < ion - before:
+        return(after)
+    else:
+        return(before)
+
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
     ## FRAGMENT NAMES ##
     charge = sub.Charge
+    spectrum_masses = list(sub.Spectrum[0])
     if charge >= 4: charge = 4
     frags, frags_m, blist, ylist = makeFrags(plainseq, charge)
     ## DM ##
@@ -641,10 +656,10 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     #     dm_set.at[list(dm_set[dm_set.mass==0].index)[0],'idx'] = [0]
     # else:
     dm_set = pd.concat([dm_set,
-                        pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[0]}).to_frame().T], ignore_index=True)
+                        pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[-1]}).to_frame().T], ignore_index=True)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
-    terrors, terrors2, terrors3, texp = errorMatrix(ions[0], theo_spec, m_proton) # TODO support higher charge states
                              m_proton, m_hydrogen, m_oxygen, charge)
+    # terrors, terrors2, terrors3, texp = errorMatrix(sub.Spectrum[0], theo_spec, m_proton) # TODO support higher charge states
     closest_proof = []
     closest_pfrags = []
     closest_dm = []
@@ -659,8 +674,31 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
         temp_name = []
         temp_pos = []
         tiebreaker = []
+        if dm == 0: # Non-modified
+            flat_theo_spec = sum(sum(theo_spec, []), [])
+            flat_frags = sum(sum(frags, []), [])
+            assigned_mz = [getClosestIon(sub.Spectrum[0], mz) for mz in flat_theo_spec]
+            assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, flat_theo_spec), flat_theo_spec)*1000000)
+            assigned_mask = assigned_ppm <= ftol
+            assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
+            assigned_frags = list(itertools.compress(flat_frags, assigned_mask))
+            assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
+            assigned_int_mask = [f[0]=='b' for f in assigned_frags]
+            i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
+            i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
+            n_b = len([f.replace('+', '') for f in assigned_frags if f[0]=='b'])
+            n_y = len([f.replace('+', '') for f in assigned_frags if f[0]=='y'])
+            if i_b == 0: i_b = 1
+            if i_y == 0: i_y = 1
+            hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
+            # TODO: what to do if one mz matches multimple fragments (I think it should be assigned to all of them but the intensity shouldn't be summed)
+            # TODO: check for intensity 0 or n 0 in hyperscore formula and handle it
+        else:
+            for dm_pos in row.idx:
+                allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
+            
         for dm_pos in row.idx:
-            allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support higher charge states
+            allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
             ## DM OPERATIONS ##
             if dm_pos == -1: # Non-modified
                 dm_theo_spec = theo_spec.copy()
