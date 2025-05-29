@@ -370,13 +370,9 @@ def expSpectrum(ions):
 
 def theoSpectrum(seq, blist, ylist, mods, pos, mass,
                  m_proton, m_hydrogen, m_oxygen, charge, dm=0):
-    # blist = [i - 2 for i in blist]
-    # ylist = [len(seq)-i for i in ylist]
     ## Y SERIES ##
     outy = []
-    # for i in range(1,len(seq)):
     for i in ylist:
-        # yn = list(seq[i:])
         yn = list(seq[-i:])
         if i < len(seq): nt = False
         else: nt = True
@@ -385,17 +381,13 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
         outy += [fragy]
     ## B SERIES ##
     outb = []
-    # for i in range(1,len(seq)):
     for i in blist:
         bn = list(seq[:i][::-1])
-        # bn = list(seq[::-1][i:])
         if i > 0: ct = False
         else: ct = True
         fragb = getTheoMH(bn,True,ct,mass,
                           m_proton,m_hydrogen,m_oxygen) + dm # TODO only add +dm to fragments up until n_pos
         outb += [fragb]
-    ## FRAGMENT MATRIX ##
-    # spec = [outb, outy[::-1]]
     ## ADD FIXED MODS ## # TODO two modes, use mods from config file or input table
     # for i, m in enumerate(mods):
         # bpos = range(0, pos[mods.index(i)]+1)
@@ -404,6 +396,7 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
         # ypos = len(seq)-pos[i]-1
         # spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
         # spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
+    ## FRAGMENT MATRIX ##
     spec = []
     for c in range(1, charge+1):
         if c > 1:
@@ -465,14 +458,6 @@ def makeFrags(seq, ch): # TODO: SLOW
     blist = [i for i in blist if i not in bp + bh]
     ylist = list(range(1,seq_len+1))
     ylist = [i for i in ylist if i not in yp + yh]
-    # frags = np.array([["b" + str(i) for i in blist] + ["y" + str(i) for i in ylist],
-    #                   ["b" + str(i) + "++" for i in blist] + ["y" + str(i) + "++" for i in ylist],
-    #                   ["b" + str(i) + "+++" for i in blist] + ["y" + str(i) + "+++" for i in ylist],
-    #                   ["b" + str(i) + "*" for i in blist] + ["y" + str(i) + "*" for i in ylist],
-    #                   ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
-    #                   ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
-    max_length = ch + 5 # 1 = series, 2:4 = number, 5= mod, supports peptides up to 999 in length
-    # frags = np.empty((ch, 2, len(blist)+len(ylist)), dtype=f"<U{max_length}")
     frags = []
     frags_m = []
     for c in range(1, ch+1):
@@ -483,16 +468,6 @@ def makeFrags(seq, ch): # TODO: SLOW
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, charge):
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
-    # if dm == 0:
-    #     frags = frags[:3]
-    #     assign = np.array([#frags[0],
-    #                        theo_spec, (theo_spec+m_proton)/2, (theo_spec+2*m_proton)/3])
-    #     c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
-    #     c_assign = np.array([assign[0:].flatten(),
-    #                          #frags[:5].flatten(),
-    #                          [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
-    #                          #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
-    # else:
     frags = frags[3:]
     dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
     assign = np.array([#frags[0],
@@ -652,14 +627,10 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    # if 0 in dm_set.mass.values:
-    #     dm_set.at[list(dm_set[dm_set.mass==0].index)[0],'idx'] = [0]
-    # else:
     dm_set = pd.concat([dm_set,
                         pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[-1]}).to_frame().T], ignore_index=True)
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen, charge)
-    # terrors, terrors2, terrors3, texp = errorMatrix(sub.Spectrum[0], theo_spec, m_proton) # TODO support higher charge states
     closest_proof = []
     closest_pfrags = []
     closest_dm = []
@@ -691,8 +662,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             if i_b == 0: i_b = 1
             if i_y == 0: i_y = 1
             hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
-            # TODO: what to do if one mz matches multimple fragments (I think it should be assigned to all of them but the intensity shouldn't be summed)
-            # TODO: check for intensity 0 or n 0 in hyperscore formula and handle it
         else:
             for dm_pos in row.idx:
                 allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
