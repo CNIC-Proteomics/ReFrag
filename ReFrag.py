@@ -605,8 +605,7 @@ def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead o
     dm_set = dm_set[dm_set.idx.apply(lambda x: len(x)) > 0]
     return(dm_set)
 
-def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, exp_spec, ions,
-             spec_correction, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -801,11 +800,10 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
-    exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
+    # exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
     proof, pfrags, dm, name, position, tie = miniVseq(sub, plain_peptide, mod, pos,
                                                  parlist[0], parlist[1], parlist[2],
-                                                 parlist[3], exp_spec, exp_ions, spec_correction,
-                                                 parlist[4], parlist[5], parlist[6],
+                                                 parlist[3], parlist[4], parlist[5], parlist[6],
                                                  parlist[7], parlist[8], score_mode)
     #matched_ions_names = pfrags.copy()
     # TODO: always get a Non-modified score
