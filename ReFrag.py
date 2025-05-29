@@ -462,7 +462,7 @@ def makeFrags(seq, ch): # TODO: SLOW
     seq_len = len(seq)
     blist = list(range(1,seq_len))
     blist = [i for i in blist if i not in bp + bh]
-    ylist = list(range(1,seq_len+1))[::-1]
+    ylist = list(range(1,seq_len+1))
     ylist = [i for i in ylist if i not in yp + yh]
     # frags = np.array([["b" + str(i) for i in blist] + ["y" + str(i) for i in ylist],
     #                   ["b" + str(i) + "++" for i in blist] + ["y" + str(i) + "++" for i in ylist],
@@ -471,13 +471,13 @@ def makeFrags(seq, ch): # TODO: SLOW
     #                   ["b" + str(i) + "*++" for i in blist] + ["y" + str(i) + "*++" for i in ylist],
     #                   ["b" + str(i) + "*+++" for i in blist] + ["y" + str(i) + "*+++" for i in ylist]])
     max_length = ch + 5 # 1 = series, 2:4 = number, 5= mod, supports peptides up to 999 in length
-    frags = np.empty((ch*2, len(blist)+len(ylist)), dtype=f"<U{max_length}")
-    step = 0
+    # frags = np.empty((ch, 2, len(blist)+len(ylist)), dtype=f"<U{max_length}")
+    frags = []
+    frags_m = []
     for c in range(1, ch+1):
-        frags[step] = np.array(["b" + str(i) + "+"*c for i in blist] + ["y" + str(i) + "+"*c for i in ylist])
-        frags[step+ch] = np.array(["b" + str(i) + "*" + "+"*c for i in blist] + ["y" + str(i) + "*" + "+"*c for i in ylist])
-        step += 1
-    return(frags, blist, ylist)
+        frags += [[["b" + str(i) + "+"*c for i in blist], ["y" + str(i) + "+"*c for i in ylist]]]
+        frags_m += [[["b" + str(i) + "*" + "+"*c for i in blist], ["y" + str(i) + "*" + "+"*c for i in ylist]]]
+    return(frags, frags_m, blist, ylist)
 
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, charge):
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
@@ -620,7 +620,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     ## FRAGMENT NAMES ##
     charge = sub.Charge
     if charge >= 4: charge = 4
-    frags, blist, ylist = makeFrags(plainseq, charge)
+    frags, frags_m, blist, ylist = makeFrags(plainseq, charge)
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
