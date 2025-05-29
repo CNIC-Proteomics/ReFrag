@@ -394,7 +394,7 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
                           m_proton,m_hydrogen,m_oxygen) + dm # TODO only add +dm to fragments up until n_pos
         outb += [fragb]
     ## FRAGMENT MATRIX ##
-    spec = [outb, outy[::-1]]
+    # spec = [outb, outy[::-1]]
     ## ADD FIXED MODS ## # TODO two modes, use mods from config file or input table
     # for i, m in enumerate(mods):
         # bpos = range(0, pos[mods.index(i)]+1)
@@ -403,6 +403,14 @@ def theoSpectrum(seq, blist, ylist, mods, pos, mass,
         # ypos = len(seq)-pos[i]-1
         # spec[0] = spec[0][:bpos] + [b + m for b in spec[0][bpos:]]
         # spec[1] = spec[1][:ypos] + [y + m for y in spec[1][ypos:]]
+    spec = []
+    for c in range(1, charge+1):
+        if c > 1:
+            coutb = [(i+(c-1)*m_proton)/c for i in outb]
+            couty = [(i+(c-1)*m_proton)/c for i in outy]
+        else:
+            coutb, couty = outb, outy
+        spec += [[coutb, couty[::-1]]]
     return(spec)
 
 def addMod(spec, dm, pos, len_seq, blist, ylist):
