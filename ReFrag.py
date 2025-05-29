@@ -468,7 +468,7 @@ def makeFrags(seq, ch): # TODO: SLOW
     step = 0
     for c in range(1, ch+1):
         frags[step] = np.array(["b" + str(i) + "+"*c for i in blist] + ["y" + str(i) + "+"*c for i in ylist])
-        frags[step+2] = np.array(["b" + str(i) + "*" + "+"*c for i in blist] + ["y" + str(i) + "*" + "+"*c for i in ylist])
+        frags[step+ch] = np.array(["b" + str(i) + "*" + "+"*c for i in blist] + ["y" + str(i) + "*" + "+"*c for i in ylist])
         step += 1
     return(frags, blist, ylist)
 
