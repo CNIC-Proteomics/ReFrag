@@ -632,6 +632,26 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                              m_proton, m_hydrogen, m_oxygen, charge)
     flat_theo_spec = sum(sum(theo_spec, []), [])
     flat_frags = sum(sum(frags, []), [])
+    f_len = len(flat_frags)
+    
+    ## NON-MODIFIED ##
+    assigned_mz = [getClosestIon(sub.Spectrum[0], mz) for mz in flat_theo_spec]
+    assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, flat_theo_spec), flat_theo_spec)*1000000)
+    assigned_mask = assigned_ppm <= ftol
+    assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
+    assigned_frags = list(itertools.compress(flat_frags, assigned_mask))
+    assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
+    assigned_int_mask = [f[0]=='b' for f in assigned_frags]
+    i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
+    i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
+    NM_i = i_b + i_y
+    NM_n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
+    NM_n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
+    if i_b == 0: i_b = 1
+    if i_y == 0: i_y = 1
+    NM_hs = math.log((i_b) * (i_y)) + math.log(math.factorial((NM_n_b))) + math.log(math.factorial(NM_n_y))
+    
+    ## DM OPERATIONS ##
     # closest_proof = []
     # closest_pfrags = []
     # closest_dm = []
@@ -644,34 +664,12 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
         # temp_dm = []
         # temp_name = []
         # temp_pos = []
-        # tiebreaker = []
-        ## NON-MODIFIED ##
-        assigned_mz = [getClosestIon(sub.Spectrum[0], mz) for mz in flat_theo_spec]
-        assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, flat_theo_spec), flat_theo_spec)*1000000)
-        assigned_mask = assigned_ppm <= ftol
-        assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
-        assigned_frags = list(itertools.compress(flat_frags, assigned_mask))
-        assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
-        assigned_int_mask = [f[0]=='b' for f in assigned_frags]
-        i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
-        i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
-        NM_i = i_b + i_y
-        NM_n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
-        NM_n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
-        if i_b == 0: i_b = 1
-        if i_y == 0: i_y = 1
-        NM_hs = math.log((i_b) * (i_y)) + math.log(math.factorial((NM_n_b))) + math.log(math.factorial(NM_n_y))
-        
-        ## DM OPERATIONS ##
+        # tiebreaker = []        
         dm = row.mass
         # TODO support both HYBRID and MOD scoring
         for dm_pos in row.idx:
-            if score_mode == 0:
-                allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
-            elif score_mode == 1:
-                allowed = 
-            elif score_mode == 2:
-                
+            allowed_mod = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
+            theo_spec_mod = [flat_theo_spec[i]+dm for i in range(0, f_len) if '*' in allowed_mod[i]]
                 
                 
             
