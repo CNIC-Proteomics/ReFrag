@@ -434,30 +434,29 @@ def fragCheck(plainseq, blist, ylist, dm_pos, charge):
     # cballowed = list(itertools.chain.from_iterable([['+'*i]*len(blist) for i in range(1,charge+1)]))
     # cyallowed = [['+'*i]*len(ylist) for i in range(1,charge+1)]
     if charge == 1:
-        ballowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist])
-        yallowed = (['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist])
+        allowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
+                   ['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist])
     elif charge == 2:
-        ballowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
-                    ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist])
-        yallowed = (['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
-                    ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist])
+        allowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
+                   ['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
+                   ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
+                   ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist])
     elif charge == 3:
-        ballowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
-                    ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
-                    ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist])
-        yallowed = (['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
-                    ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
-                    ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist])
+        allowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
+                   ['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
+                   ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
+                   ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
+                   ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist] +
+                   ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist])
     else:
-        ballowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
-                    ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
-                    ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist] +
-                    ['b'+str(i)+'*++++' if i >= dm_pos+1 else 'b'+str(i)+'++++' for i in blist])
-        yallowed = (['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
-                    ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
-                    ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist] +
-                    ['y'+str(i)+'*++++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++++' for i in ylist])
-    allowed = ballowed + yallowed
+        allowed = (['b'+str(i)+'*+' if i >= dm_pos+1 else 'b'+str(i)+'+' for i in blist] +
+                   ['y'+str(i)+'*+' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+' for i in ylist] +
+                   ['b'+str(i)+'*++' if i >= dm_pos+1 else 'b'+str(i)+'++' for i in blist] +
+                   ['y'+str(i)+'*++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++' for i in ylist] +
+                   ['b'+str(i)+'*+++' if i >= dm_pos+1 else 'b'+str(i)+'+++' for i in blist] +
+                   ['y'+str(i)+'*+++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'+++' for i in ylist] +
+                   ['b'+str(i)+'*++++' if i >= dm_pos+1 else 'b'+str(i)+'++++' for i in blist] +
+                   ['y'+str(i)+'*++++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++++' for i in ylist])
     return(allowed)
 
 def makeAblines(texp, minv, assign, afrags, ions, allowed, tie=51):
@@ -623,6 +622,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
         for dm_pos in row.idx:
             allowed_mod = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
             theo_spec_mod = [flat_theo_spec[i]+dm if '*' in allowed_mod[i] else flat_theo_spec[i] for i in range(0, f_len)]
+            MOD_i, MOD_n_b, MOD_n_y, MOD_hs = hyperscore(sub.Spectrum[0], theo_spec_mod, allowed_mod, ftol)
                 
                 
             
