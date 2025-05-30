@@ -438,7 +438,7 @@ def errorMatrix(mz, theo_spec, m_proton):
     
     return(terrors, terrors2, terrors3, exp)
 
-def makeFrags(seq, ch): # TODO: SLOW
+def makeFrags(seq, ch, full_y): # TODO: SLOW
     '''
     Name all fragments.
     '''
@@ -456,7 +456,7 @@ def makeFrags(seq, ch): # TODO: SLOW
     seq_len = len(seq)
     blist = list(range(1,seq_len))
     blist = [i for i in blist if i not in bp + bh]
-    ylist = list(range(1,seq_len+1))
+    ylist = list(range(1,seq_len+int(full_y)))
     ylist = [i for i in ylist if i not in yp + yh]
     frags = []
     frags_m = []
@@ -614,7 +614,7 @@ def getClosestIon(spectrum, ion):
     else:
         return(before)
 
-def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode, full_y):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -622,7 +622,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     charge = sub.Charge
     spectrum_masses = list(sub.Spectrum[0])
     if charge >= 4: charge = 4
-    frags, frags_m, blist, ylist = makeFrags(plainseq, charge)
+    frags, frags_m, blist, ylist = makeFrags(plainseq, charge, full_y)
     ## DM ##
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
@@ -819,9 +819,11 @@ def parallelFragging(query, parlist):
     if parlist[9]=="mzml":
         spectrum = parlist[11][np.where(np.array(parlist[10])==scan)[0][0]]
         score_mode = parlist[12]
+        full_y = parlist[13]
     else:
         spectrum = query.spectrum
         score_mode = parlist[10]
+        full_y = parlist[11]
     dm = query.massdiff
     # TODO use calc neutral mass?
     # Make a Vseq-style query
@@ -831,7 +833,7 @@ def parallelFragging(query, parlist):
     proof, pfrags, dm, name, position, tie = miniVseq(sub, plain_peptide, mod, pos,
                                                  parlist[0], parlist[1], parlist[2],
                                                  parlist[3], parlist[4], parlist[5], parlist[6],
-                                                 parlist[7], parlist[8], score_mode)
+                                                 parlist[7], parlist[8], score_mode, full_y)
     #matched_ions_names = pfrags.copy()
     # TODO: always get a Non-modified score
     # Remove cases where a DM is tried but no modified fragments have been matched
@@ -1026,6 +1028,7 @@ def main(args):
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
     score_mode = int(mass._sections['Search']['score_mode'])
+    full_y = bool(int(mass._sections['Search']['full_y']))
     prot_column = str(mass._sections['Summary']['prot_column'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
     bin_top_n = bool(int(mass._sections['Spectrum Processing']['bin_top_n']))
@@ -1148,9 +1151,9 @@ def main(args):
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
         if mode == "mzml":
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, score_mode]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, score_mode, full_y]
         else:
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, score_mode]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, score_mode, full_y]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
