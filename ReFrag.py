@@ -622,7 +622,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
         # TODO support both HYBRID and MOD scoring
         for dm_pos in row.idx:
             allowed_mod = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
-            theo_spec_mod = [flat_theo_spec[i]+dm for i in range(0, f_len) if '*' in allowed_mod[i]]
+            theo_spec_mod = [flat_theo_spec[i]+dm if '*' in allowed_mod[i] else flat_theo_spec[i] for i in range(0, f_len)]
                 
                 
             
