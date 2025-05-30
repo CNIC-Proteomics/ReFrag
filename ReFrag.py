@@ -657,8 +657,8 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             assigned_int_mask = [f[0]=='b' for f in assigned_frags]
             i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
             i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
-            n_b = len([f.replace('+', '') for f in assigned_frags if f[0]=='b'])
-            n_y = len([f.replace('+', '') for f in assigned_frags if f[0]=='y'])
+            n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
+            n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
             if i_b == 0: i_b = 1
             if i_y == 0: i_y = 1
             hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
