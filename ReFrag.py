@@ -627,44 +627,53 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     exp_pos = 'exp'
     dm_set = findClosest(sub.DM, dmdf, dmtol, exp_pos) # Contains experimental DM
     dm_set = findPos(dm_set, plainseq)
-    dm_set = pd.concat([dm_set,
-                        pd.Series({'name':'Non-modified', 'mass':0, 'site':['Anywhere'], 'site_tiebreaker':['Non-modified'], 'idx':[-1]}).to_frame().T], ignore_index=True)
+    dm_set = dm_set[dm_set.mass != 0]
     theo_spec = theoSpectrum(plainseq, blist, ylist, mods, pos, mass,
                              m_proton, m_hydrogen, m_oxygen, charge)
-    closest_proof = []
-    closest_pfrags = []
-    closest_dm = []
-    closest_name = []
-    closest_pos = []
-    closest_tie = []
+    flat_theo_spec = sum(sum(theo_spec, []), [])
+    flat_frags = sum(sum(frags, []), [])
+    # closest_proof = []
+    # closest_pfrags = []
+    # closest_dm = []
+    # closest_name = []
+    # closest_pos = []
+    # closest_tie = []
     for index, row in dm_set.iterrows():
+        # temp_proof = []
+        # temp_pfrags = []
+        # temp_dm = []
+        # temp_name = []
+        # temp_pos = []
+        # tiebreaker = []
+        ## NON-MODIFIED ##
+        assigned_mz = [getClosestIon(sub.Spectrum[0], mz) for mz in flat_theo_spec]
+        assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, flat_theo_spec), flat_theo_spec)*1000000)
+        assigned_mask = assigned_ppm <= ftol
+        assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
+        assigned_frags = list(itertools.compress(flat_frags, assigned_mask))
+        assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
+        assigned_int_mask = [f[0]=='b' for f in assigned_frags]
+        i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
+        i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
+        NM_i = i_b + i_y
+        NM_n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
+        NM_n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
+        if i_b == 0: i_b = 1
+        if i_y == 0: i_y = 1
+        NM_hs = math.log((i_b) * (i_y)) + math.log(math.factorial((NM_n_b))) + math.log(math.factorial(NM_n_y))
+        
+        ## DM OPERATIONS ##
         dm = row.mass
-        temp_proof = []
-        temp_pfrags = []
-        temp_dm = []
-        temp_name = []
-        temp_pos = []
-        tiebreaker = []
-        if dm == 0: # Non-modified
-            flat_theo_spec = sum(sum(theo_spec, []), [])
-            flat_frags = sum(sum(frags, []), [])
-            assigned_mz = [getClosestIon(sub.Spectrum[0], mz) for mz in flat_theo_spec]
-            assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, flat_theo_spec), flat_theo_spec)*1000000)
-            assigned_mask = assigned_ppm <= ftol
-            assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
-            assigned_frags = list(itertools.compress(flat_frags, assigned_mask))
-            assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
-            assigned_int_mask = [f[0]=='b' for f in assigned_frags]
-            i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
-            i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
-            n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
-            n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
-            if i_b == 0: i_b = 1
-            if i_y == 0: i_y = 1
-            hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
-        else:
-            for dm_pos in row.idx:
+        # TODO support both HYBRID and MOD scoring
+        for dm_pos in row.idx:
+            if score_mode == 0:
                 allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
+            elif score_mode == 1:
+                allowed = 
+            elif score_mode == 2:
+                
+                
+                
             
         for dm_pos in row.idx:
             allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
