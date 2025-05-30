@@ -182,57 +182,6 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
         ions = np.array(ions.T)
     return(ions)
 
-def hyperscore(ch, ions, proof, pfrags, ftol=50): # TODO play with number of ions # if modified frag present, don't consider non-modified?
-    # def _stirling(x):
-    #     y = x * math.log(x) - x + 0.5 * math.log(x) + 0.5 * math.log(math.pi * 2.0 * x)
-    #     return
-    ## 1. Normalize intensity
-    MSF_INT = (ions[1] / ions[1].max()) * 10E2
-    ## 2. Pick matched ions ##
-    pfrags = pfrags[proof[1]<=ftol]
-    proof = np.array([proof[0][proof[1]<=ftol],
-                      proof[1][proof[1]<=ftol],
-                      proof[2][proof[1]<=ftol]])
-    matched_ions = np.array([proof[0], proof[1], proof[2], 
-                             np.repeat(MSF_INT[np.isin(ions[0], proof[0])], np.unique(proof[0], return_counts=True)[1])])
-    if (len(matched_ions[0]) == 0) or (len(pfrags) == 0):
-        hs = 0
-        return(hs, 0)
-    ## Deconvolute charges ##
-    SERIES = [''.join(filter(str.isalnum, i)) for i in pfrags]
-    SERIES = np.transpose(np.array([SERIES, matched_ions[3]]))
-    lookup = defaultdict(lambda: 0)
-    for f, i in SERIES:
-        lookup[f] = float(lookup[f]) + float(i)
-    SERIES = np.transpose([[f, i] for f, i in lookup.items()])
-    INTENS = np.array([float(i) for i in SERIES[1]])
-    SERIES = SERIES[0].astype('<U1')
-    ## 3. Hyperscore ##
-    # SERIES = pfrags.astype('<U1')
-    #SERIES_C = (np.unique(np.array([f.replace('+' , '') for f in pfrags]))).astype('<U1') # Group fragment charges
-    if len(INTENS[SERIES == 'b']) == 0:
-        n_b = 1 # So that hyperscore will not be 0 if one series is missing
-        i_b = 1
-    else:
-        n_b = (SERIES == 'b').sum()
-        i_b = INTENS[SERIES == 'b'].sum()
-    if len(INTENS[SERIES == 'y']) == 0:
-        n_y = 1 # So that hyperscore will not be 0 if one series is missing
-        i_y = 1
-    else:
-        n_y = (SERIES == 'y').sum()
-        i_y = INTENS[SERIES == 'y'].sum()
-    try:
-        #hs = math.log(math.factorial(n_b) * math.factorial(n_y)) + math.log(i_b * i_y)
-        hs = math.log((i_b + 1) * (i_y + 1)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
-    except ValueError:
-        hs = 0
-    if hs < 0:
-        hs = 0
-    # TODO: CHARGE CORRECTION
-    # TODO: sequence length correction?
-    return(hs, i_b+i_y)
-
 def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
     if mfrags.size > 0:
         # Consecutive fragments
@@ -613,6 +562,24 @@ def getClosestIon(spectrum, ion):
         return(after)
     else:
         return(before)
+    
+def hyperscore(exp_spec, theo_spec, frags, ftol):
+    assigned_mz = [getClosestIon(exp_spec, mz) for mz in theo_spec]
+    assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, theo_spec), theo_spec)*1000000)
+    assigned_mask = assigned_ppm <= ftol
+    assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
+    assigned_frags = list(itertools.compress(frags, assigned_mask))
+    assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
+    assigned_int_mask = [f[0]=='b' for f in assigned_frags]
+    i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
+    i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
+    i_sum = i_b + i_y
+    n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
+    n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
+    if i_b == 0: i_b = 1
+    if i_y == 0: i_y = 1
+    hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
+    return(i_sum, n_b, n_y, hs)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode, full_y):
     ## ASSIGNDB ##
@@ -635,21 +602,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     f_len = len(flat_frags)
     
     ## NON-MODIFIED ##
-    assigned_mz = [getClosestIon(sub.Spectrum[0], mz) for mz in flat_theo_spec]
-    assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, flat_theo_spec), flat_theo_spec)*1000000)
-    assigned_mask = assigned_ppm <= ftol
-    assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
-    assigned_frags = list(itertools.compress(flat_frags, assigned_mask))
-    assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
-    assigned_int_mask = [f[0]=='b' for f in assigned_frags]
-    i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
-    i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
-    NM_i = i_b + i_y
-    NM_n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
-    NM_n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
-    if i_b == 0: i_b = 1
-    if i_y == 0: i_y = 1
-    NM_hs = math.log((i_b) * (i_y)) + math.log(math.factorial((NM_n_b))) + math.log(math.factorial(NM_n_y))
+    NM_i, NM_n_b, NM_n_y, NM_hs = hyperscore(sub.Spectrum[0], flat_theo_spec, flat_frags, ftol)
     
     ## DM OPERATIONS ##
     # closest_proof = []
