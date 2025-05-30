@@ -627,9 +627,19 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             ## HYBRID HYPERSCORE ##
             HYB_frags = [i for i in MOD_frags if i not in NM_frags]
             if len(HYB_frags) == 0:
-                HYB_mz, HYB_int, HYB_frags, HYB_n_b, HYB_n_y, HYB_i, HYB_hs = NM_mz, NM_int, NM_frags, NM_n_b, NM_n_y, NM_i, NM_hs
+                HYB_int, HYB_frags, HYB_n_b, HYB_n_y, HYB_i, HYB_hs = NM_int, NM_frags, NM_n_b, NM_n_y, NM_i, NM_hs
             else:
+                HYB_int = [i for i in MOD_int if i not in NM_int] + NM_int
                 HYB_frags += NM_frags
+                HYB_n_b = len(set([f.replace('+', '').replace('*', '') for f in HYB_frags if f[0]=='b']))
+                HYB_n_y = len(set([f.replace('+', '').replace('*', '') for f in HYB_frags if f[0]=='y']))
+                HYB_int_mask = [f[0]=='b' for f in HYB_frags]
+                HYB_i_b = sum(list(itertools.compress(HYB_int, HYB_int_mask)))
+                HYB_i_y = sum(list(itertools.compress(HYB_int, ~np.array(HYB_int_mask))))
+                HYB_i = HYB_i_b + HYB_i_y
+                if HYB_i_b == 0: HYB_i_b = 1
+                if HYB_i_y == 0: HYB_i_y = 1
+                HYB_hs = math.log((HYB_i_b) * (HYB_i_y)) + math.log(math.factorial((HYB_n_b))) + math.log(math.factorial(HYB_n_y))
                 
                 
                 
