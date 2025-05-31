@@ -602,21 +602,13 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     
     ## NON-MODIFIED ##
     NM_mz, NM_int, NM_frags, NM_n_b, NM_n_y, NM_i, NM_hs = hyperscore(sub.Spectrum[0], flat_theo_spec, flat_frags, ftol)
+    nm_results = [NM_n_b+NM_n_y, NM_i, NM_hs, 'Non-modified', 0, None]
     
     ## DM OPERATIONS ##
-    # closest_proof = []
-    # closest_pfrags = []
-    # closest_dm = []
-    # closest_name = []
-    # closest_pos = []
-    # closest_tie = []
-    for index, row in dm_set.iterrows():
-        # temp_proof = []
-        # temp_pfrags = []
-        # temp_dm = []
-        # temp_name = []
-        # temp_pos = []
-        # tiebreaker = []        
+    mod_results = [0, 0, 0, None, None, None]
+    hyb_results = [0, 0, 0, None, None, None]
+    exp_results = [0, 0, 0, None, None, None]
+    for index, row in dm_set.iterrows():       
         dm = row.mass
         # TODO support both HYBRID and MOD scoring
         for dm_pos in row.idx:
@@ -640,146 +632,18 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                 if HYB_i_b == 0: HYB_i_b = 1
                 if HYB_i_y == 0: HYB_i_y = 1
                 HYB_hs = math.log((HYB_i_b) * (HYB_i_y)) + math.log(math.factorial((HYB_n_b))) + math.log(math.factorial(HYB_n_y))
-                
-                
-                
-            
-        for dm_pos in row.idx:
-            allowed = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
-            ## DM OPERATIONS ##
-            if dm_pos == -1: # Non-modified
-                dm_theo_spec = theo_spec.copy()
-                # dm_theo_spec = [x+dm for x in dm_theo_spec[0]] + [x+dm for x in dm_theo_spec[1]]
-            else:
-                dm_theo_spec = theo_spec.copy()
-                dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq), blist, ylist)
-            ## ASSIGN IONS WITHIN SPECTRA ##
-            assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, sub.Charge)
-            # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal and assign and minv are the only things that can change the proof)
-            ## PPM ERRORS ##
-            if dm != 0:
-                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton) # TODO support higher charge states
-                if sub.Charge == 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2,
-                                                      dmterrors, dmterrors2]).min(0))
-                elif sub.Charge < 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors,
-                                                      dmterrors]).min(0))
-                elif sub.Charge >= 3:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3,
-                                                      dmterrors, dmterrors2, dmterrors3]).min(0))
-                else:
-                    sys.exit('ERROR: Invalid charge value!')
-            else:
-                if sub.Charge == 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-                elif sub.Charge < 2:
-                    ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-                elif sub.Charge >= 3:
-                    ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-                else:
-                    sys.exit('ERROR: Invalid charge value!')
-            minv = list(ppmfinal.min(axis=1))
-            ## ABLINES ##
-            proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed)
-            if pfrags.size > 0:
-                proof[2] = proof[2] * spec_correction
-                proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
-                pfrags = pfrags[proof[1] <= ftol]
-                proof = np.array([proof[0][proof[1] <= ftol],
-                                  proof[1][proof[1] <= ftol],
-                                  proof[2][proof[1] <= ftol]])
-                # Choose only lowest error match for each peak
-                if len(np.unique(proof[0])) != len(proof[0]):
-                    #mask = np.unique(proof[0], return_inverse=True)[1]
-                    split0 = np.split(proof[0], np.unique(proof[0], return_index=True)[1][1:])
-                    split1 = np.split(proof[1], np.unique(proof[0], return_index=True)[1][1:])
-                    split2 = np.split(proof[2], np.unique(proof[0], return_index=True)[1][1:])
-                    splitf = np.split(pfrags, np.unique(proof[0], return_index=True)[1][1:])
-                    mins = [np.argmin(i) for i in split1]
-                    minl = range(0,len(mins))
-                    proof = np.array([[split0[i][mins[i]] for i in minl],
-                                      [split1[i][mins[i]] for i in minl],
-                                      [split2[i][mins[i]] for i in minl]])
-                    pfrags = np.array([splitf[i][mins[i]] for i in minl])
-            tiebreaker.append(''.join(list(pfrags)))
-            temp_proof.append(proof)
-            temp_pfrags.append(pfrags)
-            temp_dm.append(dm)
-            temp_name.append(row['name'])
-            temp_pos.append(dm_pos)
-        ## TIE-BREAKER ##
-        if len(set(tiebreaker)) <= len(plainseq)-len(plainseq)*tmin:
-            temp_tie = [True if tiebreaker.count(tiebreaker[i]) > 1 else False for i in range(len(tiebreaker))]
-            for i in range(len(row.idx)):
-                dm_pos = row.idx[i]
-                ## DM OPERATIONS ##
-                if dm_pos == -1: # Non-modified
-                    dm_theo_spec = theo_spec.copy()
-                    # dm_theo_spec = [x+dm for x in dm_theo_spec[0]] + [x+dm for x in dm_theo_spec[1]]
-                else:
-                    dm_theo_spec = theo_spec.copy()
-                    dm_theo_spec = addMod(dm_theo_spec, dm, dm_pos, len(plainseq), blist, ylist)
-                ## ASSIGN IONS WITHIN SPECTRA ##
-                assign, afrags = assignIons(theo_spec, dm_theo_spec, frags, dm, mass)
-                # TODO check that we don't actually need to calculate the proof (adds PPM) (check this by making sure minv is also equal ans assign and minv are the only things that can change the proof)
-                ## PPM ERRORS ##
-                # if dm != 0:
-                dmterrors, dmterrors2, dmterrors3, dmtexp = errorMatrix(ions[0], dm_theo_spec, m_proton)
-                if sub.Charge == 2:
-                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2]).min(0))
-                elif sub.Charge < 2:
-                    ppmfinal = pd.DataFrame(np.array([dmterrors]).min(0))
-                elif sub.Charge >= 3:
-                    ppmfinal = pd.DataFrame(np.array([dmterrors, dmterrors2, dmterrors3]).min(0))
-                else:
-                    sys.exit('ERROR: Invalid charge value!')
-                # else:
-                #     if sub.Charge == 2:
-                #         ppmfinal = pd.DataFrame(np.array([terrors, terrors2]).min(0))
-                #     elif sub.Charge < 2:
-                #         ppmfinal = pd.DataFrame(np.array([terrors]).min(0))
-                #     elif sub.Charge >= 3:
-                #         ppmfinal = pd.DataFrame(np.array([terrors, terrors2, terrors3]).min(0))
-                #     else:
-                #         sys.exit('ERROR: Invalid charge value!')
-                minv = list(ppmfinal.min(axis=1))
-                ## ABLINES ##
-                proof, pfrags = makeAblines(texp, minv, assign, afrags, ions, allowed, ftol+ttol)
-                if pfrags.size > 0:
-                    proof[2] = proof[2] * spec_correction
-                    proof[2][proof[2] > exp_spec[1].max()] = exp_spec[1].max() - 3
-                    pfrags = pfrags[proof[1] <= ftol+ttol]
-                    proof = np.array([proof[0][proof[1] <= ftol+ttol],
-                                      proof[1][proof[1] <= ftol+ttol],
-                                      proof[2][proof[1] <= ftol+ttol]])
-                    # Choose only lowest error match for each peak
-                    if len(np.unique(proof[0])) != len(proof[0]):
-                        #mask = np.unique(proof[0], return_inverse=True)[1]
-                        split0 = np.split(proof[0], np.unique(proof[0], return_index=True)[1][1:])
-                        split1 = np.split(proof[1], np.unique(proof[0], return_index=True)[1][1:])
-                        split2 = np.split(proof[2], np.unique(proof[0], return_index=True)[1][1:])
-                        splitf = np.split(pfrags, np.unique(proof[0], return_index=True)[1][1:])
-                        mins = [np.argmin(i) for i in split1]
-                        minl = range(0,len(mins))
-                        proof = np.array([[split0[i][mins[i]] for i in minl],
-                                          [split1[i][mins[i]] for i in minl],
-                                          [split2[i][mins[i]] for i in minl]])
-                        pfrags = np.array([splitf[i][mins[i]] for i in minl])
-                temp_proof[i] = proof
-                temp_pfrags[i] = pfrags
-                temp_dm[i] = dm
-                temp_name[i] = row['name']
-                temp_pos[i] = dm_pos
-        else:
-            temp_tie = [False]*len(temp_proof)
-        closest_proof += temp_proof
-        closest_pfrags += temp_pfrags
-        closest_dm += temp_dm
-        closest_name += temp_name
-        closest_pos += temp_pos
-        closest_tie += temp_tie
-    return(closest_proof, closest_pfrags, closest_dm, closest_name, closest_pos, closest_tie)
+            ## STORE RESULTS ##
+            if score_mode: # HYBRID
+                if HYB_hs > hyb_results[2]: # TODO handle score ties
+                    hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
+                if row['name'] == 'EXPERIMENTAL' and HYB_hs > exp_results[2]:
+                    exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
+            else: # MOD
+                if MOD_hs > mod_results[2]:
+                    mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
+                if row['name'] == 'EXPERIMENTAL' and MOD_hs > exp_results[2]:
+                    exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
+    return(nm_results, exp_results, mod_results, hyb_results)
 
 def parallelFragging(query, parlist):
     m_proton = parlist[4]
