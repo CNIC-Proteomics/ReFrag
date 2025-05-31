@@ -633,16 +633,16 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                 if HYB_i_y == 0: HYB_i_y = 1
                 HYB_hs = math.log((HYB_i_b) * (HYB_i_y)) + math.log(math.factorial((HYB_n_b))) + math.log(math.factorial(HYB_n_y))
             ## STORE RESULTS ##
-            if score_mode: # HYBRID
+            if row['name'] == 'EXPERIMENTAL':
+                if score_mode and HYB_hs > exp_results[2]: # EXPERIMENTAL
+                        exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
+                if not score_mode and MOD_hs > exp_results[2]: # MOD
+                        exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
+            else:
                 if HYB_hs > hyb_results[2]: # TODO handle score ties
                     hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
-                if row['name'] == 'EXPERIMENTAL' and HYB_hs > exp_results[2]:
-                    exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
-            else: # MOD
                 if MOD_hs > mod_results[2]:
                     mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
-                if row['name'] == 'EXPERIMENTAL' and MOD_hs > exp_results[2]:
-                    exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
     return(nm_results, exp_results, mod_results, hyb_results)
 
 def parallelFragging(query, parlist):
@@ -651,7 +651,6 @@ def parallelFragging(query, parlist):
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
     plain_peptide = query.peptide
-    dmdf = parlist[3]
     if pd.isnull(query.modification_info):
         sequence = plain_peptide
         mod = []
@@ -671,151 +670,17 @@ def parallelFragging(query, parlist):
     # Make a Vseq-style query
     sub = pd.Series([scan, charge, MH, sequence, spectrum, dm],
                     index = ["FirstScan", "Charge", "MH", "Sequence", "Spectrum", "DM"])
-    # exp_spec, exp_ions, spec_correction = expSpectrum(sub.Spectrum)
-    proof, pfrags, dm, name, position, tie = miniVseq(sub, plain_peptide, mod, pos,
-                                                 parlist[0], parlist[1], parlist[2],
-                                                 parlist[3], parlist[4], parlist[5], parlist[6],
-                                                 parlist[7], parlist[8], score_mode, full_y)
-    #matched_ions_names = pfrags.copy()
-    # TODO: always get a Non-modified score
-    # Remove cases where a DM is tried but no modified fragments have been matched
-    check = []
-    for i in range(0, len(pfrags)):
-        if name[i] not in ['EXPERIMENTAL', 'Non-modified']:
-            if ''.join(pfrags[i]).find('*') == -1:
-                check += [False]
-            else:
-                check += [True]
-        else:
-            check += [True]
-    proof, pfrags, dm, name, position, tie = list(itertools.compress(proof, check)), list(itertools.compress(pfrags, check)), list(itertools.compress(dm, check)), list(itertools.compress(name, check)), list(itertools.compress(position, check)), list(itertools.compress(tie, check))
-    
-    hyperscores = []
-    hyperscores_label = []
-    check = []
-    hss = []
-    ufrags = []
-    for i in list(range(0, len(dm))):
-        total = proof[i][0].sum() + proof[i][2].sum() # TODO this is not the proper comparison
-        if total in check:
-            hscore = hss[check.index(total)]
-            frags = ufrags[check.index(total)]
-            pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
-        else:
-            if pfrags[i].size > 0:
-                if tie[i]:
-                    hscore, isum = hyperscore(sub.Charge, exp_ions, proof[i], pfrags[i], parlist[1]+parlist[8])
-                else:
-                    hscore, isum = hyperscore(sub.Charge, exp_ions, proof[i], pfrags[i], parlist[1])
-            else:
-                hscore = isum = 0
-            #pfrags[i] = np.array([f.replace('+' , '').replace('*' , '') for f in pfrags[i]])
-            pfrags[i] = np.unique(np.array([f.replace('*' , '') for f in pfrags[i]]))
-            frags = len(np.unique(np.array([f.replace('+' , '') for f in pfrags[i]])))
-            # check += [total]
-            hss += [hscore]
-            ufrags += [frags]
-        hyperscores += [[dm[i], position[i], frags, hscore, i, isum]]
-        hyperscores_label += [name[i]]
-    # best = hyperscores[[i[4] for i in hyperscores].index(max([i[4] for i in hyperscores]))]
-    hyperscores = np.transpose(np.array(hyperscores))
-    hyperscores_label = np.array(hyperscores_label)
-    nm = np.array([hyperscores[0][hyperscores_label == 'Non-modified'],
-                   hyperscores[1][hyperscores_label == 'Non-modified'],
-                   hyperscores[2][hyperscores_label == 'Non-modified'],
-                   hyperscores[3][hyperscores_label == 'Non-modified']])
-    nm = np.array([nm[0][nm[3]==nm[3].max()][0],
-                     nm[1][nm[3]==nm[3].max()][0],
-                     nm[2][nm[3]==nm[3].max()][0],
-                     nm[3][nm[3]==nm[3].max()][0]])
-    # if not (query.massdiff-parlist[2] <= 0 <= query.massdiff+parlist[2]):
-    #     hyperscores = np.array([np.delete(hyperscores[0], hyperscores_label == 'Non-modified'),
-    #                      np.delete(hyperscores[1], hyperscores_label == 'Non-modified'),
-    #                      np.delete(hyperscores[2], hyperscores_label == 'Non-modified'),
-    #                      np.delete(hyperscores[3], hyperscores_label == 'Non-modified'),
-    #                      np.delete(hyperscores[4], hyperscores_label == 'Non-modified'),
-    #                      np.delete(hyperscores[5], hyperscores_label == 'Non-modified')])
-    #     hyperscores_label = np.delete(hyperscores_label, hyperscores_label == 'Non-modified')
-    best = np.array([hyperscores[0][hyperscores[3]==hyperscores[3].max()],
-                     hyperscores[1][hyperscores[3]==hyperscores[3].max()],
-                     hyperscores[2][hyperscores[3]==hyperscores[3].max()],
-                     hyperscores[3][hyperscores[3]==hyperscores[3].max()],
-                     hyperscores[4][hyperscores[3]==hyperscores[3].max()],
-                     hyperscores[5][hyperscores[3]==hyperscores[3].max()]])
-    best_label = hyperscores_label[hyperscores[3]==hyperscores[3].max()]
-    if len(best[0]) > 1:
-        # In case of tie, keep most matched_ions
-        best_label = best_label[best[2]==best[2].max()]
-        best = np.array([best[0][best[2]==best[2].max()],
-                         best[1][best[2]==best[2].max()],
-                         best[2][best[2]==best[2].max()],
-                         best[3][best[2]==best[2].max()],
-                         best[4][best[2]==best[2].max()],
-                         best[5][best[2]==best[2].max()]])
-        # In case of tie, keep highest intensity
-        if len(best[0]) > 1:
-            best_label = best_label[best[5]==best[5].max()]
-            best = np.array([best[0][best[5]==best[5].max()],
-                             best[1][best[5]==best[5].max()],
-                             best[2][best[5]==best[5].max()],
-                             best[3][best[5]==best[5].max()],
-                             best[4][best[5]==best[5].max()],
-                             best[5][best[5]==best[5].max()]])
-        if len(best[0]) > 1:
-            # Prefer theoretical rather than experimental # TODO
-            if 0 < (best_label == 'EXPERIMENTAL').sum() < len(best_label):
-                best = np.array([np.delete(best[0], best_label == 'EXPERIMENTAL'),
-                                 np.delete(best[1], best_label == 'EXPERIMENTAL'),
-                                 np.delete(best[2], best_label == 'EXPERIMENTAL'),
-                                 np.delete(best[3], best_label == 'EXPERIMENTAL'),
-                                 np.delete(best[4], best_label == 'EXPERIMENTAL'),
-                                 np.delete(best[5], best_label == 'EXPERIMENTAL')])
-                best_label = np.delete(best_label, best_label == 'EXPERIMENTAL')
-            # Prefer NM rather than modified
-            if 0 < (best_label == 'Non-modified').sum() < len(best_label):
-                best = np.array([np.delete(best[0], best_label != 'Non-modified'),
-                                 np.delete(best[1], best_label != 'Non-modified'),
-                                 np.delete(best[2], best_label != 'Non-modified'),
-                                 np.delete(best[3], best_label != 'Non-modified'),
-                                 np.delete(best[4], best_label != 'Non-modified'),
-                                 np.delete(best[5], best_label != 'Non-modified')])
-                best_label = np.delete(best_label, best_label != 'Non-modified')
-            if len(best[0]) > 1:
-                # Prefer cases where the AA location is possible according to UNIMOD
-                pos_check = np.array([plain_peptide[int(j)]+str(int(bool(j))) if j==0 or j==len(plain_peptide)-1 else plain_peptide[int(j)] for j in best[1]])
-                name_check = np.array([dmdf[3][dmdf[1]==k][0] if (k!=0)&(len(dmdf[3][dmdf[1]==k])>0) else string.ascii_uppercase for k in best[0]])
-                name_check[np.where(name_check=='C-term')] = plain_peptide[-1] # TODO consider AA in other positions that match the first/last AA
-                name_check[np.where(name_check=='N-term')] = plain_peptide[0]
-                bool_check = [True if len(set(pos_check[l]).intersection(name_check[l]))>0 else False for l in range(len(pos_check))]
-                if sum(bool_check) > 0:
-                    best = np.array([best[m][bool_check] for m in range(len(best))])
-                    best_label = best_label[bool_check]
-        # Keep closest to experimental # TODO mark several possible locations (same score)
-        # best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
-        best_index = int(np.where(abs(best[0]-sub.DM) == min(abs(best[0]-sub.DM)))[0][0])
-        best = np.array([best[0][best_index], best[1][best_index], best[2][best_index],
-                         best[3][best_index], best[4][best_index], best[5][best_index]])
-        best_label = np.array(best_label[best_index])
-    elif len(best[0]) == 1:
-        best = np.array([best[0][0], best[1][0], best[2][0], best[3][0], best[4][0], best[5][0]])
-        best_label = np.array(best_label[0])
-    exp = np.array([hyperscores[0][hyperscores_label == 'EXPERIMENTAL'],
-                   hyperscores[1][hyperscores_label == 'EXPERIMENTAL'],
-                   hyperscores[2][hyperscores_label == 'EXPERIMENTAL'],
-                   hyperscores[3][hyperscores_label == 'EXPERIMENTAL']])
-    exp = np.array([exp[0][exp[3]==exp[3].max()][0],
-                     exp[1][exp[3]==exp[3].max()][0],
-                     exp[2][exp[3]==exp[3].max()][0],
-                     exp[3][exp[3]==exp[3].max()][0]])
-    try:
-        best_label = str(best_label[0])
-    except IndexError:
-        best_label = str(best_label)
-    sp = spscore(sub.Spectrum, best[5], parlist[1], query.peptide, pfrags[int(best[4])])
-    #matched_ions_names = matched_ions_names[np.where((hyperscores[0]==best[0])&(hyperscores[1]==best[1])&(hyperscores[2]==best[2])&(hyperscores[3]==best[3])&(hyperscores[4]==best[4])&(hyperscores[5]==best[5]))[0][0]]
-    best_pos = plain_peptide[int(best[1])]+str(int(best[1]+1))
-    if best_label == 'Non-modified':
-        best_pos = ''
+    nm_r, exp_r, mod_r, hyb_r = miniVseq(sub, plain_peptide, mod, pos,
+                                         parlist[0], parlist[1], parlist[2],
+                                         parlist[3], parlist[4], parlist[5], parlist[6],
+                                         parlist[7], parlist[8], score_mode, full_y)
+    # TODO handle score ties
+    if score_mode: # HYBRID
+        opts = [nm_r[2], hyb_r[2], exp_r[2]]
+        best_r = opts[np.argmax(opts)]
+    else: # MOD
+        opts = [nm_r[2], mod_r[2], exp_r[2]]
+        best_r = opts[np.argmax(opts)]
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), best_pos,
             sp, int(exp[2]), float(nm[3]), int(nm[2]), float(best[5])])
