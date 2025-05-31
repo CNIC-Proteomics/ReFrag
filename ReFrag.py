@@ -869,7 +869,7 @@ def main(args):
     tmin = float(mass._sections['Search']['t_min'])
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
-    score_mode = int(mass._sections['Search']['score_mode'])
+    score_mode = bool(int(mass._sections['Search']['score_mode']))
     full_y = bool(int(mass._sections['Search']['full_y']))
     prot_column = str(mass._sections['Summary']['prot_column'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
