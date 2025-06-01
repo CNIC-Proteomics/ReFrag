@@ -568,7 +568,7 @@ def hyperscore(exp_spec, theo_spec, frags, ftol):
     assigned_mask = assigned_ppm <= ftol
     assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
     assigned_frags = list(itertools.compress(frags, assigned_mask))
-    assigned_int = [sub.Spectrum[1][spectrum_masses.index(mz)] for mz in assigned_mz]
+    assigned_int = [exp_spec[1][list(exp_spec[0]).index(mz)] for mz in assigned_mz]
     assigned_int_mask = [f[0]=='b' for f in assigned_frags]
     i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
     i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
@@ -586,7 +586,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     # assigndb = []
     ## FRAGMENT NAMES ##
     charge = sub.Charge
-    spectrum_masses = list(sub.Spectrum[0])
     if charge >= 4: charge = 4
     frags, frags_m, blist, ylist = makeFrags(plainseq, charge, full_y)
     ## DM ##
@@ -602,12 +601,12 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     
     ## NON-MODIFIED ##
     NM_mz, NM_int, NM_frags, NM_n_b, NM_n_y, NM_i, NM_hs = hyperscore(sub.Spectrum[0], flat_theo_spec, flat_frags, ftol)
-    nm_results = [NM_n_b+NM_n_y, NM_i, NM_hs, 'Non-modified', 0, None]
+    nm_results = [NM_n_b+NM_n_y, NM_i, NM_hs, 'Non-modified', 0, None, NM_frags]
     
     ## DM OPERATIONS ##
-    mod_results = [0, 0, 0, None, None, None]
-    hyb_results = [0, 0, 0, None, None, None]
-    exp_results = [0, 0, 0, None, None, None]
+    mod_results = [0, 0, 0, None, None, None, None]
+    hyb_results = [0, 0, 0, None, None, None, None]
+    exp_results = [0, 0, 0, None, None, None, None]
     for index, row in dm_set.iterrows():       
         dm = row.mass
         # TODO support both HYBRID and MOD scoring
@@ -635,14 +634,14 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             ## STORE RESULTS ##
             if row['name'] == 'EXPERIMENTAL':
                 if score_mode and HYB_hs > exp_results[2]: # EXPERIMENTAL
-                        exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
+                        exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
                 if not score_mode and MOD_hs > exp_results[2]: # MOD
-                        exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
+                        exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
             else:
                 if HYB_hs > hyb_results[2]: # TODO handle score ties
-                    hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos]
+                    hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
                 if MOD_hs > mod_results[2]:
-                    mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos]
+                    mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
     return(nm_results, exp_results, mod_results, hyb_results)
 
 def parallelFragging(query, parlist):
@@ -650,6 +649,7 @@ def parallelFragging(query, parlist):
     scan = query.scannum
     charge = query.charge
     MH = query.precursor_neutral_mass + (m_proton)
+    MZ = (MH+m_proton*(charge-1))/charge
     plain_peptide = query.peptide
     if pd.isnull(query.modification_info):
         sequence = plain_peptide
@@ -676,15 +676,13 @@ def parallelFragging(query, parlist):
                                          parlist[7], parlist[8], score_mode, full_y)
     # TODO handle score ties
     if score_mode: # HYBRID
-        opts = [nm_r[2], hyb_r[2], exp_r[2]]
-        best_r = opts[np.argmax(opts)]
+        best_r = [nm_r, hyb_r, exp_r][np.argmax([nm_r[2], hyb_r[2], exp_r[2]])]
     else: # MOD
-        opts = [nm_r[2], mod_r[2], exp_r[2]]
-        best_r = opts[np.argmax(opts)]
-    return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
-            float(exp[0]), float(exp[3]), best_pos,
-            sp, int(exp[2]), float(nm[3]), int(nm[2]), float(best[5])])
+        best_r = [nm_r, hyb_r, exp_r][np.argmax([nm_r[2], hyb_r[2], exp_r[2]])]
+    spfrags = np.array([i.replace('*', '') for i in best_r[6]])
     sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
+    return([MH, MZ, dm, exp_r[0], exp_r[2], nm_r[0], nm_r[2], best_r[4], best_r[5], sequence,
+            best_r[0], best_r[1], best_r[2], best_r[3], sp])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy, protein):
     
