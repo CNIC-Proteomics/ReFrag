@@ -563,7 +563,7 @@ def getClosestIon(spectrum, ion):
         return(before)
     
 def hyperscore(exp_spec, theo_spec, frags, ftol):
-    assigned_mz = [getClosestIon(exp_spec, mz) for mz in theo_spec]
+    assigned_mz = [getClosestIon(exp_spec[0], mz) for mz in theo_spec]
     assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, theo_spec), theo_spec)*1000000)
     assigned_mask = assigned_ppm <= ftol
     assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
@@ -600,7 +600,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     f_len = len(flat_frags)
     
     ## NON-MODIFIED ##
-    NM_mz, NM_int, NM_frags, NM_n_b, NM_n_y, NM_i, NM_hs = hyperscore(sub.Spectrum[0], flat_theo_spec, flat_frags, ftol)
+    NM_mz, NM_int, NM_frags, NM_n_b, NM_n_y, NM_i, NM_hs = hyperscore(sub.Spectrum, flat_theo_spec, flat_frags, ftol)
     nm_results = [NM_n_b+NM_n_y, NM_i, NM_hs, 'Non-modified', 0, None, NM_frags]
     
     ## DM OPERATIONS ##
@@ -614,7 +614,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             ## MOD HYPERSCORE ##
             allowed_mod = fragCheck(plainseq, blist, ylist, dm_pos, charge) # TODO support charge states > 4
             theo_spec_mod = [flat_theo_spec[i]+dm if '*' in allowed_mod[i] else flat_theo_spec[i] for i in range(0, f_len)]
-            MOD_mz, MOD_int, MOD_frags, MOD_n_b, MOD_n_y, MOD_i, MOD_hs = hyperscore(sub.Spectrum[0], theo_spec_mod, allowed_mod, ftol)
+            MOD_mz, MOD_int, MOD_frags, MOD_n_b, MOD_n_y, MOD_i, MOD_hs = hyperscore(sub.Spectrum, theo_spec_mod, allowed_mod, ftol)
             ## HYBRID HYPERSCORE ##
             HYB_frags = [i for i in MOD_frags if i not in NM_frags]
             if len(HYB_frags) == 0:
