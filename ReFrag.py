@@ -567,17 +567,19 @@ def hyperscore(exp_spec, theo_spec, frags, ftol):
     assigned_ppm = np.absolute(np.divide(np.subtract(assigned_mz, theo_spec), theo_spec)*1000000)
     assigned_mask = assigned_ppm <= ftol
     assigned_mz = list(itertools.compress(assigned_mz, assigned_mask))
-    assigned_frags = list(itertools.compress(frags, assigned_mask))
-    assigned_int = [exp_spec[1][list(exp_spec[0]).index(mz)] for mz in assigned_mz]
-    assigned_int_mask = [f[0]=='b' for f in assigned_frags]
-    i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
-    i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
-    i_sum = i_b + i_y
-    n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
-    n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
-    if i_b == 0: i_b = 1
-    if i_y == 0: i_y = 1
-    hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
+    if len(assigned_mz) == 0: return([], [], [], 0, 0, 0, 0)
+    else:
+        assigned_frags = list(itertools.compress(frags, assigned_mask))
+        assigned_int = [exp_spec[1][list(exp_spec[0]).index(mz)] for mz in assigned_mz]
+        assigned_int_mask = [f[0]=='b' for f in assigned_frags]
+        i_b = sum(list(itertools.compress(assigned_int, assigned_int_mask)))
+        i_y = sum(list(itertools.compress(assigned_int, ~np.array(assigned_int_mask))))
+        i_sum = i_b + i_y
+        n_b = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='b']))
+        n_y = len(set([f.replace('+', '') for f in assigned_frags if f[0]=='y']))
+        if i_b == 0: i_b = 1
+        if i_y == 0: i_y = 1
+        hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
     return(assigned_mz, assigned_int, assigned_frags, n_b, n_y, i_sum, hs)
 
 def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode, full_y):
@@ -679,8 +681,10 @@ def parallelFragging(query, parlist):
         best_r = [nm_r, exp_r, hyb_r][np.argmax([nm_r[2], exp_r[2], hyb_r[2]])]
     else: # MOD
         best_r = [nm_r, exp_r, mod_r][np.argmax([nm_r[2], exp_r[2], mod_r[2]])]
-    spfrags = np.array([i.replace('*', '') for i in best_r[6]])
-    sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
+    if len(best_r[6]) == 0: sp = 0
+    else:
+        spfrags = np.array([i.replace('*', '') for i in best_r[6]])
+        sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
     return([MH, MZ, dm, exp_r[0], exp_r[2], nm_r[0], nm_r[2], best_r[4], best_r[5], sequence,
             best_r[0], best_r[1], best_r[2], best_r[3], sp])
 
