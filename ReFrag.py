@@ -674,11 +674,11 @@ def parallelFragging(query, parlist):
                                          parlist[0], parlist[1], parlist[2],
                                          parlist[3], parlist[4], parlist[5], parlist[6],
                                          parlist[7], parlist[8], score_mode, full_y)
-    # TODO handle score ties
+    # TODO handle score ties (Current preference NM > EXP > MOD)
     if score_mode: # HYBRID
-        best_r = [nm_r, hyb_r, exp_r][np.argmax([nm_r[2], hyb_r[2], exp_r[2]])]
+        best_r = [nm_r, exp_r, hyb_r][np.argmax([nm_r[2], exp_r[2], hyb_r[2]])]
     else: # MOD
-        best_r = [nm_r, hyb_r, exp_r][np.argmax([nm_r[2], hyb_r[2], exp_r[2]])]
+        best_r = [nm_r, exp_r, mod_r][np.argmax([nm_r[2], exp_r[2], mod_r[2]])]
     spfrags = np.array([i.replace('*', '') for i in best_r[6]])
     sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
     return([MH, MZ, dm, exp_r[0], exp_r[2], nm_r[0], nm_r[2], best_r[4], best_r[5], sequence,
