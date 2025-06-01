@@ -196,7 +196,7 @@ def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
             bf = bf[np.invert(np.char.endswith(bf, '++'))]
             bf3 = np.array([int(i.replace('+' , '')) for i in bf3])
             bf2 = np.array([int(i.replace('+' , '')) for i in bf2])
-            bf = np.array([int(i) for i in bf])
+            bf = np.array([int(i.replace('+' , '')) for i in bf])
         else: 
             bf = bf2 = bf3 = np.array([0])
         # Y series
@@ -209,7 +209,7 @@ def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
             yf = yf[np.invert(np.char.endswith(yf, '++'))]
             yf3 = np.array([int(i.replace('+' , '')) for i in yf3])
             yf2 = np.array([int(i.replace('+' , '')) for i in yf2])
-            yf = np.array([int(i) for i in yf])
+            yf = np.array([int(i.replace('+' , '')) for i in yf])
         else: 
             yf = yf2 = yf3 = np.array([0])
         # Claculate continuity per charge
@@ -684,6 +684,7 @@ def parallelFragging(query, parlist):
     return([MH, float(best[0]), sequence, int(best[2]), float(best[3]), best_label,
             float(exp[0]), float(exp[3]), best_pos,
             sp, int(exp[2]), float(nm[3]), int(nm[2]), float(best[5])])
+    sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy, protein):
     
