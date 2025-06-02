@@ -286,37 +286,6 @@ def getTheoMH(sequence, nt, ct, mass,
     # MH = total_aas - m_proton
     return(total_aas)
 
-def expSpectrum(ions):
-    '''
-    Prepare experimental spectrum.
-    '''
-    #ions[0] is mz
-    #ions[1] is int
-    ions_ZERO = list([0]*len(ions[0]))
-    ions_CCU = ions[0] - 0.01
-    
-    bind = np.array([list(itertools.chain.from_iterable(zip(ions_CCU,ions[0]))),
-                     list(itertools.chain.from_iterable(zip(ions_ZERO,ions[1]))),
-                     list([0]*len(ions[0])*2),
-                     list(np.array(list(itertools.chain.from_iterable(zip(ions_CCU,ions[0])))) + 0.01)
-                     ])
-    
-    spec = np.array([list(itertools.chain.from_iterable(zip(list(bind[0]),list(bind[3])))),
-                     list(itertools.chain.from_iterable(zip(list(bind[1]),list(bind[2]))))])
-    
-    median_rel_int = statistics.median(ions[1])
-    std_rel_int = np.std(ions[1], ddof = 1)
-    ions_NORM_REL_INT = (ions[1] - median_rel_int) / std_rel_int
-    ions_P_REL_INT = scipy.stats.norm.cdf(ions_NORM_REL_INT) #, 0, 1)
-    ions = np.array([ions[0], ions[1], ions_ZERO, ions_CCU, ions_NORM_REL_INT, ions_P_REL_INT])
-    normspec = ions[1][ions[5]>0.81]
-    if len(ions) > 0 and len(normspec) > 0:
-        spec_correction = max(ions[1])/statistics.mean(normspec)
-    else: spec_correction = 0
-    order = np.argsort(np.array(ions)[0])
-    ions = [i[order] for i in ions]
-    return(spec, ions, spec_correction)
-
 def theoSpectrum(seq, blist, ylist, mods, pos, mass,
                  m_proton, m_hydrogen, m_oxygen, charge, dm=0):
     ## Y SERIES ##
@@ -363,29 +332,6 @@ def addMod(spec, dm, pos, len_seq, blist, ylist):
     spec[0] = [spec[0][i]+dm if bpos[i]==True else spec[0][i] for i in list(range(0,len(spec[0])))]
     spec[1] = [spec[1][i]+dm if ypos[i]==True else spec[1][i] for i in list(range(0,len(spec[1])))]
     return(spec)
-    
-def errorMatrix(mz, theo_spec, m_proton):
-    '''
-    Prepare ppm-error and experimental mass matrices.
-    '''
-
-    theo_spec = theo_spec[0] + theo_spec[1][::-1]
-    # theo_spec = np.array([theo_spec]*len(mz))
-    theo_spec = np.tile(np.array(np.array(theo_spec)), (len(mz), 1))
-    exp = np.transpose(np.array([mz]*len(theo_spec[0])))
-    
-    ## EXPERIMENTAL MASSES FOR CHARGE 2 ##
-    mzs2 = np.transpose([np.array(mz)*2 - m_proton]*(len(exp[0])))
-    ## EXPERIMENTAL MASSES FOR CHARGE 3 ##
-    mzs3 = np.transpose([np.array(mz)*3 - m_proton*2]*(len(exp[0])))
-    ## PPM ERRORS ##
-    terrors = np.absolute(np.divide(np.subtract(exp, theo_spec), theo_spec)*1000000)
-    terrors2 = np.absolute(np.divide(np.subtract(mzs2, theo_spec), theo_spec)*1000000)
-    terrors3 = np.absolute(np.divide(np.subtract(mzs3, theo_spec), theo_spec)*1000000)
-    
-    exp = [i[0] for i in exp]
-    
-    return(terrors, terrors2, terrors3, exp)
 
 def makeFrags(seq, ch, full_y): # TODO: SLOW
     '''
@@ -417,11 +363,17 @@ def makeFrags(seq, ch, full_y): # TODO: SLOW
 def assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, charge):
     theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
     m_proton = mass.getfloat('Masses', 'm_proton')
-    frags = frags[3:]
+    if score_mode == 1:
+        frags = frags
+    elif score_mode == 0: # TODO score_mode == 2
+        frags = allowed
+    #frags = frags[3:]
     dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
-    assign = np.array([#frags[0],
-                       dm_theo_spec, (dm_theo_spec+m_proton)/2, (dm_theo_spec+m_proton)/3])
-    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]])
+    if charge < 3:
+        assign = np.array([dm_theo_spec, (dm_theo_spec+m_proton)/2])
+    else:
+        assign = np.array([dm_theo_spec, (dm_theo_spec+m_proton)/2, (dm_theo_spec+m_proton)/3])
+    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]]) # TODO GET PROPER MASSES
     c_assign = np.array([assign[0:].flatten(),
                          #frags[:5].flatten(),
                          [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
