@@ -536,10 +536,12 @@ def parallelFragging(query, parlist):
         spectrum = parlist[11][np.where(np.array(parlist[10])==scan)[0][0]]
         score_mode = parlist[12]
         full_y = parlist[13]
+        preference = parlist[14]
     else:
         spectrum = query.spectrum
         score_mode = parlist[10]
         full_y = parlist[11]
+        preference = parlist[12]
     dm = query.massdiff
     # TODO use calc neutral mass?
     # Make a Vseq-style query
@@ -549,11 +551,16 @@ def parallelFragging(query, parlist):
                                          parlist[0], parlist[1], parlist[2],
                                          parlist[3], parlist[4], parlist[5], parlist[6],
                                          parlist[7], parlist[8], score_mode, full_y)
-    # TODO handle score ties (Current preference NM > EXP > MOD)
-    if score_mode: # HYBRID
-        best_r = [nm_r, exp_r, hyb_r][np.argmax([nm_r[2], exp_r[2], hyb_r[2]])]
-    else: # MOD
-        best_r = [nm_r, exp_r, mod_r][np.argmax([nm_r[2], exp_r[2], mod_r[2]])]
+    if preference: # Preference NM > MOD > EXP
+        if score_mode: # HYBRID
+            best_r = [nm_r, hyb_r, exp_r][np.argmax([nm_r[2], hyb_r[2], exp_r[2]])]
+        else: # MOD
+            best_r = [nm_r, mod_r, exp_r][np.argmax([nm_r[2], mod_r[2], exp_r[2]])]
+    else: # Preference NM > EXP > MOD
+        if score_mode: # HYBRID
+            best_r = [nm_r, exp_r, hyb_r][np.argmax([nm_r[2], exp_r[2], hyb_r[2]])]
+        else: # MOD
+            best_r = [nm_r, exp_r, mod_r][np.argmax([nm_r[2], exp_r[2], mod_r[2]])]
     if len(best_r[6]) == 0: sp = 0
     else:
         spfrags = np.array([i.replace('*', '') for i in best_r[6]])
@@ -612,6 +619,7 @@ def main(args):
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
     score_mode = bool(int(mass._sections['Search']['score_mode']))
     full_y = bool(int(mass._sections['Search']['full_y']))
+    preference = bool(int(mass._sections['Search']['preference']))
     prot_column = str(mass._sections['Summary']['prot_column'])
     top_n = int(mass._sections['Spectrum Processing']['top_n'])
     bin_top_n = bool(int(mass._sections['Spectrum Processing']['bin_top_n']))
@@ -734,9 +742,9 @@ def main(args):
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
         if mode == "mzml":
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, score_mode, full_y]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, score_mode, full_y, preference]
         else:
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, score_mode, full_y]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, score_mode, full_y, preference]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
