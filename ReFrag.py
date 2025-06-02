@@ -360,26 +360,6 @@ def makeFrags(seq, ch, full_y): # TODO: SLOW
         frags_m += [[["b" + str(i) + "*" + "+"*c for i in blist], ["y" + str(i) + "*" + "+"*c for i in ylist]]]
     return(frags, frags_m, blist, ylist)
 
-def assignIons(theo_spec, dm_theo_spec, frags, dm, mass, score_mode, allowed, charge):
-    theo_spec = np.array(theo_spec[0] + theo_spec[1][::-1])
-    m_proton = mass.getfloat('Masses', 'm_proton')
-    if score_mode == 1:
-        frags = frags
-    elif score_mode == 0: # TODO score_mode == 2
-        frags = allowed
-    #frags = frags[3:]
-    dm_theo_spec = np.array(dm_theo_spec[0] + dm_theo_spec[1][::-1])
-    if charge < 3:
-        assign = np.array([dm_theo_spec, (dm_theo_spec+m_proton)/2])
-    else:
-        assign = np.array([dm_theo_spec, (dm_theo_spec+m_proton)/2, (dm_theo_spec+m_proton)/3])
-    c_assign_ions = itertools.cycle([i for i in list(range(1,len(assign[0])+1))] + [i for i in list(range(1,len(assign[0])+1))[::-1]]) # TODO GET PROPER MASSES
-    c_assign = np.array([assign[0:].flatten(),
-                         #frags[:5].flatten(),
-                         [next(c_assign_ions) for i in range(len(assign[0:].flatten()))]])
-                         #[1]*len(assign[0]) + [2]*len(assign[0]) + [3]*len(assign[0]) + [1]*len(assign[0]) + [2]*len(assign[0])])
-    return(c_assign, frags.flatten())
-
 def fragCheck(plainseq, blist, ylist, dm_pos, charge):
     # ballowed = ['b'+str(i)+'*' if i >= dm_pos+1 else 'b'+str(i) for i in blist] * charge
     # yallowed = ['y'+str(i)+'*' if i >= len(plainseq)-dm_pos else 'y'+str(i) for i in ylist] * charge
@@ -410,65 +390,6 @@ def fragCheck(plainseq, blist, ylist, dm_pos, charge):
                    ['b'+str(i)+'*++++' if i >= dm_pos+1 else 'b'+str(i)+'++++' for i in blist] +
                    ['y'+str(i)+'*++++' if i >= len(plainseq)-dm_pos else 'y'+str(i)+'++++' for i in ylist])
     return(allowed)
-
-def makeAblines(texp, minv, assign, afrags, ions, allowed, tie=51):
-    masses = np.array([texp, minv])
-    matches = np.array([masses[0][(masses[1]<tie) & ((masses[0]+masses[1])>=0.001)],
-                        masses[1][(masses[1]<tie) & ((masses[0]+masses[1])>=0.001)]])
-    if len(matches[0]) <= 0:
-        proof = np.array([[0],[0],[0]])
-        pfrags = np.array([])
-        return(proof, pfrags)
-    temp_mi = np.repeat(list(matches[0]), len(assign[0]))
-    temp_ci1 = np.tile(afrags, len(matches[0]))
-    temp_mi1 = np.repeat(list(matches[1]), len(assign[0]))
-    temp_ci = np.tile(np.array(assign[0]), len(matches[0]))
-    check = abs(temp_mi-temp_ci)/temp_ci*1000000
-    if len(check) <= 0:
-        proof = np.array([[0],[0],[0]])
-        pfrags = np.array([])
-        return(proof, pfrags)
-    temp_mi = temp_mi[check<=tie]
-    proof = np.array([temp_mi,
-                      temp_mi1[check<=tie],
-                      np.repeat(ions[1][np.isin(ions[0], temp_mi)], np.unique(temp_mi, return_counts=True)[1])])
-    pfrags = temp_ci1[check<=tie]
-    if len(proof[0]) == 0:
-        mzcycle = itertools.cycle([ions[0][0], ions[0][1]])
-        proof = np.array([temp_mi,
-                          temp_mi1[check<=tie],
-                          [next(mzcycle) for i in range(len(temp_mi))]])
-        pfrags = temp_ci1[check<=tie]
-    # CLEAN UP PFRAGS BY 1) DUPLICATES 2) NONEXISTENT MODIFIED FRAGMENTS
-    if len(set(pfrags)) < len(pfrags):
-        sorting = pfrags.argsort()
-        pfrags = pfrags[sorting]
-        proof = np.array([proof[0][sorting], proof[1][sorting], proof[2][sorting]])
-        
-        proof_mz_groups = np.split(proof[0,:], np.unique(pfrags, return_index=True)[1][1:])
-        proof_ppm_groups = np.split(proof[1,:], np.unique(pfrags, return_index=True)[1][1:])
-        proof_int_groups = np.split(proof[2,:], np.unique(pfrags, return_index=True)[1][1:])
-        for i in range(len(proof_ppm_groups)):
-            if len(proof_ppm_groups[i]) > 1:
-                amin = np.argmin(proof_ppm_groups[i])
-                proof_mz_groups[i] = np.array([proof_mz_groups[i][amin]])
-                proof_ppm_groups[i] = np.array([proof_ppm_groups[i][amin]])
-                proof_int_groups[i] = np.array([proof_int_groups[i][amin]])
-        # acheck = (len(np.concatenate(proof_mz_groups)) == len(np.concatenate(proof_ppm_groups)) == len(np.concatenate(proof_int_groups)))
-        proof = np.array([np.concatenate(proof_mz_groups),
-                          np.concatenate(proof_ppm_groups),
-                          np.concatenate(proof_int_groups)])
-    proof[0] = proof[0][proof[0].argsort()]
-    proof[1] = proof[1][proof[0].argsort()]
-    proof[2] = proof[2][proof[0].argsort()]
-    pfrags = np.array(list(dict.fromkeys(pfrags)))
-    pfrags = pfrags[proof[0].argsort()]
-    fragfilter = [True if i not in allowed else False for i in pfrags]
-    pfrags = pfrags[fragfilter]
-    proof = np.array([proof[0][fragfilter],
-                      proof[1][fragfilter],
-                      proof[2][fragfilter]])
-    return(proof, pfrags)
 
 def findClosest(dm, dmdf, dmtol, pos):
     cand = [i for i in range(len(dmdf[1])) if dmdf[1][i] > dm-dmtol and dmdf[1][i] < dm+dmtol]
