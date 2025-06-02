@@ -784,7 +784,7 @@ def main(args):
                 coln += ['extra_column_' + str(i) for i in range(0,(max_columns-len(coln)))]
                 df = pd.read_csv(Path(infile), header=None, sep=sep, skiprows=1, names=coln)
         if len(args.scanrange) > 0:
-            logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
+            logging.info("\tFiltering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
             df = df[(df.scannum>=args.scanrange[0])&(df.scannum<=args.scanrange[1])]
         logging.info("\t" + str(len(df)) + " lines read.")
         if len(df) < 1:
@@ -808,10 +808,10 @@ def main(args):
         if mode == "mzml":
             spectra = msdata.getSpectra()
             spectra_n = np.array([int(s.getNativeID().split("=")[-1]) for s in spectra])
-            if len(args.scanrange) > 0:
-                logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
-                spectra = spectra[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
-                spectra_n = spectra_n[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
+            # if len(args.scanrange) > 0:
+            #     logging.info("Filtering scan range " + str(args.scanrange[0]) + "-" + str(args.scanrange[1]) + "...")
+            #     spectra = spectra[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
+            #     spectra_n = spectra_n[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
             peaks = [s.get_peaks() for s in spectra]
             ions = [np.array([p[0], p[1]]) for p in peaks]
             ions0 = [np.array(p[0]) for p in peaks]
