@@ -507,6 +507,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                 if HYB_i_y == 0: HYB_i_y = 1
                 HYB_hs = math.log((HYB_i_b) * (HYB_i_y)) + math.log(math.factorial((HYB_n_b))) + math.log(math.factorial(HYB_n_y))
             ## STORE RESULTS ##
+            dm_pos = plainseq[dm_pos] + str(dm_pos+1)
             if row['name'] == 'EXPERIMENTAL':
                 if score_mode and HYB_hs > exp_results[2]: # EXPERIMENTAL
                         exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
