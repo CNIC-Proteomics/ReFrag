@@ -351,7 +351,7 @@ def makeFrags(seq, ch, full_y): # TODO: SLOW
     seq_len = len(seq)
     blist = list(range(1,seq_len))
     blist = [i for i in blist if i not in bp + bh]
-    ylist = list(range(1,seq_len+int(full_y)))
+    ylist = list(range(1+int(full_y),seq_len+1))
     ylist = [i for i in ylist if i not in yp + yh]
     frags = []
     frags_m = []
