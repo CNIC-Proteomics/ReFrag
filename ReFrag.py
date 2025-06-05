@@ -150,16 +150,15 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
             logging.info("\tERROR: Scan number " + str(scan) + " not found in mzML file.")
             sys.exit()
         peaks = s.get_peaks()
-        ions = np.array([peaks[0], peaks[1]])
-        ions0 = [np.array(p[0]) for p in peaks]
-        ions1 = [np.array(p[1]) for p in peaks]
+        ions0 = peaks[0]
+        ions1 = peaks[1]
     # Normalize intensity
-    ions1 = [(ions1[i]/max(ions1[i]))*100 for i in range(len(ions))]
+    ions1 = (ions1/max(ions1))*100
     # Remove peaks below min_ratio
     if min_ratio > 0:
-        cutoff1 = [i/max(i) >= min_ratio for i in ions1]
-        ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
-        ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+        cutoff1 = ions1/max(ions1) >= min_ratio
+        ions0 = ions0[cutoff1]
+        ions1 = ions1[cutoff1]
     # Return only top N peaks
     if bin_top_n:
         bins = np.digitize(ions[0], np.arange(55,max(ions[0]),110))
@@ -171,19 +170,18 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
             ions_f += [np.array([ions_t[0][ions_t[1].argsort()][cutoff:], ions_t[1][ions_t[1].argsort()][cutoff:]])]
         ions = np.concatenate(ions_f, axis=1)
     elif top_n > 0:
-        cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
-        ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
-        ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
-        ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
+        cutoff1 = ions1 >= ions1[np.argsort(ions1)[len(ions1)-top_n]] if len(ions1)>top_n else i>0
+        ions0 = ions0[cutoff1]
+        ions1 = ions1[cutoff1]
+        ions = np.array([ions0,ions1])
     # # Duplicate m/z measurement
-    check = [len(np.unique(i)) != len(i) for i in ions0]
-    for i in range(len(check)):
-        if check[i] == True:
-            temp = ions[i].copy()
-            temp = pd.DataFrame(temp).T
-            temp = temp[temp.groupby(0)[1].rank(ascending=False)<2]
-            temp.drop_duplicates(subset=0, inplace=True)
-            ions[i] = np.array(temp.T)
+    check = len(np.unique(ions0)) != len(ions0)
+    if check == True:
+        temp = ions.copy()
+        temp = pd.DataFrame(temp).T
+        temp = temp[temp.groupby(0)[1].rank(ascending=False)<2]
+        temp.drop_duplicates(subset=0, inplace=True)
+        ions = np.array(temp.T)
     # Deisotope (experimental)
     if deiso: # TODO: Intensity, 2C13
         ions = deisotope(ions, m_proton, max_charge)
