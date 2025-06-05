@@ -141,6 +141,8 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
             ions = ions.drop(ions.columns[0], axis=1)
             ions = ions.apply(pd.to_numeric)
         ions = np.array(ions.T)
+        ions0 = ions[0]
+        ions1 = ions[1]
     elif mode == "mzml":
         try:
             s = spectra[spectra_n.index(scan)]
@@ -149,18 +151,15 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
             sys.exit()
         peaks = s.get_peaks()
         ions = np.array([peaks[0], peaks[1]])
-    # Deisotope (experimental)
-    if deiso: # TODO: Intensity, 2C13
-        ions = deisotope(ions, m_proton, max_charge)
+        ions0 = [np.array(p[0]) for p in peaks]
+        ions1 = [np.array(p[1]) for p in peaks]
+    # Normalize intensity
+    ions1 = [(ions1[i]/max(ions1[i]))*100 for i in range(len(ions))]
     # Remove peaks below min_ratio
-    cutoff = np.where(ions[1]/max(ions[1]) >= min_ratio)
-    ions = np.array([ions[0][cutoff], ions[1][cutoff]])
-    # Remove peaks outside range
-    if max_frag_mz > 0:
-        cutoff = np.where((ions[0] >= min_frag_mz) & (ions[0] <= max_frag_mz))
-    else:
-        cutoff = np.where(ions[0] >= min_frag_mz)
-    ions = np.array([ions[0][cutoff], ions[1][cutoff]])
+    if min_ratio > 0:
+        cutoff1 = [i/max(i) >= min_ratio for i in ions1]
+        ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
+        ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
     # Return only top N peaks
     if bin_top_n:
         bins = np.digitize(ions[0], np.arange(55,max(ions[0]),110))
@@ -171,15 +170,23 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
             if (cutoff < 0) or (cutoff >= len(ions_t[0])): cutoff = 0
             ions_f += [np.array([ions_t[0][ions_t[1].argsort()][cutoff:], ions_t[1][ions_t[1].argsort()][cutoff:]])]
         ions = np.concatenate(ions_f, axis=1)
-    else:
-        cutoff = len(ions[0])-top_n
-        if (cutoff < 0) or (cutoff >= len(ions[0])): cutoff = 0
-        ions = np.array([ions[0][ions[1].argsort()][cutoff:], ions[1][ions[1].argsort()][cutoff:]])
-    if len(np.unique(ions[0])) != len(ions[0]): # Duplicate m/z measurement
-        ions = pd.DataFrame(ions).T
-        ions = ions[ions.groupby(0)[1].rank(ascending=False)<2]
-        ions.drop_duplicates(subset=0, inplace=True)
-        ions = np.array(ions.T)
+    elif top_n > 0:
+        cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
+        ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
+        ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+        ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
+    # # Duplicate m/z measurement
+    check = [len(np.unique(i)) != len(i) for i in ions0]
+    for i in range(len(check)):
+        if check[i] == True:
+            temp = ions[i].copy()
+            temp = pd.DataFrame(temp).T
+            temp = temp[temp.groupby(0)[1].rank(ascending=False)<2]
+            temp.drop_duplicates(subset=0, inplace=True)
+            ions[i] = np.array(temp.T)
+    # Deisotope (experimental)
+    if deiso: # TODO: Intensity, 2C13
+        ions = deisotope(ions, m_proton, max_charge)
     return(ions)
 
 def spscore(sub_spec, matched_ions, ftol, seq, mfrags):
