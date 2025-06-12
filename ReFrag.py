@@ -714,7 +714,7 @@ def main(args):
                 cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
                 ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
                 ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
-                ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
+            ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
             # # Duplicate m/z measurement
             logging.info("\t" + "Filter duplicate m/z measurements...")
             check = [len(np.unique(i)) != len(i) for i in ions0]
