@@ -481,8 +481,11 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     
     ## DM OPERATIONS ##
     mod_results = [0, 0, 0, None, None, None, None]
+    mod_site_range = []
     hyb_results = [0, 0, 0, None, None, None, None]
+    hyb_site_range = []
     exp_results = [0, 0, 0, None, None, None, None]
+    exp_site_range = []
     for index, row in dm_set.iterrows():       
         dm = row.mass
         # TODO support both HYBRID and MOD scoring
@@ -512,14 +515,19 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             if row['name'] == 'EXPERIMENTAL':
                 if score_mode and HYB_hs > exp_results[2]: # EXPERIMENTAL
                         exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
+                        exp_site_range += [HYB_hs]
                 if not score_mode and MOD_hs > exp_results[2]: # MOD
                         exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
+                        exp_site_range += [MOD_hs]
             else:
                 if HYB_hs > hyb_results[2]: # TODO handle score ties
                     hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
+                    hyb_site_range += [HYB_hs]
                 if MOD_hs > mod_results[2]:
                     mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
-    return(nm_results, exp_results, mod_results, hyb_results)
+                    mod_site_range += [MOD_hs]
+                    
+    return(nm_results, exp_results+[exp_site_range], mod_results+[mod_site_range], hyb_results+[hyb_site_range])
 
 def parallelFragging(query, parlist):
     m_proton = parlist[4]
