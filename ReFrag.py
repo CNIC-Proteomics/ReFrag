@@ -534,7 +534,7 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     hyb_dm_pos = [i for i in range(0,len(hyb_site_range)) if hyb_site_range[i]==max(hyb_site_range)]
     hyb_results[5] = [len(hyb_dm_pos)//2]
     
-    return(nm_results, exp_results+[exp_site_range], mod_results+[mod_site_range], hyb_results+[hyb_site_range])
+    return(nm_results+[[]], exp_results+[exp_site_range], mod_results+[mod_site_range], hyb_results+[hyb_site_range])
 
 def parallelFragging(query, parlist):
     m_proton = parlist[4]
