@@ -575,8 +575,9 @@ def parallelFragging(query, parlist):
     else:
         spfrags = np.array([i.replace('*', '') for i in best_r[6]])
         sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
-    return([MH, MZ, dm, exp_r[0], exp_r[2], nm_r[0], nm_r[2], best_r[4], best_r[5], sequence,
-            best_r[0], best_r[1], best_r[2], best_r[3], sp])
+    return([MH, MZ, dm, exp_r[0], exp_r[2], nm_r[0], nm_r[2], mod_r, hyb_r,
+            best_r[7], best_r[4], best_r[5], sequence, best_r[0], best_r[1],
+            best_r[2], best_r[3], sp])
 
 def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy, protein):
     
@@ -765,21 +766,30 @@ def main(args):
         if 'spectrum' in df.columns:
             df = df.drop('spectrum', axis = 1)
         df['templist'] = refrags
+        # Experimental information #
         df['REFRAG_MH'] = pd.DataFrame(df.templist.tolist()).iloc[:, 0]. tolist()
         df['REFRAG_exp_MZ'] = pd.DataFrame(df.templist.tolist()).iloc[:, 1]. tolist()
         df['REFRAG_exp_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 2]. tolist()
         df['REFRAG_exp_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 3]. tolist()
         df['REFRAG_exp_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 4]. tolist()
+          # TODO: df['REFRAG_exp_hyperscore_M']
+          # TODO: df['REFRAG_exp_hyperscore_H']
+        # Non-modified information #
         df['REFRAG_nm_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
         df['REFRAG_nm_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
-        df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
-        df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
-        df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
-        df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
-        df['REFRAG_sum_intensity'] = pd.DataFrame(df.templist.tolist()).iloc[:, 11]. tolist()
-        df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 12]. tolist()
-        df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 13]. tolist()
-        df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 14]. tolist()
+        # Modified information # (TESTING)
+        df['REFRAG_MOD_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
+        df['REFRAG_HYB_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
+        # Best candidate information #
+        df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
+        df['REFRAG_site_range'] =  pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
+        df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 11]. tolist()
+        df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 12]. tolist() # TODO: add DM?
+        df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 13]. tolist()
+        df['REFRAG_sum_intensity'] = pd.DataFrame(df.templist.tolist()).iloc[:, 14]. tolist()
+        df['REFRAG_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 15]. tolist()
+        df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 16]. tolist()
+        df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 17]. tolist()
         df = df.drop('templist', axis = 1)
         try:
             refragged = len(df)-df.REFRAG_name.value_counts()['EXPERIMENTAL']
