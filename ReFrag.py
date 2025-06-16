@@ -526,7 +526,14 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                 if MOD_hs > mod_results[2]:
                     mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
                     mod_site_range += [MOD_hs]
-                    
+    # Pick site in the middle of the range
+    exp_dm_pos = [i for i in range(0,len(exp_site_range)) if exp_site_range[i]==max(exp_site_range)]
+    exp_results[5] = [len(exp_dm_pos)//2]
+    mod_dm_pos = [i for i in range(0,len(mod_site_range)) if mod_site_range[i]==max(mod_site_range)]
+    mod_results[5] = [len(mod_dm_pos)//2]
+    hyb_dm_pos = [i for i in range(0,len(hyb_site_range)) if hyb_site_range[i]==max(hyb_site_range)]
+    hyb_results[5] = [len(hyb_dm_pos)//2]
+    
     return(nm_results, exp_results+[exp_site_range], mod_results+[mod_site_range], hyb_results+[hyb_site_range])
 
 def parallelFragging(query, parlist):
