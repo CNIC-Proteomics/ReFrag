@@ -482,11 +482,17 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     ## DM OPERATIONS ##
     mod_results = [0, 0, 0, None, None, None, None]
     mod_site_range = []
+    best_mod = 0
     hyb_results = [0, 0, 0, None, None, None, None]
     hyb_site_range = []
+    best_hyb = 0
     exp_results = [0, 0, 0, None, None, None, None]
     exp_site_range = []
-    for index, row in dm_set.iterrows():       
+    place = 0
+    for index, row in dm_set.iterrows():
+        temp_hyb_site_range = []
+        temp_mod_site_range = []
+        place += 1
         dm = row.mass
         # TODO support both HYBRID and MOD scoring
         for dm_pos in row.idx:
@@ -522,12 +528,18 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                     if MOD_hs > exp_results[2]: # MOD
                         exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
             else:
+                temp_hyb_site_range += [HYB_hs]
+                temp_mod_site_range += [MOD_hs]
                 if HYB_hs > hyb_results[2]: # TODO handle score ties
                     hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
-                    hyb_site_range += [HYB_hs]
+                    best_hyb = place
                 if MOD_hs > mod_results[2]:
                     mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
-                    mod_site_range += [MOD_hs]
+                    best_mod = place
+        mod_site_range += [temp_mod_site_range]
+        hyb_site_range += [temp_hyb_site_range]
+    mod_site_range = mod_site_range[best_mod]
+    hyb_site_range = hyb_site_range[best_hyb]
     # Pick site in the middle of the range
     exp_dm_pos = [i for i in range(0,len(exp_site_range)) if exp_site_range[i]==max(exp_site_range)]
     exp_results[5] = [len(exp_dm_pos)//2]
