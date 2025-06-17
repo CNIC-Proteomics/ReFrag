@@ -513,12 +513,14 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
             ## STORE RESULTS ##
             dm_pos = plainseq[dm_pos] + str(dm_pos+1)
             if row['name'] == 'EXPERIMENTAL':
-                if score_mode and HYB_hs > exp_results[2]: # EXPERIMENTAL
+                if score_mode:
+                    exp_site_range += [HYB_hs]
+                    if HYB_hs > exp_results[2]: # EXPERIMENTAL
                         exp_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
-                        exp_site_range += [HYB_hs]
-                if not score_mode and MOD_hs > exp_results[2]: # MOD
+                if not score_mode:
+                    exp_site_range += [MOD_hs]
+                    if MOD_hs > exp_results[2]: # MOD
                         exp_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
-                        exp_site_range += [MOD_hs]
             else:
                 if HYB_hs > hyb_results[2]: # TODO handle score ties
                     hyb_results = [HYB_n_b+HYB_n_y, HYB_i, HYB_hs, row['name'], dm, dm_pos, HYB_frags]
