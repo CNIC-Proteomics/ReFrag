@@ -542,11 +542,14 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     hyb_site_range = hyb_site_range[best_hyb]
     # Pick site in the middle of the range
     exp_dm_pos = [i for i in range(0,len(exp_site_range)) if exp_site_range[i]==max(exp_site_range)]
-    exp_results[5] = [len(exp_dm_pos)//2]
+    if len(exp_dm_pos)>0:
+        exp_results[5] = plainseq[exp_dm_pos[len(exp_dm_pos)//2]]+str(exp_dm_pos[len(exp_dm_pos)//2]+1)
     mod_dm_pos = [i for i in range(0,len(mod_site_range)) if mod_site_range[i]==max(mod_site_range)]
-    mod_results[5] = [len(mod_dm_pos)//2]
+    if len(mod_dm_pos)>0:
+            mod_results[5] = plainseq[mod_dm_pos[len(mod_dm_pos)//2]]+str(mod_dm_pos[len(mod_dm_pos)//2]+1)
     hyb_dm_pos = [i for i in range(0,len(hyb_site_range)) if hyb_site_range[i]==max(hyb_site_range)]
-    hyb_results[5] = [len(hyb_dm_pos)//2]
+    if len(hyb_dm_pos)>0:
+        hyb_results[5] = plainseq[hyb_dm_pos[len(hyb_dm_pos)//2]]+str(hyb_dm_pos[len(hyb_dm_pos)//2]+1)
     
     return(nm_results+[[]], exp_results+[exp_site_range], mod_results+[mod_site_range], hyb_results+[hyb_site_range])
 
