@@ -788,8 +788,8 @@ def main(args):
         df['REFRAG_MOD_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
         df['REFRAG_HYB_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
         # Best candidate information #
-        df['REFRAG_DM'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
-        df['REFRAG_site_range'] =  pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
+        df['REFRAG_site_range'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
+        df['REFRAG_DM'] =  pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
         df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 11]. tolist()
         df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 12]. tolist() # TODO: add DM?
         df['REFRAG_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 13]. tolist()
