@@ -492,7 +492,6 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
     for index, row in dm_set.iterrows():
         temp_hyb_site_range = []
         temp_mod_site_range = []
-        place += 1
         dm = row.mass
         # TODO support both HYBRID and MOD scoring
         for dm_pos in row.idx:
@@ -536,17 +535,18 @@ def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydr
                 if MOD_hs > mod_results[2]:
                     mod_results = [MOD_n_b+MOD_n_y, MOD_i, MOD_hs, row['name'], dm, dm_pos, MOD_frags]
                     best_mod = place
+        place += 1
         mod_site_range += [temp_mod_site_range]
         hyb_site_range += [temp_hyb_site_range]
-    mod_site_range = mod_site_range[best_mod]
-    hyb_site_range = hyb_site_range[best_hyb]
     # Pick site in the middle of the range
     exp_dm_pos = [i for i in range(0,len(exp_site_range)) if exp_site_range[i]==max(exp_site_range)]
     if len(exp_dm_pos)>0:
         exp_results[5] = plainseq[exp_dm_pos[len(exp_dm_pos)//2]]+str(exp_dm_pos[len(exp_dm_pos)//2]+1)
+    mod_site_range = mod_site_range[best_mod]
     mod_dm_pos = [i for i in range(0,len(mod_site_range)) if mod_site_range[i]==max(mod_site_range)]
     if len(mod_dm_pos)>0:
             mod_results[5] = plainseq[mod_dm_pos[len(mod_dm_pos)//2]]+str(mod_dm_pos[len(mod_dm_pos)//2]+1)
+    hyb_site_range = hyb_site_range[best_hyb]
     hyb_dm_pos = [i for i in range(0,len(hyb_site_range)) if hyb_site_range[i]==max(hyb_site_range)]
     if len(hyb_dm_pos)>0:
         hyb_results[5] = plainseq[hyb_dm_pos[len(hyb_dm_pos)//2]]+str(hyb_dm_pos[len(hyb_dm_pos)//2]+1)
