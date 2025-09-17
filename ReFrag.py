@@ -843,18 +843,18 @@ def main(args):
         outdir = args.outdir if args.outdir else os.path.join(os.path.dirname(infile), script_name.lower())
         os.makedirs(outdir, exist_ok=True)
         basename = os.path.basename(infile)
-        outpath = Path(outdir)/basename
+        outpath = Path(outdir) / basename
         outsum = Path(outdir) / f"{Path(basename).stem}_SUMMARY{Path(basename).suffix}"
 
-        logging.info(f"Writing output file {outpath}...")
         if len(args.scanrange) > 0:
-            outpath = f"{outpath.stem}{str(args.scanrange[0]) + '-' + str(args.scanrange[1])}{outpath.suffix}"
+            outpath = Path(outdir) / f"{outpath.stem}_{str(args.scanrange[0]) + '-' + str(args.scanrange[1])}{outpath.suffix}"
+        logging.info(f"Writing output file {outpath}...")
         df.to_csv(outpath, index=False, sep='\t', encoding='utf-8')
         logging.info("Done.")
 
-        logging.info(f"Writing summary file {outsum}...")
         if len(args.scanrange) > 0:
-            outsum = f"{outsum.stem}{str(args.scanrange[0]) + '-' + str(args.scanrange[1])}{outsum.suffix}"
+            outsum = Path(outdir) / f"{outsum.stem}_{str(args.scanrange[0]) + '-' + str(args.scanrange[1])}{outsum.suffix}"
+        logging.info(f"Writing summary file {outsum}...")
         makeSummary(df, outsum, infile, rawfile, args.dmfile, starttime, endtime, decoy_prefix, prot_column)
         logging.info("Done.")
 
