@@ -641,6 +641,18 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy, protein):
     
     return
 
+def formatSiteRange(score_range, peptide):
+    if not len(peptide) == len(score_range):
+        return('')
+    max_score = max(score_range)
+    site_range = ''
+    for i in range(len(peptide)):
+        if score_range[i] == max_score:
+            site_range += peptide[i].lower()
+        else:
+            site_range += peptide[i]
+    return(site_range)
+
 def main(args):
     '''
     Main function
@@ -805,7 +817,8 @@ def main(args):
         df['REFRAG_MOD_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
         df['REFRAG_HYB_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
         # Best candidate information #
-        df['REFRAG_site_range'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
+        df['REFRAG_score_range'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
+        df['REFRAG_site_range'] = df.apply(lambda x: formatSiteRange(x.REFRAG_score_range, x.peptide), axis=1)
         df['REFRAG_DM'] =  pd.DataFrame(df.templist.tolist()).iloc[:, 10]. tolist()
         df['REFRAG_site'] = pd.DataFrame(df.templist.tolist()).iloc[:, 11]. tolist()
         df['REFRAG_sequence'] = pd.DataFrame(df.templist.tolist()).iloc[:, 12]. tolist() # TODO: add DM?
