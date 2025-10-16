@@ -687,6 +687,8 @@ def main(args):
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
+    # Debug
+    debug_scores = bool(int(mass._sections['Debug']['debug_scores']))
     
     checked = checkParams(mass)
     if checked != 0:
@@ -824,8 +826,9 @@ def main(args):
         df['REFRAG_nm_ions_matched'] = pd.DataFrame(df.templist.tolist()).iloc[:, 5]. tolist()
         df['REFRAG_nm_hyperscore'] = pd.DataFrame(df.templist.tolist()).iloc[:, 6]. tolist()
         # Modified information # (TESTING)
-        df['REFRAG_MOD_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
-        df['REFRAG_HYB_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
+        if debug_scores:
+            df['REFRAG_MOD_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 7]. tolist()
+            df['REFRAG_HYB_hs'] = pd.DataFrame(df.templist.tolist()).iloc[:, 8]. tolist()
         # Best candidate information #
         df['REFRAG_score_range'] = pd.DataFrame(df.templist.tolist()).iloc[:, 9]. tolist()
         df['REFRAG_site_range'] = df.apply(lambda x: formatSiteRange(x.REFRAG_score_range, x.peptide), axis=1)
