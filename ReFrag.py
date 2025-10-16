@@ -649,7 +649,7 @@ def makeSummary(df, outpath, infile, raw, dmlist, startt, endt, decoy, protein):
 
 def formatSiteRange(score_range, peptide):
     if not len(peptide) == len(score_range):
-        return('')
+        return(peptide)
     max_score = max(score_range)
     site_range = ''
     for i in range(len(peptide)):
