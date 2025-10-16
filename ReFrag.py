@@ -601,10 +601,14 @@ def parallelFragging(query, parlist):
             best_r = [nm_r, exp_r, hyb_r][np.argmax([nm_r[2], exp_r[2], hyb_r[2]])]
         else: # MOD
             best_r = [nm_r, exp_r, mod_r][np.argmax([nm_r[2], exp_r[2], mod_r[2]])]
-    if len(best_r[6]) == 0: sp = 0
-    else:
-        spfrags = np.array([i.replace('*', '') for i in best_r[6]])
-        sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
+    try:
+        if len(best_r[6]) == 0: sp = 0
+        else:
+            spfrags = np.array([i.replace('*', '') for i in best_r[6]])
+            sp = spscore(sub.Spectrum, best_r[0], parlist[1], query.peptide, spfrags)
+    except TypeError:
+        best_r = [0, 0, 0, 0, 0, 0, 0, 0]
+        sp = 0
     return([MH, MZ, dm, exp_r[0], exp_r[2], nm_r[0], nm_r[2], mod_r, hyb_r,
             best_r[7], best_r[4], best_r[5], sequence, best_r[0], best_r[1],
             best_r[2], best_r[3], sp])
