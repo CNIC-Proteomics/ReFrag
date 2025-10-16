@@ -5,6 +5,12 @@ Created on Mon Jun 27 16:55:52 2022
 @author: alaguillog
 """
 
+import warnings
+warnings.filterwarnings(
+    "ignore",
+    message="Warning: OPENMS_DATA_PATH environment variable already exists",
+    category=UserWarning
+)
 from ast import literal_eval
 import argparse
 from bisect import bisect_left
