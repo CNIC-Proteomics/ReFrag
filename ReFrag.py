@@ -784,6 +784,15 @@ def main(args):
                 cutoff1 = [i >= i[np.argsort(i)[len(i)-top_n]] if len(i)>top_n else i>0 for i in ions1]
                 ions0 = [ions0[i][cutoff1[i]] for i in range(len(ions))]
                 ions1 = [ions1[i][cutoff1[i]] for i in range(len(ions))]
+            # Remove peaks outside the min_frag_mz to max_frag_mz range
+            if min_frag_mz > 0:
+                cutoff0 = ions0/max(ions0) >= min_frag_mz
+                ions0 = ions0[cutoff0]
+                ions1 = ions1[cutoff0]
+            if max_frag_mz > 0:
+                cutoff0 = ions0/max(ions0) <= max_frag_mz
+                ions0 = ions0[cutoff0]
+                ions1 = ions1[cutoff0]
             ions = [np.array([ions0[i],ions1[i]]) for i in range(len(ions))]
             # # Duplicate m/z measurement
             logging.info("\t" + "Filter duplicate m/z measurements...")
