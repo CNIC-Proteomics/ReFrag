@@ -176,6 +176,15 @@ def locateScan(scan, mode, fr_ns, spectra, spectra_n, index2, top_n, bin_top_n, 
         ions0 = ions0[cutoff1]
         ions1 = ions1[cutoff1]
         ions = np.array([ions0,ions1])
+    # Remove peaks outside the min_frag_mz to max_frag_mz range
+    if min_frag_mz > 0:
+        cutoff0 = ions0/max(ions0) >= min_frag_mz
+        ions0 = ions0[cutoff0]
+        ions1 = ions1[cutoff0]
+    if max_frag_mz > 0:
+        cutoff0 = ions0/max(ions0) <= max_frag_mz
+        ions0 = ions0[cutoff0]
+        ions1 = ions1[cutoff0]
     # # Duplicate m/z measurement
     check = len(np.unique(ions0)) != len(ions0)
     if check == True:
