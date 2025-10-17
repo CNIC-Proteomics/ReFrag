@@ -892,7 +892,7 @@ if __name__ == '__main__':
 
         ''')
         
-    defaultconfig = os.path.join(os.path.dirname(__file__), "config/ReFrag.ini")
+    defaultconfig = os.path.join(os.path.dirname(__file__), "ReFrag.ini")
     
     # TODO parameter: exclude DM range (consider as NM)= default (-3, 0)
     parser.add_argument('-i',  '--infile', required=True, help='MSFragger results file')
