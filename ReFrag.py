@@ -33,12 +33,18 @@ from tqdm import tqdm
 pd.options.mode.chained_assignment = None  # default='warn'
 shutup.please()
 
-def checkParams(mass):
+def checkParams(mass, infiles):
     min_frag_mz = int(mass._sections['Spectrum Processing']['min_fragment_mz'])
     max_frag_mz = int(mass._sections['Spectrum Processing']['max_fragment_mz'])
     if (max_frag_mz > 0) & (max_frag_mz <= min_frag_mz):
         logging.error('max_frag_mz must be either 0 or a value greater than min_frag_mz')
         return(1)
+    prot_column = str(mass._sections['Summary']['prot_column'])
+    for f in infiles:
+        cols = pd.read_csv(f, index_col=0, nrows=0).columns.tolist()
+        if prot_column not in cols:
+            logging.error('The file ' + str(f) + 'does not contain a ' + str(prot_column) + ' column. Please check the name of the protein column.')
+            return(1)
     return(0)
 
 def preProcess(args):
@@ -697,11 +703,11 @@ def main(args):
     # Debug
     debug_scores = bool(int(mass._sections['Debug']['debug_scores']))
     
-    checked = checkParams(mass)
+    infiles, rawfiles, rawbase = preProcess(args)
+    
+    checked = checkParams(mass, infiles)
     if checked != 0:
         sys.exit("ERROR: Invalid parameters.")
-    
-    infiles, rawfiles, rawbase = preProcess(args)
         
     for f in infiles:
         if os.path.basename(f).split(sep=".")[0] in rawbase:
