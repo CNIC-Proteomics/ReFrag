@@ -410,8 +410,8 @@ def fragCheck(plainseq, blist, ylist, dm_pos, charge):
 def findClosest(dm, dmdf, dmtol, pos):
     cand = [i for i in range(len(dmdf[1])) if dmdf[1][i] > dm-dmtol and dmdf[1][i] < dm+dmtol]
     closest = pd.DataFrame([dmdf[0][cand], dmdf[1][cand], dmdf[2][cand], dmdf[3][cand]]).T
-    closest.columns = ['name', 'mass', 'site', 'site_tiebreaker']
-    closest = pd.concat([closest, pd.Series({'name':'EXPERIMENTAL', 'mass':dm, 'site':[pos], 'site_tiebreaker':[pos]}).to_frame().T], ignore_index=True)
+    closest.columns = ['name', 'mass', 'site']
+    closest = pd.concat([closest, pd.Series({'name':'EXPERIMENTAL', 'mass':dm, 'site':[pos]}).to_frame().T], ignore_index=True)
     return(closest)
 
 def findPos(dm_set, plainseq): # TODO fix sites now that this is array instead of DF
@@ -471,7 +471,7 @@ def hyperscore(exp_spec, theo_spec, frags, ftol):
         hs = math.log((i_b) * (i_y)) + math.log(math.factorial((n_b))) + math.log(math.factorial(n_y))
     return(assigned_mz, assigned_int, assigned_frags, n_b, n_y, i_sum, hs)
 
-def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, score_mode, full_y):
+def miniVseq(sub, plainseq, mods, pos, mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, score_mode, full_y):
     ## ASSIGNDB ##
     # assigndblist = []
     # assigndb = []
@@ -581,16 +581,16 @@ def parallelFragging(query, parlist):
         pos = []
     else:
         sequence, mod, pos = insertMods(plain_peptide, query.modification_info)
-    if parlist[9]=="mzml":
-        spectrum = parlist[11][np.where(np.array(parlist[10])==scan)[0][0]]
-        score_mode = parlist[12]
-        full_y = parlist[13]
-        preference = parlist[14]
-    else:
-        spectrum = query.spectrum
+    if parlist[7]=="mzml":
+        spectrum = parlist[9][np.where(np.array(parlist[8])==scan)[0][0]]
         score_mode = parlist[10]
         full_y = parlist[11]
         preference = parlist[12]
+    else:
+        spectrum = query.spectrum
+        score_mode = parlist[8]
+        full_y = parlist[9]
+        preference = parlist[10]
     dm = query.massdiff
     # TODO use calc neutral mass?
     # Make a Vseq-style query
@@ -599,7 +599,7 @@ def parallelFragging(query, parlist):
     nm_r, exp_r, mod_r, hyb_r = miniVseq(sub, plain_peptide, mod, pos,
                                          parlist[0], parlist[1], parlist[2],
                                          parlist[3], parlist[4], parlist[5], parlist[6],
-                                         parlist[7], parlist[8], score_mode, full_y)
+                                         score_mode, full_y)
     if preference: # Preference NM > MOD > EXP
         if score_mode: # HYBRID
             best_r = [nm_r, hyb_r, exp_r][np.argmax([nm_r[2], hyb_r[2], exp_r[2]])]
@@ -679,8 +679,6 @@ def main(args):
     # Parameters
     chunks = int(mass._sections['Search']['batch_size'])
     ftol = float(mass._sections['Search']['f_tol'])
-    ttol = float(mass._sections['Search']['t_tol'])
-    tmin = float(mass._sections['Search']['t_min'])
     dmtol = float(mass._sections['Search']['dm_tol'])
     decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
     score_mode = bool(int(mass._sections['Search']['score_mode']))
@@ -744,7 +742,7 @@ def main(args):
         # Read DM file
         logging.info("Reading DM file (" + str(os.path.basename(Path(args.dmfile))) + ")...")
         dmdf = pd.read_csv(Path(args.dmfile), sep="\t") # TODO check for duplicates (when both DM and SITE is the same)
-        dmdf.columns = ["name", "mass", "site", "site_tiebreaker"]
+        dmdf.columns = ["name", "mass", "site"]
         dmdf.site = dmdf.site.apply(literal_eval)
         dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
         dmdf = dmdf.T.to_numpy()
@@ -810,9 +808,9 @@ def main(args):
         if len(df) <= chunks:
             chunks = math.ceil(len(df)/args.n_workers)
         if mode == "mzml":
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, spectra_n, ions, score_mode, full_y, preference]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, mode, spectra_n, ions, score_mode, full_y, preference]
         else:
-            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, ttol, tmin, mode, score_mode, full_y, preference]
+            parlist = [mass, ftol, dmtol, dmdf, m_proton, m_hydrogen, m_oxygen, mode, score_mode, full_y, preference]
         logging.info("\tBatch size: " + str(chunks) + " (" + str(math.ceil(len(df)/chunks)) + " batches)")
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.n_workers) as executor:
             refrags = list(tqdm(executor.map(parallelFragging,
