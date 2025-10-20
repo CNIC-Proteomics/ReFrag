@@ -416,6 +416,7 @@ def fragCheck(plainseq, blist, ylist, dm_pos, charge):
 def findClosest(dm, dmdf, dmtol, pos):
     cand = [i for i in range(len(dmdf[1])) if dmdf[1][i] > dm-dmtol and dmdf[1][i] < dm+dmtol]
     closest = pd.DataFrame([dmdf[0][cand], dmdf[1][cand], dmdf[2][cand], dmdf[3][cand]]).T
+    closest = closest.iloc[:, :3]
     closest.columns = ['name', 'mass', 'site']
     closest = pd.concat([closest, pd.Series({'name':'EXPERIMENTAL', 'mass':dm, 'site':[pos]}).to_frame().T], ignore_index=True)
     return(closest)
