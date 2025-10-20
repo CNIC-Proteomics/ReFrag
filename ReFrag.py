@@ -767,7 +767,7 @@ def main(args):
             #     spectra = spectra[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
             #     spectra_n = spectra_n[np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[0]))[0][0]:np.where((np.array(spectra_n)>=0)&(np.array(spectra_n)<=args.scanrange[-1]))[0][-1]]
             peaks = [s.get_peaks() for s in spectra]
-            empty_peaks = set([i for i, p in enumerate(peaks) if len(p) == 0])
+            empty_peaks = set([i for i, p in enumerate(peaks) if len(p[0]) == 0])
             # Skip empty spectra
             if len(empty_peaks) > 0:
                 peaks = [p for i, p in enumerate(peaks) if i not in empty_peaks]
