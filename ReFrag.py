@@ -687,7 +687,7 @@ def main(args):
     chunks = int(mass._sections['Search']['batch_size'])
     ftol = float(mass._sections['Search']['f_tol'])
     dmtol = float(mass._sections['Search']['dm_tol'])
-    decoy_prefix = str(mass._sections['Search']['decoy_prefix'])
+    decoy_prefix = str(mass._sections['Summary']['decoy_prefix'])
     score_mode = bool(int(mass._sections['Search']['score_mode']))
     full_y = bool(int(mass._sections['Search']['full_y']))
     preference = bool(int(mass._sections['Search']['preference']))
