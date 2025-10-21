@@ -255,6 +255,7 @@ while True:
         window["Run"].update(disabled=True)
         window["Stop"].update(disabled=False)
         window["Exit"].update(disabled=True)
+        window["-INI_TAB-"].update(disabled=True)
 
         threading.Thread(target=run_script, args=(values, window), daemon=True).start()
         
@@ -299,6 +300,7 @@ while True:
         window["Stop"].update(disabled=True)
         window["Run"].update(disabled=False)
         window["Exit"].update(disabled=False)
+        window["-INI_TAB-"].update(disabled=False)
 
     elif event == "-DONE-":
         code = values[event]
@@ -311,6 +313,7 @@ while True:
         window["Run"].update(disabled=False)
         window["Stop"].update(disabled=True)
         window["Exit"].update(disabled=False)
+        window["-INI_TAB-"].update(disabled=False)
         process = None
         
 window.close()
