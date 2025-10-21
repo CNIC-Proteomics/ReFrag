@@ -251,6 +251,7 @@ while True:
         buffer.clear()
         window["Run"].update(disabled=True)
         window["Stop"].update(disabled=False)
+        window["Exit"].update(disabled=True)
 
         threading.Thread(target=run_script, args=(values, window), daemon=True).start()
         
@@ -303,6 +304,7 @@ while True:
             sg.popup("ReFrag finished with an error or was stopped.")
         window["Run"].update(disabled=False)
         window["Stop"].update(disabled=True)
+        window["Exit"].update(disabled=False)
         process = None
         
 window.close()
