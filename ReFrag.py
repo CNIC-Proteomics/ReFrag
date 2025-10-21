@@ -415,7 +415,6 @@ def fragCheck(plainseq, blist, ylist, dm_pos, charge):
 
 def findClosest(dm, dmdf, dmtol, pos):
     cand = [i for i in range(len(dmdf[1])) if dmdf[1][i] > dm-dmtol and dmdf[1][i] < dm+dmtol]
-    closest = pd.DataFrame([dmdf[0][cand], dmdf[1][cand], dmdf[2][cand], dmdf[3][cand]]).T
     closest = closest.iloc[:, :3]
     closest.columns = ['name', 'mass', 'site']
     closest = pd.concat([closest, pd.Series({'name':'EXPERIMENTAL', 'mass':dm, 'site':[pos]}).to_frame().T], ignore_index=True)
@@ -749,11 +748,12 @@ def main(args):
         # Read DM file
         logging.info("Reading DM file (" + str(os.path.basename(Path(args.dmfile))) + ")...")
         dmdf = pd.read_csv(Path(args.dmfile), sep="\t") # TODO check for duplicates (when both DM and SITE is the same)
+        dmdf = dmdf.iloc[:, :3]
         dmdf.columns = ["name", "mass", "site"]
         dmdf.site = dmdf.site.apply(literal_eval)
         dmdf.site = dmdf.apply(lambda x: list(dict.fromkeys(x.site)), axis=1)
         dmdf = dmdf.T.to_numpy()
-        dmdf[3] = np.array([''.join(set(''.join(literal_eval(i)).replace('N-term', '0').replace('C-term', '1'))) for i in dmdf[3]]) # Nt = 0, Ct = 1
+        #dmdf[3] = np.array([''.join(set(''.join(literal_eval(i)).replace('N-term', '0').replace('C-term', '1'))) for i in dmdf[3]]) # Nt = 0, Ct = 1
         logging.info("\t" + str(len(dmdf[0])) + " theoretical DMs read.")
         # Prepare to parallelize
         logging.info("Refragging...")
