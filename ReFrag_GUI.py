@@ -106,22 +106,13 @@ def run_script(values, window):
 
     window.write_event_value('-PROCESS-', process)
 
-    current_line = ""
-    for char in iter(lambda: process.stdout.read(1), ''):
-        if char == '\r':
-            window.write_event_value('-UPDATE-', current_line)
-            match = re.search(r'(\d{1,3})%', current_line)
-            if match:
-                window.write_event_value('-PROGRESS-', int(match.group(1)))
-            current_line = ""
-        elif char == '\n':
-            window.write_event_value('-APPEND-', current_line + '\n')
-            current_line = ""
+    for line in iter(process.stdout.readline, ''):
+        if '%|' in line:
+            # tqdm line
+            window.write_event_value('-UPDATE-', line)
         else:
-            current_line += char
-
-    if current_line:
-        window.write_event_value('-APPEND-', current_line + '\n')
+            # normal line
+            window.write_event_value('-APPEND-', line)
 
     process.wait()
     window.write_event_value('-DONE-', process.returncode)
