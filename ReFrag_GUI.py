@@ -70,7 +70,7 @@ def run_script(values, window):
     cmd += ["-r", values["-RAWFILE-"]]
     cmd += ["-d", values["-DMFILE-"]]
 
-    # Optional ones
+    # Optional arguments
     if values["-DIA-"]:
         cmd += ["-a", values["-DIA-"]]
     # if values["-SCANRANGE-"]:
@@ -79,7 +79,7 @@ def run_script(values, window):
     scan_end = values.get("-SCAN_END-", "")
     scan_range = ""
     if scan_start and scan_end:
-        scan_range = f"{scan_start},{scan_end}"  # matches your script's expected format
+        scan_range = f"{scan_start},{scan_end}"
     elif scan_start:
         scan_range = scan_start
     elif scan_end:
@@ -101,7 +101,8 @@ def run_script(values, window):
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,
-        universal_newlines=True
+        universal_newlines=True,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
     )
 
     window.write_event_value('-PROCESS-', process)
@@ -292,16 +293,19 @@ while True:
                     process.terminate()
                 except Exception:
                     pass
-            sg.popup("ReFrag stopped.")
+            window["-OUTPUT-"].print("\nReFrag stopped by user.\n", text_color='red')
         window["Stop"].update(disabled=True)
         window["Run"].update(disabled=False)
+        window["Exit"].update(disabled=False)
 
     elif event == "-DONE-":
         code = values[event]
         if code == 0:
-            sg.popup("ReFrag finished successfully!")
+            # sg.popup("ReFrag finished successfully!")
+            window["-OUTPUT-"].print("\nReFrag finished successfully!\n", text_color='green')
         else:
-            sg.popup("ReFrag finished with an error or was stopped.")
+            # sg.popup("ReFrag finished with an error or was stopped.")
+            window["-OUTPUT-"].print("\nReFrag finished with an error or was stopped.\n", text_color='red')
         window["Run"].update(disabled=False)
         window["Stop"].update(disabled=True)
         window["Exit"].update(disabled=False)
