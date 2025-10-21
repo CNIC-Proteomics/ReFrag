@@ -211,7 +211,7 @@ run_layout = [
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
     #[sg.ProgressBar(100, orientation='h', size=(50, 20), key='-PROGRESS_BAR-')],
     [sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))],
-    [sg.Button("Run", bind_return_key=True), sg.Button("Stop", disabled=True), sg.Button("Exit")]
+    [sg.Button("Run", bind_return_key=True), sg.Button("Stop", disabled=True, button_color=('white','red')), sg.Button("Exit")]
 ]
 layout = [
     [sg.Text("ReFrag v1.0", font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold"))], # TODO get version from script
