@@ -132,28 +132,76 @@ settings = load_settings()
 
 # GUI layout
 italic = (sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1], "italic")
+bold = (sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1], "bold")
+amino_acids = [
+    ("Alanine", "A"),
+    ("Arginine", "R"),
+    ("Asparagine", "N"),
+    ("Aspartic Acid", "D"),
+    ("Cysteine", "C"),
+    ("Glutamic Acid", "E"),
+    ("Glutamine", "Q"),
+    ("Glycine", "G"),
+    ("Histidine", "H"),
+    ("Isoleucine", "I"),
+    ("Leucine", "L"),
+    ("Lysine", "K"),
+    ("Methionine", "M"),
+    ("Phenylalanine", "F"),
+    ("Proline", "P"),
+    ("Serine", "S"),
+    ("Threonine", "T"),
+    ("Selenocysteine", "U"),
+    ("Tryptophan", "W"),
+    ("Tyrosine", "Y"),
+    ("Valine", "V"),
+    ("Pyrrolysine", "O"),
+    ("Ambiguous E/Q", "Z")
+] # TODO: Handle adding custom amino acids
+aa_rows = []
+for name, code in amino_acids:
+    aa_rows.append([
+        sg.Text(f"{name} ({code})", size=(25,1)),
+        sg.Input(key=f"-{code}_MASS-", size=(20,1), disabled=True),
+        sg.Input(key=f"-{code}_FM-", size=(20,1))
+    ])
+    
 iniedit_layout = [
     [sg.Text("INI file"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"), sg.FileBrowse(), sg.Button("Load INI")],
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
-    [sg.Text("\nSEARCH PARAMETERS")],
+    [sg.Column([
+    [sg.Text("\nSEARCH PARAMETERS", font=bold)],
     [sg.Text("Batch Size", size=(25,1), tooltip="Size (number of PSMs) of each task that will be submitted to a CPU core."), sg.Input(key="-BATCH_SIZE-", size=(40,1))],
     [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
     [sg.Text("Theoretical Δmass Tolerance (Da)", size=(25,1)), sg.Input(key="-DELTAMASS_TOLERANCE-", size=(40,1))],
     [sg.Text("Score Mode", size=(25,1)), sg.Radio("MOD-Hyperscore", "MODE_GROUP", key="-MODE_A-", default=True), sg.Radio("HYB-Hyperscore", "MODE_GROUP", key="-MODE_B-")],
     [sg.Text("Y-series Matching", size=(25,1)), sg.Radio("Exclude y\u00b9", "Y_GROUP", key="-Y_A-", default=True), sg.Radio("Full Series", "Y_GROUP", key="-Y_B-")],
     [sg.Text("Δmass Preference", size=(25,1)), sg.Radio("Experimental", "PREF_GROUP", key="-PREF_A-", default=True), sg.Radio("Theoretical", "PREF_GROUP", key="-PREF_B-")],
-    [sg.Text("\nSPECTRUM PROCESSING")],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("\nSUMMARY")],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("\nSPECTRUM PROCESSING", font=bold)],
+    [sg.Text("Top N", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Minimum Intensity Ratio", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Bin Top N", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Minimum fragment m/z", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Maximum fragment m/z", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Deisotope", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("\nSUMMARY PARAMETERS", font=bold)],
+    [sg.Text("Protein Column", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Decoy Prefix", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
     #[sg.Column([], scrollable=True, vertical_scroll_only=True, size=(600,300), key="-INI_INPUTS-")],
+    [sg.Text("\nAMINO ACIDS", font=bold)],
+    [sg.Text("Adding custom amino acids through the GUI is currently unsupported, it can still be done by editing the INI file directly.", font=italic)],
+    [sg.Text("", size=(25,1)), sg.Text("Amino Acid Mass", size=(20,1)), sg.Text("Fixed Modifications", size=(20,1))],
+    *aa_rows,
+    [sg.Text("\nOTHER MASSES", font=bold)],
+    [sg.Text("Proton", size=(25,1)), sg.Input(key="-PROTON_MASS-", size=(20,1), disabled=True)],
+    [sg.Text("Hydrogen", size=(25,1)), sg.Input(key="-HYDROGEN_MASS-", size=(20,1), disabled=True)],
+    [sg.Text("Oxygen", size=(25,1)), sg.Input(key="-OXYGEN_MASS-", size=(20,1), disabled=True)],
+    [sg.Text("\nLOGGING", font=bold)],
+    [sg.Text("Create Log", size=(25,1)), sg.Checkbox("", default=settings.get("-CREATE_LOG-", True), key="-CREATE_LOG-")],
+    [sg.Text("Create INI", size=(25,1)), sg.Checkbox("", default=settings.get("-CREATE_INI-", True), key="-CREATE_INI-")],
+    [sg.Text("\nDEBUG", font=bold)],
+    [sg.Text("Debug Scores", size=(25,1)), sg.Checkbox("", default=settings.get("-DEBUG_SCORES-", False), key="-DEBUG_SCORES-")],
+    ], scrollable=True, vertical_scroll_only=True, size=(750,600))],
     [sg.Button("Save INI")]
 ]
 
