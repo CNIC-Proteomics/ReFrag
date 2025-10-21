@@ -159,7 +159,7 @@ for name, code in amino_acids:
     ])
     
 iniedit_layout = [
-    [sg.Text("INI file"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"), sg.FileBrowse(), sg.Button("Load INI")],
+    [sg.Text("INI file"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"), sg.FileBrowse(), sg.Button("Load INI")], # TODO: create default INI
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
     [sg.Column([
     [sg.Text("\nSEARCH PARAMETERS", font=bold)],
@@ -170,15 +170,15 @@ iniedit_layout = [
     [sg.Text("Y-series Matching", size=(25,1)), sg.Radio("Exclude y\u00b9", "Y_GROUP", key="-Y_A-", default=True), sg.Radio("Full Series", "Y_GROUP", key="-Y_B-")],
     [sg.Text("Δmass Preference", size=(25,1)), sg.Radio("Experimental", "PREF_GROUP", key="-PREF_A-", default=True), sg.Radio("Theoretical", "PREF_GROUP", key="-PREF_B-")],
     [sg.Text("\nSPECTRUM PROCESSING", font=bold)],
-    [sg.Text("Top N", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Minimum Intensity Ratio", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Bin Top N", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Minimum fragment m/z", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Maximum fragment m/z", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Deisotope", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Top N", size=(25,1)), sg.Input(key="-TOP_N-", size=(40,1))],
+    [sg.Text("Minimum Intensity Ratio", size=(25,1)), sg.Input(key="-MIN_RATIO-", size=(40,1))],
+    [sg.Text("Bin Top N", size=(25,1)), sg.Checkbox("", default=settings.get("-BIN_TOP_N-", False), key="-BIN_TOP_N-")],
+    [sg.Text("Minimum fragment m/z", size=(25,1)), sg.Input(key="-MIN_FRAG_MZ-", size=(40,1))],
+    [sg.Text("Maximum fragment m/z", size=(25,1)), sg.Input(key="-MAX_FRAG_MZ-", size=(40,1))],
+    [sg.Text("Deisotope", size=(25,1)), sg.Checkbox("", default=settings.get("-DEISO-", False), key="-DEISO-")],
     [sg.Text("\nSUMMARY PARAMETERS", font=bold)],
-    [sg.Text("Protein Column", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Decoy Prefix", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
+    [sg.Text("Protein Column", size=(25,1)), sg.Input(key="-PROTEIN-", size=(40,1))],
+    [sg.Text("Decoy Prefix", size=(25,1)), sg.Input(key="-DECOY-", size=(40,1))],
     #[sg.Column([], scrollable=True, vertical_scroll_only=True, size=(600,300), key="-INI_INPUTS-")],
     [sg.Text("\nAMINO ACIDS", font=bold)],
     [sg.Text("Adding custom amino acids through the GUI is currently unsupported. It can still be done by editing the INI file directly.", font=italic)],
@@ -264,7 +264,47 @@ while True:
         if ini_path:
             config = configparser.ConfigParser(inline_comment_prefixes='#')
             config.read(ini_path)
+            # SEARCH
+            window["-BATCH_SIZE-"].update(int(config._sections['Search']['batch_size']))
             window["-FRAGMENT_TOLERANCE-"].update(float(config._sections['Search']['f_tol']))
+            window["-DELTAMASS_TOLERANCE-"].update(float(config._sections['Search']['dm_tol']))
+            radio = int(config._sections['Search']['score_mode'])
+            window["-MODE_A-"].update(value=(radio == 0))
+            window["-MODE_B-"].update(value=(radio == 1))
+            radio = int(config._sections['Search']['full_y'])
+            window["-Y_A-"].update(value=(radio == 1))
+            window["-Y_B-"].update(value=(radio == 0))
+            radio = int(config._sections['Search']['preference'])
+            window["-PREF_A-"].update(value=(radio == 0))
+            window["-PREF_B-"].update(value=(radio == 1))
+            # SPECTRUM PROCESSING
+            window["-TOP_N-"].update(int(config._sections['Spectrum Processing']['top_n']))
+            window["-MIN_RATIO-"].update(float(config._sections['Spectrum Processing']['min_ratio']))
+            window["-BIN_TOP_N-"].update(bool(int((config._sections['Spectrum Processing']['bin_top_n']))))
+            window["-MIN_FRAG_MZ-"].update(float(config._sections['Spectrum Processing']['min_fragment_mz']))
+            window["-MAX_FRAG_MZ-"].update(float(config._sections['Spectrum Processing']['max_fragment_mz']))
+            window["-DEISO-"].update(bool(int((config._sections['Spectrum Processing']['deisotope']))))
+            window["-PROTEIN-"].update(str(config._sections['Summary']['prot_column']))
+            window["-DECOY-"].update(str(config._sections['Summary']['decoy_prefix']))
+            # AMINO ACIDS
+            AAs = dict(config._sections['Aminoacids'])
+            MODs = dict(config._sections['Fixed Modifications'])
+            for name, code in amino_acids:
+                if code.lower() in AAs:
+                    window[f"-{code}_MASS-"].update(AAs[code.lower()])
+                if code.lower() in MODs:
+                    window[f"-{code}_FM-"].update(MODs[code.lower()])
+            # MASSES
+            window["-PROTON_MASS-"].update(str(config._sections['Masses']['m_proton']))
+            window["-HYDROGEN_MASS-"].update(str(config._sections['Masses']['m_hydrogen']))
+            window["-OXYGEN_MASS-"].update(str(config._sections['Masses']['m_oxygen']))
+            # LOGGING
+            window["-CREATE_LOG-"].update(bool(int((config._sections['Logging']['create_log']))))
+            window["-CREATE_INI-"].update(bool(int((config._sections['Logging']['create_ini']))))
+            # DEBUG
+            window["-DEBUG_SCORES-"].update(bool(int((config._sections['Debug']['debug_scores']))))
+            
+            
 
     elif event == "-PROCESS-":
         process = values[event]
