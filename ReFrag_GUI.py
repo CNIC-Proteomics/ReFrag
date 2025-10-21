@@ -211,13 +211,16 @@ run_layout = [
     [sg.Text("Number of workers (-w)", size=(25,1), justification='right'), sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
     #[sg.ProgressBar(100, orientation='h', size=(50, 20), key='-PROGRESS_BAR-')],
-    [sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))],
-    [sg.Button("Run", bind_return_key=True), sg.Button("Stop", disabled=True, button_color=('white','red')), sg.Button("Exit")]
+    [sg.Column([[sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))]], element_justification='center', expand_x=True)],
+    [sg.Column([[
+        sg.Button("Run", bind_return_key=True),
+        sg.Button("Stop", disabled=True, button_color=('white','red')),
+        sg.Button("Exit")]], element_justification='center', expand_x=True)]
 ]
 layout = [
     [sg.Text("ReFrag v1.0", font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold"))], # TODO get version from script
     [sg.TabGroup([
-        [sg.Tab('INI Editor', iniedit_layout), sg.Tab('Run ReFrag', run_layout)]
+        [sg.Tab('INI Editor', iniedit_layout, key='-INI_TAB-'), sg.Tab('Run ReFrag', run_layout, key='-RUN_TAB-')]
     ])]
 ]
 window = sg.Window("ReFrag GUI", layout)
