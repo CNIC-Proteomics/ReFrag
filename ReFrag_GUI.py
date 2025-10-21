@@ -218,8 +218,7 @@ layout = [
     [sg.Text("ReFrag v1.0", font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold"))], # TODO get version from script
     [sg.TabGroup([
         [sg.Tab('INI Editor', iniedit_layout), sg.Tab('Run ReFrag', run_layout)]
-    ])],
-    [sg.Button("Exit")]
+    ])]
 ]
 window = sg.Window("ReFrag GUI", layout)
 
