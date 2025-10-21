@@ -189,7 +189,7 @@ iniedit_layout = [
     [sg.Text("Decoy Prefix", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
     #[sg.Column([], scrollable=True, vertical_scroll_only=True, size=(600,300), key="-INI_INPUTS-")],
     [sg.Text("\nAMINO ACIDS", font=bold)],
-    [sg.Text("Adding custom amino acids through the GUI is currently unsupported, it can still be done by editing the INI file directly.", font=italic)],
+    [sg.Text("Adding custom amino acids through the GUI is currently unsupported. It can still be done by editing the INI file directly.", font=italic)],
     [sg.Text("", size=(25,1)), sg.Text("Amino Acid Mass", size=(20,1)), sg.Text("Fixed Modifications", size=(20,1))],
     *aa_rows,
     [sg.Text("\nOTHER MASSES", font=bold)],
@@ -223,6 +223,7 @@ run_layout = [
     [sg.Button("Run", bind_return_key=True), sg.Button("Stop", disabled=True), sg.Button("Exit")]
 ]
 layout = [
+    [sg.Text("ReFrag v1.0", font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold"))], # TODO get version from script
     [sg.TabGroup([
         [sg.Tab('INI Editor', iniedit_layout), sg.Tab('Run ReFrag', run_layout)]
     ])],
@@ -255,7 +256,7 @@ while True:
         save_settings(values)
 
         window["-OUTPUT-"].update("")
-        window["-PROGRESS_BAR-"].update(0)
+        # window["-PROGRESS_BAR-"].update(0)
         buffer.clear()
         window["Run"].update(disabled=True)
         window["Stop"].update(disabled=False)
@@ -283,9 +284,9 @@ while True:
             buffer.append(values[event])
         window["-OUTPUT-"].update(''.join(buffer))
 
-    elif event == "-PROGRESS-":
-        window["-PROGRESS_BAR-"].update(values[event])
-        window.refresh()
+    # elif event == "-PROGRESS-":
+    #     window["-PROGRESS_BAR-"].update(values[event])
+    #     window.refresh()
 
     elif event == "Stop":
         if process and process.poll() is None:
