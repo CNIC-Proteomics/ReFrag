@@ -679,20 +679,27 @@ def formatSiteRange(score_range, peptide):
             site_range += peptide[i]
     return(site_range)
 
-def globalFDR(df, score_column, prot_column, decoy_prefix, filter_target=False, filter_fdr=False):
-    df['row_index'] = df.cumcount()
+def globalFDR(df, score_column, prot_column, decoy_prefix, filter_target=False, filter_fdr=0):
+    fl = len(df)
+    df['row_index'] = range(1, len(df) + 1)
     df['REFRAG_Label'] = df.apply(lambda x: 'Decoy' if (x[prot_column][0:len(decoy_prefix)]==decoy_prefix) else 'Target', axis = 1)
-    df.sort_values(by=[score_column, 'Label'], inplace=True, ascending=False)
-    df['Rank'] = df.groupby('Label').cumcount()+1
-    df['Rank_T'] = np.where(df['Label']=='Target', df['Rank'], 0)
+    df.sort_values(by=[score_column, 'REFRAG_Label'], inplace=True, ascending=False)
+    df['Rank'] = df.groupby('REFRAG_Label').cumcount()+1
+    df['Rank_T'] = np.where(df['REFRAG_Label']=='Target', df['Rank'], 0)
     df['Rank_T'] = df['Rank_T'].replace(0, np.nan).ffill()
-    df['Rank_D'] = np.where(df['Label'] == 'Decoy', df['Rank'], 0)
+    df['Rank_D'] = np.where(df['REFRAG_Label'] == 'Decoy', df['Rank'], 0)
     df['Rank_D'] =  df['Rank_D'].replace(0, np.nan).ffill()
     df['REFRAG_FDR'] = df['Rank_D']/df['Rank_T']
     df['REFRAG_FDR'] =  df['REFRAG_FDR'].replace(np.nan, 0).ffill()
     df.sort_values(by='row_index', inplace=True, ascending=True)
     if filter_fdr > 0:
+        logging.info("Filtering at " + str(filter_fdr*100) + "% FDR...")
         df = df[df.REFRAG_FDR <= filter_fdr]
+    if filter_target:
+        logging.info("Removing decoys...")
+        df = df[~df.REFRAG_Label.str.startswith(decoy_prefix)]
+    if filter_fdr > 0 or filter_target:
+        logging.info(str(len(df)) + "out of " + str(fl) + " PSMs passed the filter(s).")
     df.drop(['row_index', 'Rank', 'Rank_T', 'Rank_D'], axis = 1, inplace = True)
     return(df)
 
@@ -715,8 +722,8 @@ def main(args):
     deiso = bool(int(mass._sections['Spectrum Processing']['deisotope']))
     decoy_prefix = str(mass._sections['FDR']['decoy_prefix'])
     prot_column = str(mass._sections['FDR']['prot_column'])
-    filter_target = str(mass._sections['FDR']['filter_target'])
-    filter_fdr = str(mass._sections['FDR']['filter_fdr'])
+    filter_target =  bool(int(mass._sections['FDR']['filter_target']))
+    filter_fdr = float(mass._sections['FDR']['filter_fdr'])
     m_proton = mass.getfloat('Masses', 'm_proton')
     m_hydrogen = mass.getfloat('Masses', 'm_hydrogen')
     m_oxygen = mass.getfloat('Masses', 'm_oxygen')
@@ -889,6 +896,7 @@ def main(args):
         df['REFRAG_name'] = pd.DataFrame(df.templist.tolist()).iloc[:, 16]. tolist()
         df['REFRAG_sp_score'] = pd.DataFrame(df.templist.tolist()).iloc[:, 17]. tolist()
         df = df.drop('templist', axis = 1)
+        logging.info("Calculating FDR...")
         df = globalFDR(df, 'REFRAG_hyperscore', prot_column, decoy_prefix, filter_target, filter_fdr)
         
         try:
