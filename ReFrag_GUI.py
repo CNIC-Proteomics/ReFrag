@@ -176,13 +176,15 @@ iniedit_layout = [
     [sg.Text("Minimum fragment m/z", size=(25,1)), sg.Input(key="-MIN_FRAG_MZ-", size=(40,1))],
     [sg.Text("Maximum fragment m/z", size=(25,1)), sg.Input(key="-MAX_FRAG_MZ-", size=(40,1))],
     [sg.Text("Deisotope", size=(25,1)), sg.Checkbox("", default=settings.get("-DEISO-", False), key="-DEISO-")],
-    [sg.Text("\nSUMMARY PARAMETERS", font=bold)],
+    [sg.Text("\nFDR PARAMETERS", font=bold)],
     [sg.Text("Protein Column", size=(25,1)), sg.Input(key="-PROTEIN-", size=(40,1))],
     [sg.Text("Decoy Prefix", size=(25,1)), sg.Input(key="-DECOY-", size=(40,1))],
+    [sg.Text("Filter Targets", size=(25,1)), sg.Checkbox("", default=settings.get("-FILTER_TARGET-", False), key="-FILTER_TARGET-")],
+    [sg.Text("Filter FDR", size=(25,1)), sg.Spin([round(x * 0.01, 2) for x in range(0, 101)], initial_value=settings.get("-FILTER_FDR-", 0), key="-FILTER_FDR-", size=(10,1))],
     #[sg.Column([], scrollable=True, vertical_scroll_only=True, size=(600,300), key="-INI_INPUTS-")],
     [sg.Text("\nAMINO ACIDS", font=bold)],
     [sg.Text("Adding custom amino acids through the GUI is currently unsupported. It can still be done by editing the INI file directly.", font=italic)],
-    [sg.Text("", size=(25,1)), sg.Text("Amino Acid Mass", size=(20,1)), sg.Text("Fixed Modifications", size=(20,1))],
+    [sg.Text("", size=(25,1)), sg.Text("Amino Acid Mass", size=(18,1)), sg.Text("Fixed Modifications", size=(20,1))],
     *aa_rows,
     [sg.Text("\nOTHER MASSES", font=bold)],
     [sg.Text("Proton", size=(25,1)), sg.Input(key="-PROTON_MASS-", size=(20,1), disabled=True)],
@@ -284,8 +286,11 @@ while True:
             window["-MIN_FRAG_MZ-"].update(float(config._sections['Spectrum Processing']['min_fragment_mz']))
             window["-MAX_FRAG_MZ-"].update(float(config._sections['Spectrum Processing']['max_fragment_mz']))
             window["-DEISO-"].update(bool(int((config._sections['Spectrum Processing']['deisotope']))))
-            window["-PROTEIN-"].update(str(config._sections['Summary']['prot_column']))
-            window["-DECOY-"].update(str(config._sections['Summary']['decoy_prefix']))
+            # FDR
+            window["-PROTEIN-"].update(str(config._sections['FDR']['prot_column']))
+            window["-DECOY-"].update(str(config._sections['FDR']['decoy_prefix']))
+            window["-FILTER_TARGET-"].update(bool(int(config._sections['FDR']['filter_target'])))
+            window["-FILTER_FDR-"].update(float(config._sections['FDR']['filter_fdr']))
             # AMINO ACIDS
             AAs = dict(config._sections['Aminoacids'])
             MODs = dict(config._sections['Fixed Modifications'])
