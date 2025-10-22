@@ -15,8 +15,8 @@ import signal
 import json
 import sys
 
-# User preferences file
-SETTINGS_FILE = "ReFrag_GUI.json"
+SETTINGS_FILE = "ReFrag_GUI.json" # User preferences file
+DOCS_PATH = "docs.pdf" # Documentation
 
 def load_settings():
     """Load saved user settings"""
@@ -154,47 +154,79 @@ aa_rows = []
 for name, code in amino_acids:
     aa_rows.append([
         sg.Text(f"{name} ({code})", size=(25,1)),
-        sg.Input(key=f"-{code}_MASS-", size=(20,1), disabled=True),
-        sg.Input(key=f"-{code}_FM-", size=(20,1))
+        sg.Input(key=f"-{code}_MASS-", size=(20,1), disabled=True, justification="right"),
+        sg.Input(key=f"-{code}_FM-", size=(20,1), justification="right")
     ])
     
 iniedit_layout = [
-    [sg.Text("INI file"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"), sg.FileBrowse(), sg.Button("Load INI"), sg.Button("Save INI")], # TODO: create default INI
+    [sg.Text("Configuration File:"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"),
+     sg.FileBrowse(file_types = (('INI Files', '*.ini'),), initial_folder = "."),
+     sg.Button("Load Config"), # TODO: create default INI
+     sg.FileSaveAs("Save Config", file_types = (('INI Files', '*.ini'),), initial_folder = ".", default_extension = ".ini")],
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
     [sg.Column([
-    [sg.Text("\nSEARCH PARAMETERS", font=bold)],
-    [sg.Text("Batch Size", size=(25,1), tooltip=" Size (number of PSMs) of each task that will be submitted to a CPU core. "), sg.Input(default_text=settings.get("-BATCH_SIZE-", 1000), key="-BATCH_SIZE-", size=(10,1))],
-    [sg.Text("Fragment Tolerance", size=(25,1), tooltip=" Fragment mass tolerance, in parts-per-million. "), sg.Spin([x for x in range(0, 1001)], initial_value=settings.get("-FRAGMENT_TOLERANCE-", 20), key="-FRAGMENT_TOLERANCE-", size=(10,1)), sg.Text("ppm")],
-    [sg.Text("Theoretical Δmass Tolerance", size=(25,1), tooltip=" Tolerance for matching of theoretical and experimental Δmasses, in Dalton. \n This is an absolute value. "), sg.Spin([round(x * 0.1, 2) for x in range(0, 101)], initial_value=settings.get("-DELTAMASS_TOLERANCE-", 3), key="-DELTAMASS_TOLERANCE-", size=(10,1)), sg.Text("Da")],
-    [sg.Text("Score Mode", size=(25,1), tooltip=" The method for hyperscore calculation. "), sg.Radio("MOD-Hyperscore", "MODE_GROUP", key="-MODE_A-", default=True, tooltip=" Equivalent to MSFragger hyperscore. "), sg.Radio("HYB-Hyperscore", "MODE_GROUP", key="-MODE_B-", tooltip=" Attempts to match all non-modified fragment ions \n regardless of the position of the modification. ")],
-    [sg.Text("Y-series Matching", size=(25,1), tooltip=" How to use the y-series for fragment matching. "), sg.Radio("Exclude y\u00b9", "Y_GROUP", key="-Y_A-", default=True, tooltip=" Exclude the y\u00b9 ion. Equivalent to MSFragger. "), sg.Radio("Use Full Series", "Y_GROUP", key="-Y_B-", tooltip=" Include the full y-series up to y\u207f. ")],
-    [sg.Text("Δmass Preference", size=(25,1)), sg.Radio("Experimental", "PREF_GROUP", key="-PREF_A-", default=True), sg.Radio("Theoretical", "PREF_GROUP", key="-PREF_B-")],
-    [sg.Text("\nSPECTRUM PROCESSING", font=bold)],
-    [sg.Text("Top N", size=(25,1)), sg.Input(key="-TOP_N-", size=(40,1))],
-    [sg.Text("Minimum Intensity Ratio", size=(25,1)), sg.Input(key="-MIN_RATIO-", size=(40,1))],
-    [sg.Text("Bin Top N", size=(25,1)), sg.Checkbox("", default=settings.get("-BIN_TOP_N-", False), key="-BIN_TOP_N-")],
-    [sg.Text("Minimum fragment m/z", size=(25,1)), sg.Input(key="-MIN_FRAG_MZ-", size=(40,1))],
-    [sg.Text("Maximum fragment m/z", size=(25,1)), sg.Input(key="-MAX_FRAG_MZ-", size=(40,1))],
-    [sg.Text("Deisotope", size=(25,1)), sg.Checkbox("", default=settings.get("-DEISO-", False), key="-DEISO-")],
-    [sg.Text("\nFDR PARAMETERS", font=bold)],
-    [sg.Text("Protein Column", size=(25,1)), sg.Input(key="-PROTEIN-", size=(40,1))],
-    [sg.Text("Decoy Prefix", size=(25,1)), sg.Input(key="-DECOY-", size=(40,1))],
-    [sg.Text("Filter Targets", size=(25,1)), sg.Checkbox("", default=settings.get("-FILTER_TARGET-", False), key="-FILTER_TARGET-")],
-    [sg.Text("Filter FDR", size=(25,1)), sg.Spin([round(x * 0.01, 2) for x in range(0, 101)], initial_value=settings.get("-FILTER_FDR-", 0), key="-FILTER_FDR-", size=(10,1))],
-    #[sg.Column([], scrollable=True, vertical_scroll_only=True, size=(600,300), key="-INI_INPUTS-")],
-    [sg.Text("\nAMINO ACIDS", font=bold)],
-    [sg.Text("Adding custom amino acids through the GUI is currently unsupported. It can still be done by editing the INI file directly.", font=italic)],
-    [sg.Text("", size=(25,1)), sg.Text("Amino Acid Mass", size=(18,1)), sg.Text("Fixed Modifications", size=(20,1))],
-    *aa_rows,
-    [sg.Text("\nOTHER MASSES", font=bold)],
-    [sg.Text("Proton", size=(25,1)), sg.Input(key="-PROTON_MASS-", size=(20,1), disabled=True)],
-    [sg.Text("Hydrogen", size=(25,1)), sg.Input(key="-HYDROGEN_MASS-", size=(20,1), disabled=True)],
-    [sg.Text("Oxygen", size=(25,1)), sg.Input(key="-OXYGEN_MASS-", size=(20,1), disabled=True)],
-    [sg.Text("\nLOGGING", font=bold)],
-    [sg.Text("Create Log", size=(25,1)), sg.Checkbox("", default=settings.get("-CREATE_LOG-", True), key="-CREATE_LOG-")],
-    [sg.Text("Create INI", size=(25,1)), sg.Checkbox("", default=settings.get("-CREATE_INI-", True), key="-CREATE_INI-")],
-    [sg.Text("\nDEBUG", font=bold)],
-    [sg.Text("Debug Scores", size=(25,1)), sg.Checkbox("", default=settings.get("-DEBUG_SCORES-", False), key="-DEBUG_SCORES-")],
+        [sg.Text("\nSEARCH PARAMETERS", font=bold)],
+        [sg.Text("Batch Size", size=(25,1), tooltip=" Size (number of PSMs) of each task that will be submitted to a CPU core. "),
+         sg.Input(default_text=settings.get("-BATCH_SIZE-", 1000), key="-BATCH_SIZE-", size=(10,1), enable_events=True)],
+        [sg.Text("Fragment Tolerance", size=(25,1), tooltip=" Fragment mass tolerance, in parts-per-million. "),
+         sg.Input(default_text=settings.get("-FRAGMENT_TOLERANCE-", 20.0), key="-FRAGMENT_TOLERANCE-", size=(10,1), enable_events=True),
+         sg.Text("ppm")],
+        [sg.Text("Theoretical Δmass Tolerance", size=(25,1), tooltip=" Tolerance for matching of theoretical and experimental Δmasses, in Dalton. \n This is an absolute value. "),
+         sg.Input(default_text=settings.get("-DELTAMASS_TOLERANCE-", 3.0), key="-DELTAMASS_TOLERANCE-", size=(10,1), enable_events=True),
+         sg.Text("Da")],
+        [sg.Text("Score Mode", size=(25,1), tooltip=" The method for hyperscore calculation. "),
+         sg.Radio("MOD-Hyperscore", "MODE_GROUP", key="-MODE_A-", default=True, tooltip=" Equivalent to MSFragger hyperscore. "),
+         sg.Radio("HYB-Hyperscore", "MODE_GROUP", key="-MODE_B-", tooltip=" Attempts to match all non-modified fragment ions \n regardless of the position of the modification. ")],
+        [sg.Text("Y-series Matching", size=(25,1), tooltip=" How to use the y-series for fragment matching. "),
+         sg.Radio("Exclude y\u00b9", "Y_GROUP", key="-Y_A-", default=True, tooltip=" Exclude the y\u00b9 ion. Equivalent to MSFragger. "),
+         sg.Radio("Use Full Series", "Y_GROUP", key="-Y_B-", tooltip=" Include the full y-series up to y\u207f. ")],
+        [sg.Text("Δmass Preference", size=(25,1), tooltip=" Which Δmass candidate should be reported \n if both have the same score. "),
+         sg.Radio("Experimental", "PREF_GROUP", key="-PREF_A-", default=True, tooltip=" Δmass determined by MSFragger. "),
+         sg.Radio("Theoretical", "PREF_GROUP", key="-PREF_B-", tooltip=" Highest-scoring Δmass from the curated list. ")],
+        
+        [sg.Text("\nSPECTRUM PROCESSING", font=bold)],
+        [sg.Text("Top N", size=(25,1), tooltip=" Maximum number of peaks (sorted by intensity) \n to keep from each spectrum. "),
+         sg.Input(default_text=settings.get("-TOP_N-", 150), key="-TOP_N-", size=(10,1), enable_events=True)],
+        [sg.Text("Minimum Intensity Ratio", size=(25,1), tooltip=" Remove peaks less intense than this multiple \n of the base peak intensity. "),
+         sg.Input(default_text=settings.get("-MIN_RATIO-", 0.01), key="-MIN_RATIO-", size=(10,1), enable_events=True)],
+        [sg.Text("Bin Top N", size=(25,1), tooltip=" Bin spectra according to the average aminoacid mass \n and keep the Top N peaks in each bin. "),
+         sg.Checkbox("", default=settings.get("-BIN_TOP_N-", False), key="-BIN_TOP_N-")],
+        [sg.Text("Minimum Fragment m/z", size=(25,1), tooltip=" Remove peaks with m/z lower than or equal to this value. "),
+         sg.Input(default_text=settings.get("-MIN_FRAG_MZ-", 0), key="-MIN_FRAG_MZ-", size=(10,1), enable_events=True)],
+        [sg.Text("Maximum Fragment m/z", size=(25,1), tooltip=" Remove peaks with m/z greater than or equal to this value. \n A value of 0 ignores this parameter. "),
+         sg.Input(default_text=settings.get("-MAX_FRAG_MZ-", 0), key="-MAX_FRAG_MZ-", size=(10,1), enable_events=True)],
+        [sg.Text("Deisotope", size=(25,1), tooltip=" Remove non-monoisotopic peaks up to 3 Carbon-13, \n with a tolerance of 0.005 Th. \n This is an experimental parameter. "),
+         sg.Checkbox("", default=settings.get("-DEISO-", False), key="-DEISO-")],
+        
+        [sg.Text("\nFDR PARAMETERS", font=bold)],
+        [sg.Text("Protein Column", size=(25,1), tooltip=" Name of the column containing protein names. "),
+         sg.Input(default_text=settings.get("-PROTEIN-", False), key="-PROTEIN-", size=(40,1))],
+        [sg.Text("Decoy Prefix", size=(25,1), tooltip=" The prefix that marks decoy protein IDs. "),
+         sg.Input(default_text=settings.get("-DECOY-", False), key="-DECOY-", size=(40,1))],
+        [sg.Text("Filter Targets", size=(25,1), tooltip=" Remove Decoys from output. "),
+         sg.Checkbox("", default=settings.get("-FILTER_TARGET-", False), key="-FILTER_TARGET-")],
+        [sg.Text("Filter FDR", size=(25,1), tooltip=" Remove PSMs above this FDR threshold. \n A value of 0 ignores this parameter. "),
+         sg.Spin([round(x * 0.01, 2) for x in range(0, 101)], initial_value=settings.get("-FILTER_FDR-", 0), key="-FILTER_FDR-", size=(10,1))],
+        #[sg.Column([], scrollable=True, vertical_scroll_only=True, size=(600,300), key="-INI_INPUTS-")],
+        
+        [sg.Text("\nAMINO ACIDS", font=bold)],
+        [sg.Text("Adding custom amino acids through the GUI is currently unsupported. It can still be done by editing the INI file directly.", font=italic)],
+        [sg.Text("", size=(25,1)), sg.Text("Amino Acid Mass", size=(18,1)), sg.Text("Fixed Modifications", size=(20,1))],
+        *aa_rows,
+        
+        [sg.Text("\nOTHER MASSES", font=bold)],
+        [sg.Text("Proton", size=(25,1)), sg.Input(key="-PROTON_MASS-", size=(20,1), disabled=True, justification="right")],
+        [sg.Text("Hydrogen", size=(25,1)), sg.Input(key="-HYDROGEN_MASS-", size=(20,1), disabled=True, justification="right")],
+        [sg.Text("Oxygen", size=(25,1)), sg.Input(key="-OXYGEN_MASS-", size=(20,1), disabled=True, justification="right")],
+        
+        [sg.Text("\nLOGGING", font=bold)],
+        [sg.Text("Create Log", size=(25,1), tooltip=" Create a log file. "),
+         sg.Checkbox("", default=settings.get("-CREATE_LOG-", True), key="-CREATE_LOG-")],
+        [sg.Text("Create INI", size=(25,1), tooltip=" Create a copy of the configuration file in the input directory. "),
+         sg.Checkbox("", default=settings.get("-CREATE_INI-", True), key="-CREATE_INI-")],
+        
+        [sg.Text("\nDEBUG", font=bold)],
+        [sg.Text("Debug Scores", size=(25,1)), sg.Checkbox("", default=settings.get("-DEBUG_SCORES-", False), key="-DEBUG_SCORES-")],
     ], scrollable=True, vertical_scroll_only=True, size=(760,640))]
 ]
 
@@ -216,12 +248,12 @@ run_layout = [
     [sg.Column([[
         sg.Button("Run", bind_return_key=True),
         sg.Button("Stop", disabled=True, button_color=('white','red')),
-        sg.Button("Exit")]], element_justification='center', expand_x=True)]
+        sg.Button("Exit")]], element_justification='center', expand_x=True)] # TODO add progress bar for 1 out of n files, etc
 ]
 layout = [
-    [sg.Text("ReFrag v1.0"+" "*72, font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold")), sg.Button("About")], # TODO get version from script
+    [sg.Text("ReFrag v1.0"+" "*67, font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold")), sg.Button("About"), sg.Button("Help")], # TODO get version from script
     [sg.TabGroup([
-        [sg.Tab('INI Editor', iniedit_layout, key='-INI_TAB-'), sg.Tab('Run ReFrag', run_layout, key='-RUN_TAB-')]
+        [sg.Tab('Parameters', iniedit_layout, key='-INI_TAB-'), sg.Tab('Run ReFrag', run_layout, key='-RUN_TAB-')]
     ])]
 ]
 window = sg.Window("ReFrag GUI", layout)
@@ -258,16 +290,16 @@ while True:
         window["Exit"].update(disabled=True)
         window["-INI_TAB-"].update(disabled=True)
 
-        threading.Thread(target=run_script, args=(values, window), daemon=True).start()
+        threading.Thread(target=run_script, args=(values, window), daemon=True).start() # TODO: always save INI showing in GUI?
         
-    elif event == "Load INI":
+    elif event == "Load Config":
         ini_path = values["-CONFIG-"]
         if ini_path:
             config = configparser.ConfigParser(inline_comment_prefixes='#')
             config.read(ini_path)
             # SEARCH
             window["-BATCH_SIZE-"].update(int(config._sections['Search']['batch_size']))
-            window["-FRAGMENT_TOLERANCE-"].update(int(config._sections['Search']['f_tol']))
+            window["-FRAGMENT_TOLERANCE-"].update(float(config._sections['Search']['f_tol']))
             window["-DELTAMASS_TOLERANCE-"].update(float(config._sections['Search']['dm_tol']))
             radio = int(config._sections['Search']['score_mode'])
             window["-MODE_A-"].update(value=(radio == 0))
@@ -308,7 +340,20 @@ while True:
             # DEBUG
             window["-DEBUG_SCORES-"].update(bool(int((config._sections['Debug']['debug_scores']))))
             
+    elif event == "Help":
+        try:
+            if sys.platform.startswith('darwin'):  # macOS
+                subprocess.call(('open', DOCS_PATH))
+            elif os.name == 'nt':  # Windows
+                os.startfile(DOCS_PATH)
+            elif os.name == 'posix':  # Linux
+                subprocess.call(('xdg-open', DOCS_PATH))
+        except Exception as e:
+            sg.popup_error(f"Could not open help file:\n{e}")
             
+    elif event == "About":
+        sg.popup("ReFrag is an implementation of the ReCom concept (Laguillo-Gómez et al., 2023) designed to be run as a post-processing step after an open MSFragger search. It is compatible with both DDA and DIA data. When using ReFrag, DIA data can be searched in a “pseudo-DDA” workflow, using a curated list of theoretical Δmass values to correct errors caused by the uncertainty in precursor masses contained within the same fragmentation window. \n\nReFrag has been developed at the Cardiovascular Proteomics Lab / Proteomics Unit at CNIC (Spanish National Centre for Cardiovascular Research). ",
+                 title="About ReFrag")
 
     elif event == "-PROCESS-":
         process = values[event]
@@ -323,6 +368,25 @@ while True:
         else:
             buffer.append(values[event])
         window["-OUTPUT-"].update(''.join(buffer))
+        
+    elif event in ["-BATCH_SIZE-", "-TOP_N-"]: # Keep only digits
+        val = values[event]
+        if not val.isdigit():
+            new_val = "".join(c for c in val if c.isdigit())
+            window[event].update(new_val)
+            
+    elif event in ["-FRAGMENT_TOLERANCE-", "-DELTAMASS_TOLERANCE-", "-MIN_RATIO-"]: # Keep only digits and a single decimal point
+        val = values[event]
+        new_val = ""
+        decimal_found = False
+        for c in val:
+            if c.isdigit():
+                new_val += c
+            elif c == '.' and not decimal_found:
+                new_val += c
+                decimal_found = True
+        if new_val != val:
+            window[event].update(new_val)
 
     # elif event == "-PROGRESS-":
     #     window["-PROGRESS_BAR-"].update(values[event])
