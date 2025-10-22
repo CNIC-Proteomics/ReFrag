@@ -159,15 +159,15 @@ for name, code in amino_acids:
     ])
     
 iniedit_layout = [
-    [sg.Text("INI file"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"), sg.FileBrowse(), sg.Button("Load INI")], # TODO: create default INI
+    [sg.Text("INI file"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"), sg.FileBrowse(), sg.Button("Load INI"), sg.Button("Save INI")], # TODO: create default INI
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
     [sg.Column([
     [sg.Text("\nSEARCH PARAMETERS", font=bold)],
-    [sg.Text("Batch Size", size=(25,1), tooltip="Size (number of PSMs) of each task that will be submitted to a CPU core."), sg.Input(key="-BATCH_SIZE-", size=(40,1))],
-    [sg.Text("Fragment Tolerance (ppm)", size=(25,1)), sg.Input(key="-FRAGMENT_TOLERANCE-", size=(40,1))],
-    [sg.Text("Theoretical Δmass Tolerance (Da)", size=(25,1)), sg.Input(key="-DELTAMASS_TOLERANCE-", size=(40,1))],
-    [sg.Text("Score Mode", size=(25,1)), sg.Radio("MOD-Hyperscore", "MODE_GROUP", key="-MODE_A-", default=True), sg.Radio("HYB-Hyperscore", "MODE_GROUP", key="-MODE_B-")],
-    [sg.Text("Y-series Matching", size=(25,1)), sg.Radio("Exclude y\u00b9", "Y_GROUP", key="-Y_A-", default=True), sg.Radio("Full Series", "Y_GROUP", key="-Y_B-")],
+    [sg.Text("Batch Size", size=(25,1), tooltip=" Size (number of PSMs) of each task that will be submitted to a CPU core. "), sg.Input(default_text=settings.get("-BATCH_SIZE-", 1000), key="-BATCH_SIZE-", size=(10,1))],
+    [sg.Text("Fragment Tolerance", size=(25,1), tooltip=" Fragment mass tolerance, in parts-per-million. "), sg.Spin([x for x in range(0, 1001)], initial_value=settings.get("-FRAGMENT_TOLERANCE-", 20), key="-FRAGMENT_TOLERANCE-", size=(10,1)), sg.Text("ppm")],
+    [sg.Text("Theoretical Δmass Tolerance", size=(25,1), tooltip=" Tolerance for matching of theoretical and experimental Δmasses, in Dalton. \n This is an absolute value. "), sg.Spin([round(x * 0.1, 2) for x in range(0, 101)], initial_value=settings.get("-DELTAMASS_TOLERANCE-", 3), key="-DELTAMASS_TOLERANCE-", size=(10,1)), sg.Text("Da")],
+    [sg.Text("Score Mode", size=(25,1), tooltip=" The method for hyperscore calculation. "), sg.Radio("MOD-Hyperscore", "MODE_GROUP", key="-MODE_A-", default=True, tooltip=" Equivalent to MSFragger hyperscore. "), sg.Radio("HYB-Hyperscore", "MODE_GROUP", key="-MODE_B-", tooltip=" Attempts to match all non-modified fragment ions \n regardless of the position of the modification. ")],
+    [sg.Text("Y-series Matching", size=(25,1), tooltip=" How to use the y-series for fragment matching. "), sg.Radio("Exclude y\u00b9", "Y_GROUP", key="-Y_A-", default=True, tooltip=" Exclude the y\u00b9 ion. Equivalent to MSFragger. "), sg.Radio("Use Full Series", "Y_GROUP", key="-Y_B-", tooltip=" Include the full y-series up to y\u207f. ")],
     [sg.Text("Δmass Preference", size=(25,1)), sg.Radio("Experimental", "PREF_GROUP", key="-PREF_A-", default=True), sg.Radio("Theoretical", "PREF_GROUP", key="-PREF_B-")],
     [sg.Text("\nSPECTRUM PROCESSING", font=bold)],
     [sg.Text("Top N", size=(25,1)), sg.Input(key="-TOP_N-", size=(40,1))],
@@ -195,8 +195,7 @@ iniedit_layout = [
     [sg.Text("Create INI", size=(25,1)), sg.Checkbox("", default=settings.get("-CREATE_INI-", True), key="-CREATE_INI-")],
     [sg.Text("\nDEBUG", font=bold)],
     [sg.Text("Debug Scores", size=(25,1)), sg.Checkbox("", default=settings.get("-DEBUG_SCORES-", False), key="-DEBUG_SCORES-")],
-    ], scrollable=True, vertical_scroll_only=True, size=(750,600))],
-    [sg.Button("Save INI")]
+    ], scrollable=True, vertical_scroll_only=True, size=(760,640))]
 ]
 
 run_layout = [
@@ -220,7 +219,7 @@ run_layout = [
         sg.Button("Exit")]], element_justification='center', expand_x=True)]
 ]
 layout = [
-    [sg.Text("ReFrag v1.0", font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold"))], # TODO get version from script
+    [sg.Text("ReFrag v1.0"+" "*72, font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold")), sg.Button("About")], # TODO get version from script
     [sg.TabGroup([
         [sg.Tab('INI Editor', iniedit_layout, key='-INI_TAB-'), sg.Tab('Run ReFrag', run_layout, key='-RUN_TAB-')]
     ])]
@@ -268,7 +267,7 @@ while True:
             config.read(ini_path)
             # SEARCH
             window["-BATCH_SIZE-"].update(int(config._sections['Search']['batch_size']))
-            window["-FRAGMENT_TOLERANCE-"].update(float(config._sections['Search']['f_tol']))
+            window["-FRAGMENT_TOLERANCE-"].update(int(config._sections['Search']['f_tol']))
             window["-DELTAMASS_TOLERANCE-"].update(float(config._sections['Search']['dm_tol']))
             radio = int(config._sections['Search']['score_mode'])
             window["-MODE_A-"].update(value=(radio == 0))
