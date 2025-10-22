@@ -39,7 +39,7 @@ def checkParams(mass, infiles):
     if (max_frag_mz > 0) & (max_frag_mz <= min_frag_mz):
         logging.error('max_frag_mz must be either 0 or a value greater than min_frag_mz')
         return(1)
-    prot_column = str(mass._sections['Summary']['prot_column'])
+    prot_column = str(mass._sections['FDR']['prot_column'])
     for f in infiles:
         cols = pd.read_csv(f, index_col=0, nrows=0, sep="\t").columns.tolist()
         if prot_column not in cols:
