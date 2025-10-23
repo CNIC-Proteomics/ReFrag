@@ -107,11 +107,15 @@ def run_script(values, window):
 
     window.write_event_value('-PROCESS-', process)
 
+    progress = 0
     for line in iter(process.stdout.readline, ''):
         if '%|' in line:
             # tqdm line
             window.write_event_value('-UPDATE-', line)
         else:
+            if " - INFO - Reading MSFragger file (" in line or "INFO - end script" in line: # update progress bar
+                progress += 1
+                window["-PROGRESS_BAR-"].update(progress)
             # normal line
             window.write_event_value('-APPEND-', line)
 
@@ -160,9 +164,9 @@ for name, code in amino_acids:
     
 iniedit_layout = [
     [sg.Text("Configuration File:"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"),
-     sg.FileBrowse(file_types = (('INI Files', '*.ini'),), initial_folder = "."),
+     sg.FileBrowse(file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = "."),
      sg.Button("Load Config"), # TODO: create default INI
-     sg.FileSaveAs("Save Config", file_types = (('INI Files', '*.ini'),), initial_folder = ".", default_extension = ".ini")],
+     sg.FileSaveAs("Save Config", file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = ".", default_extension = ".ini")],
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
     [sg.Column([
         [sg.Text("\nSEARCH PARAMETERS", font=bold)],
@@ -231,20 +235,33 @@ iniedit_layout = [
 ]
 
 run_layout = [
-    [sg.Text("MSFragger results file (-i)", size=(25,1), justification='right'), sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1)), sg.FileBrowse()],
-    [sg.Text("MS Data file (-r)", size=(25,1), justification='right'), sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1)), sg.FileBrowse()],
-    [sg.Text("DeltaMass file (-d)", size=(25,1), justification='right'), sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1)), sg.FileBrowse()],
-    [sg.Text("_chN files (-a, comma-separated)", size=(25,1), justification='right'), sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1))],
-    #[sg.Text("Scan range (-s, comma-separated)", size=(25,1), justification='right'), sg.Input(settings.get("-SCANRANGE-", ""), key="-SCANRANGE-", size=(60,1))],
-    #[sg.Text("Scan range (-s, comma-separated)", size=(25,1), justification='right'), sg.Input(settings.get("-SCAN_START-", ""), key="-SCAN_START-", size=(10,1), enable_events=True), sg.Text("-", pad=(0,0)), sg.Input(settings.get("-SCAN_END-", ""), key="-SCAN_END-", size=(10,1), enable_events=True)],
-    [sg.Text("Scan range (-s)", size=(25,1), justification='right'), sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_START-", 0)), key="-SCAN_START-", enable_events=True, size=(8,1)), sg.Text("-", pad=(0,0)), sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_END-", 0)), key="-SCAN_END-", enable_events=True, size=(8,1))],
-    [sg.Text("Output directory (-o)", size=(25,1), justification='right'), sg.Input(settings.get("-OUTDIR-", ""), key="-OUTDIR-", size=(60,1)), sg.FolderBrowse()],
-    [sg.Text("Config file (-c)", size=(25,1), justification='right'), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-", size=(60,1)), sg.FileBrowse(), sg.Button("Load Config")],
-    #[sg.Text("Number of workers (-w)", size=(25,1), justification='right'), sg.Input(settings.get("-WORKERS-", ""), key="-WORKERS-", size=(60,1))],
-    [sg.Text("Number of workers (-w)", size=(25,1), justification='right'), sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
+    [sg.Text("MSFragger Results File", size=(25,1), justification='right'),
+     sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1)),
+     sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),))],
+    [sg.Text("MS Data File", size=(25,1), justification='right'),
+     sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1)),
+     sg.FileBrowse(file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),))],
+    [sg.Text("Δmass File", size=(25,1), justification='right'),
+     sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1)),
+     sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),))],
+    [sg.Text("_chN Files", size=(25,1), justification='right'),
+     sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1))],
+    [sg.Text("Scan Range", size=(25,1), justification='right'),
+     sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_START-", 0)), key="-SCAN_START-", enable_events=True, size=(8,1)),
+     sg.Text("-", pad=(0,0)),
+     sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_END-", 0)), key="-SCAN_END-", enable_events=True, size=(8,1)),
+     sg.Text("A value of 0 ignores these parameters.", font=italic)],
+    [sg.Text("Output directory", size=(25,1), justification='right'), sg.Input(settings.get("-OUTDIR-", ""), key="-OUTDIR-", size=(60,1)),
+     sg.FolderBrowse()],
+    [sg.Text("Config file", size=(25,1), justification='right'), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-", size=(60,1)),
+     sg.FileBrowse(),
+     sg.Button("Load Config")],
+    [sg.Text("Number of workers", size=(25,1), justification='right'),
+     sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
-    #[sg.ProgressBar(100, orientation='h', size=(50, 20), key='-PROGRESS_BAR-')],
     [sg.Column([[sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))]], element_justification='center', expand_x=True)],
+    [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), key='-PROGRESS_BAR-')]], pad=((25, 5), (10)), element_justification='left', expand_x=False),
+     sg.Text("Searching file 1 out of 1000", justification="left")], # TODO get max value from input file list and update these values
     [sg.Column([[
         sg.Button("Run", bind_return_key=True),
         sg.Button("Stop", disabled=True, button_color=('white','red')),
@@ -369,13 +386,15 @@ while True:
             buffer.append(values[event])
         window["-OUTPUT-"].update(''.join(buffer))
         
-    elif event in ["-BATCH_SIZE-", "-TOP_N-"]: # Keep only digits
+    elif event in ["-BATCH_SIZE-", "-TOP_N-", "-SCAN_START-", "-SCAN_END-"]:
+        # Keep only digits
         val = values[event]
         if not val.isdigit():
             new_val = "".join(c for c in val if c.isdigit())
             window[event].update(new_val)
             
-    elif event in ["-FRAGMENT_TOLERANCE-", "-DELTAMASS_TOLERANCE-", "-MIN_RATIO-"]: # Keep only digits and a single decimal point
+    elif event in ["-FRAGMENT_TOLERANCE-", "-DELTAMASS_TOLERANCE-", "-MIN_RATIO-", "-FILTER_FDR-"]:
+        # Keep only digits and a single decimal point
         val = values[event]
         new_val = ""
         decimal_found = False
