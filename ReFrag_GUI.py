@@ -269,16 +269,17 @@ iniedit_layout = [
 ]
 
 run_layout = [
-    [sg.Text("MSFragger Results", size=(25,1), justification='right'),
+    [sg.Text("MSFragger File(s)", size=(25,1), justification='right'),
      sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1), enable_events=True),
-     sg.FileBrowse(button_text = "Load File",  target="-INFILE-", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_FILE-"),
+     sg.FileBrowse(button_text = "Load File", target="-INFILE-", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_FILE-"),
      sg.FolderBrowse(button_text = "Load Folder", target="-INFILE-", key="-BROWSE_FOLDER-")],
-    [sg.Text("MS Data File", size=(25,1), justification='right'),
+    [sg.Text("MS Data File(s)", size=(25,1), justification='right'),
      sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1), enable_events=True),
-     sg.FileBrowse(file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),), key="-BROWSE_RAW-")], # TODO disable all these buttons when running
+     sg.FileBrowse(button_text = "Load File", file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),), key="-BROWSE_RAW-"),
+     sg.FolderBrowse(button_text = "Load Folder", target="-RAWFILE-", key="-BROWSE_RAW_FOLDER-")],
     [sg.Text("Δmass File", size=(25,1), justification='right'),
      sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1), enable_events=True),
-     sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_DM-")],
+     sg.FileBrowse(button_text = "Load File", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_DM-")],
     # [sg.Text("_chN Files", size=(25,1), justification='right'),
     #  sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1), enable_events=True)],
     [sg.Input("", key="-DIA-", visible=False)],
@@ -289,10 +290,10 @@ run_layout = [
      sg.Text("A value of 0 ignores these parameters.", font=italic)],
     [sg.Text("Output directory", size=(25,1), justification='right'),
      sg.Input(settings.get("-OUTDIR-", ""), key="-OUTDIR-", size=(60,1), enable_events=True),
-     sg.FolderBrowse(key="-BROWSE_OUTPUT-")],
+     sg.FolderBrowse(button_text = "Select Folder", key="-BROWSE_OUTPUT-")],
     [sg.Text("Config file", size=(25,1), justification='right'),
      sg.Input(settings.get("-CONFIG_TO_RUN-", ""), key="-CONFIG_TO_RUN-", size=(60,1), enable_events=True),
-     sg.FileBrowse(key="-BROWSE_CONFIG-")],
+     sg.FileBrowse(button_text = "Load File", key="-BROWSE_CONFIG-")],
      #sg.Button("Load Config", key="-LOAD_CONFIG-")],
     [sg.Text("Number of workers", size=(25,1), justification='right'),
      sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1), enable_events=True)],
@@ -346,7 +347,7 @@ while True:
         window["-PROGRESS_BAR-"].update(bar_color=("green", "white"))
         
         disable_keys = [
-            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
+            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-", "-BROWSE_RAW_FOLDER-",
             "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-",
             "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
             "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
@@ -566,7 +567,7 @@ while True:
         window["Run"].update(disabled=False)
         window["Exit"].update(disabled=False)
         enable_keys = [
-            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
+            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-", "-BROWSE_RAW_FOLDER-",
             "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-",
             "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
             "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
@@ -600,7 +601,7 @@ while True:
         window["Stop"].update(disabled=True)
         window["Exit"].update(disabled=False)
         enable_keys = [
-            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
+            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-", "-BROWSE_RAW_FOLDER-",
             "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-",
             "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
             "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
