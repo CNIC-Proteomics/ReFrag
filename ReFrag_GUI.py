@@ -108,14 +108,23 @@ def run_script(values, window):
     window.write_event_value('-PROCESS-', process)
 
     progress = 0
+    progress_current = 1
+    progress_total = 0
+    if os.path.isfile(values["-INFILE-"]): progress_total = 1
+    elif os.path.isdir(values["-INFILE-"]): progress_total = len([f for f in os.listdir(values["-INFILE-"]) if any(f.lower().endswith(s) for s in [".tsv"])]) # , ".txt"])])
+    window["-PROGRESS_BAR-"].update(0, progress_total)
     for line in iter(process.stdout.readline, ''):
         if '%|' in line:
             # tqdm line
             window.write_event_value('-UPDATE-', line)
         else:
-            if " - INFO - Reading MSFragger file (" in line or "INFO - end script" in line: # update progress bar
+            if " - INFO - Reading MSFragger file (" in line: # update progress label
+                window["-PROGRESS_LABEL-"].update("Searching file " + str(progress_current) + " out of " + str(progress_total) + " ...")
                 progress += 1
+                progress_current += 1
+            elif " - INFO - Done." in line: # update progress bar
                 window["-PROGRESS_BAR-"].update(progress)
+            #elif "INFO - end script" in line:
             # normal line
             window.write_event_value('-APPEND-', line)
 
@@ -261,8 +270,8 @@ run_layout = [
      sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
     [sg.Column([[sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))]], element_justification='center', expand_x=True)],
-    [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), bar_color=('green', 'white'), key='-PROGRESS_BAR-')]], pad=((25, 5), (10)), element_justification='left', expand_x=False),
-     sg.Text("Searching file 1 out of 1000", justification="left")], # TODO get max value from input file list and update these values
+    [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), bar_color=('green', 'white'), key='-PROGRESS_BAR-')]], pad=((30, 5), (10)), element_justification='left', expand_x=False),
+     sg.Text("", justification="left", key="-PROGRESS_LABEL-")], # TODO get max value from input file list and update these values
     [sg.Column([[
         sg.Button("Run", bind_return_key=True),
         sg.Button("Stop", disabled=True, button_color=('white','red')),
@@ -434,7 +443,7 @@ while True:
         code = values[event]
         if code == 0:
             # sg.popup("ReFrag finished successfully!")
-            window["-OUTPUT-"].print("\nReFrag finished successfully!\n", text_color='green')
+            window["-OUTPUT-"].print("\nReFrag finished successfully!\n", text_color='green') # TODO list errors and warnings that occurred, if any.
         else:
             # sg.popup("ReFrag finished with an error or was stopped.")
             window["-OUTPUT-"].print("\nReFrag finished with an error or was stopped.\n", text_color='red')
