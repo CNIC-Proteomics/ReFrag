@@ -169,19 +169,38 @@ amino_acids = [
     ("Pyrrolysine", "O"),
     ("Ambiguous E/Q", "Z")
 ] # TODO: Handle adding custom amino acids
+
+default_masses = {
+    "A": 71.037114, "R": 156.101111, "N": 114.042927, "D": 115.026943,
+    "C": 103.009185, "E": 129.042593, "Q": 128.058578, "G": 57.021464,
+    "H": 137.058912, "I": 113.084064, "L": 113.084064, "K": 128.094963,
+    "M": 131.040485, "F": 147.068414, "P": 97.052764, "S": 87.032028,
+    "T": 101.047679, "U": 150.953630, "W": 186.079313, "Y": 163.063329,
+    "V": 99.068414, "O": 132.089878, "Z": 129.042594
+}
+
+default_mods = {
+    "A": 0, "R": 0, "N": 0, "D": 0, "C": 57.021464, "E": 0, "Q": 0, "G": 0,
+    "H": 0, "I": 0, "L": 0, "K": 0, "M": 0, "F": 0, "P": 0, "S": 0,
+    "T": 0, "U": 0, "W": 0, "Y": 0, "V": 0, "O": 0, "Z": 0
+}
+
 aa_rows = []
 for name, code in amino_acids:
+    mass = default_masses.get(code.upper(), "")
+    mods = default_mods.get(code.upper(), "")
     aa_rows.append([
         sg.Text(f"{name} ({code})", size=(25,1)),
-        sg.Input(key=f"-{code}_MASS-", size=(20,1), disabled=True, justification="right"),
-        sg.Input(key=f"-{code}_FM-", size=(20,1), justification="right")
+        sg.Input(default_text=mass, key=f"-{code}_MASS-", size=(20,1), disabled=True, justification="right"),
+        sg.Input(default_text=mods, key=f"-{code}_FM-", size=(20,1), justification="right")
     ])
-    
+
 iniedit_layout = [
     [sg.Text("Configuration File:"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"),
      sg.FileBrowse(file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = "."),
      sg.Button("Load Config"), # TODO: create default INI
-     sg.FileSaveAs("Save Config", file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = ".", default_extension = ".ini")],
+     sg.FileSaveAs("Save Config", file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = ".", default_extension = ".ini"),
+     sg.Button("Reset To Default", key="-RESET_CONFIG-")],
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
     [sg.Column([
         [sg.Text("\nSEARCH PARAMETERS", font=bold)],
@@ -272,11 +291,11 @@ run_layout = [
      sg.FolderBrowse(key="-BROWSE_OUTPUT-")],
     [sg.Text("Config file", size=(25,1), justification='right'),
      sg.Input(settings.get("-CONFIG_TO_RUN-", ""), key="-CONFIG_TO_RUN-", size=(60,1), enable_events=True),
-     sg.FileBrowse(key="-BROWSE_CONFIG-"),
-     sg.Button("Load Config", key="-LOAD_CONFIG-")],
+     sg.FileBrowse(key="-BROWSE_CONFIG-")],
+     #sg.Button("Load Config", key="-LOAD_CONFIG-")],
     [sg.Text("Number of workers", size=(25,1), justification='right'),
      sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1), enable_events=True)],
-    [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
+    [sg.Text("", size=(25,1)), sg.Checkbox("Verbose", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
     [sg.Column([[sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))]], element_justification='center', expand_x=True)],
     [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), bar_color=('green', 'white'), key='-PROGRESS_BAR-')]], pad=((30, 5), (10)), element_justification='left', expand_x=False),
      sg.Text("", justification="left", key="-PROGRESS_LABEL-")], # TODO get max value from input file list and update these values
@@ -323,10 +342,11 @@ while True:
         window["Run"].update(disabled=True)
         window["Stop"].update(disabled=False)
         window["Exit"].update(disabled=True)
+        window["-PROGRESS_BAR-"].update(bar_color=("green", "white"))
         
         disable_keys = [
             "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
-            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-", "-LOAD_CONFIG-",
+            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-",
             "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
             "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
         ]
@@ -385,6 +405,52 @@ while True:
             window["-CREATE_INI-"].update(bool(int((config._sections['Logging']['create_ini']))))
             # DEBUG
             window["-DEBUG_SCORES-"].update(bool(int((config._sections['Debug']['debug_scores']))))
+            
+    elif event == "Save Config":
+        a = 0
+        
+    elif event == "-RESET_CONFIG-":
+        default_masses = {
+            "A": 71.037114, "R": 156.101111, "N": 114.042927, "D": 115.026943,
+            "C": 103.009185, "E": 129.042593, "Q": 128.058578, "G": 57.021464,
+            "H": 137.058912, "I": 113.084064, "L": 113.084064, "K": 128.094963,
+            "M": 131.040485, "F": 147.068414, "P": 97.052764, "S": 87.032028,
+            "T": 101.047679, "U": 150.953630, "W": 186.079313, "Y": 163.063329,
+            "V": 99.068414, "O": 132.089878, "Z": 129.042594
+        }
+        default_mods = {
+            "A": 0, "R": 0, "N": 0, "D": 0, "C": 57.021464, "E": 0, "Q": 0, "G": 0,
+            "H": 0, "I": 0, "L": 0, "K": 0, "M": 0, "F": 0, "P": 0, "S": 0,
+            "T": 0, "U": 0, "W": 0, "Y": 0, "V": 0, "O": 0, "Z": 0
+        }
+        window["-CONFIG-"].update(settings.get("-CONFIG-", ""))
+        window["-BATCH_SIZE-"].update(settings.get("-BATCH_SIZE-", 1000))
+        window["-FRAGMENT_TOLERANCE-"].update(settings.get("-FRAGMENT_TOLERANCE-", 20.0))
+        window["-DELTAMASS_TOLERANCE-"].update(settings.get("-DELTAMASS_TOLERANCE-", 3.0))
+        window["-MODE_A-"].update(True)
+        window["-MODE_B-"].update(False)
+        window["-Y_A-"].update(True)
+        window["-Y_B-"].update(False)
+        window["-PREF_A-"].update(True)
+        window["-PREF_B-"].update(False)
+        window["-TOP_N-"].update(settings.get("-TOP_N-", 150))
+        window["-MIN_RATIO-"].update(settings.get("-MIN_RATIO-", 0.01))
+        window["-BIN_TOP_N-"].update(settings.get("-BIN_TOP_N-", False))
+        window["-MIN_FRAG_MZ-"].update(settings.get("-MIN_FRAG_MZ-", 0))
+        window["-MAX_FRAG_MZ-"].update(settings.get("-MAX_FRAG_MZ-", 0))
+        window["-DEISO-"].update(settings.get("-DEISO-", False))
+        window["-PROTEIN-"].update(settings.get("-PROTEIN-", ""))
+        window["-DECOY-"].update(settings.get("-DECOY-", ""))
+        window["-FILTER_TARGET-"].update(settings.get("-FILTER_TARGET-", False))
+        window["-FILTER_FDR-"].update(settings.get("-FILTER_FDR-", 0))
+        window["-CREATE_LOG-"].update(settings.get("-CREATE_LOG-", True))
+        window["-CREATE_INI-"].update(settings.get("-CREATE_INI-", True))
+        window["-DEBUG_SCORES-"].update(settings.get("-DEBUG_SCORES-", False))
+        for name, code in amino_acids:
+                mass = default_masses.get(code.upper(), "")
+                mods = default_mods.get(code.upper(), "")
+                window[f"-{code}_MASS-"].update(mass)
+                window[f"-{code}_FM-"].update(mods)
             
     elif event == "Help":
         try:
@@ -461,7 +527,7 @@ while True:
         window["Exit"].update(disabled=False)
         enable_keys = [
             "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
-            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-", "-LOAD_CONFIG-",
+            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-",
             "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
             "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
         ]
@@ -495,7 +561,7 @@ while True:
         window["Exit"].update(disabled=False)
         enable_keys = [
             "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
-            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-", "-LOAD_CONFIG-",
+            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-",
             "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
             "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
         ]
