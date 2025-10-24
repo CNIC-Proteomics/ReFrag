@@ -235,9 +235,10 @@ iniedit_layout = [
 ]
 
 run_layout = [
-    [sg.Text("MSFragger Results File", size=(25,1), justification='right'),
+    [sg.Text("MSFragger Results", size=(25,1), justification='right'),
      sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1)),
-     sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),))],
+     sg.FileBrowse(button_text = "Load File",  target="-INFILE-", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),)),
+     sg.FolderBrowse(button_text = "Load Folder", target="-INFILE-")],
     [sg.Text("MS Data File", size=(25,1), justification='right'),
      sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1)),
      sg.FileBrowse(file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),))],
@@ -260,7 +261,7 @@ run_layout = [
      sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
     [sg.Column([[sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))]], element_justification='center', expand_x=True)],
-    [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), key='-PROGRESS_BAR-')]], pad=((25, 5), (10)), element_justification='left', expand_x=False),
+    [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), bar_color=('green', 'white'), key='-PROGRESS_BAR-')]], pad=((25, 5), (10)), element_justification='left', expand_x=False),
      sg.Text("Searching file 1 out of 1000", justification="left")], # TODO get max value from input file list and update these values
     [sg.Column([[
         sg.Button("Run", bind_return_key=True),
