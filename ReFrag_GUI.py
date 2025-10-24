@@ -198,8 +198,8 @@ for name, code in amino_acids:
 iniedit_layout = [
     [sg.Text("Configuration File:"), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-"),
      sg.FileBrowse(file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = "."),
-     sg.Button("Load Config"), # TODO: create default INI
-     sg.FileSaveAs("Save Config", file_types = (('INI Files', '*.ini;*.INI'),), initial_folder = ".", default_extension = ".ini"),
+     sg.Button("Load Config"),
+     sg.Button("Save Config", key="-SAVE_CONFIG-"),
      sg.Button("Reset To Default", key="-RESET_CONFIG-")],
     [sg.Text("Hover over the name of each parameter to show a brief description.", font=italic)],
     [sg.Column([
@@ -406,8 +406,44 @@ while True:
             # DEBUG
             window["-DEBUG_SCORES-"].update(bool(int((config._sections['Debug']['debug_scores']))))
             
-    elif event == "Save Config":
-        a = 0
+    elif event == "-SAVE_CONFIG-":
+        save_path = sg.popup_get_file("Save INI file as...", save_as=True,
+                                      file_types=(("INI Files", "*.ini;*.INI"),),
+                                      default_extension=".ini",
+                                      initial_folder=".") # TODO current path in -CONFIG-
+        if save_path:
+                config_data = {
+                    "Search.batch_size": str(values["-BATCH_SIZE-"]),
+                    "Search.f_tol": str(values["-FRAGMENT_TOLERANCE-"]),
+                    "Search.dm_tol": str(values["-DELTAMASS_TOLERANCE-"]),
+                    "Search.score_mode": "0" if values["-MODE_A-"] else "1",
+                    "Search.full_y": "1" if values["-Y_A-"] else "0",
+                    "Search.preference": "0" if values["-PREF_A-"] else "1",
+                    "Spectrum Processing.top_n": str(values["-TOP_N-"]),
+                    "Spectrum Processing.min_ratio": str(values["-MIN_RATIO-"]),
+                    "Spectrum Processing.bin_top_n": "1" if values["-BIN_TOP_N-"] else "0",
+                    "Spectrum Processing.min_fragment_mz": str(values["-MIN_FRAG_MZ-"]),
+                    "Spectrum Processing.max_fragment_mz": str(values["-MAX_FRAG_MZ-"]),
+                    "Spectrum Processing.deisotope": "1" if values["-DEISO-"] else "0",
+                    "FDR.prot_column": values["-PROTEIN-"],
+                    "FDR.decoy_prefix": values["-DECOY-"],
+                    "FDR.filter_target": "1" if values["-FILTER_TARGET-"] else "0",
+                    "FDR.filter_fdr": str(values["-FILTER_FDR-"]),
+                    "Logging.create_log": "1" if values["-CREATE_LOG-"] else "0",
+                    "Logging.create_ini": "1" if values["-CREATE_INI-"] else "0",
+                    "Debug.debug_scores": "1" if values["-DEBUG_SCORES-"] else "0",
+                    "Masses.m_proton": values["-PROTON_MASS-"],
+                    "Masses.m_hydrogen": values["-HYDROGEN_MASS-"],
+                    "Masses.m_oxygen": values["-OXYGEN_MASS-"]
+                }
+                for name, code in amino_acids:
+                    config_data[f"Aminoacids.{code.upper()}"] = str(values[f"-{code}_MASS-"])
+                    config_data[f"Fixed Modifications.{code.upper()}"] = str(values[f"-{code}_FM-"])
+                
+                dict_to_ini(config_data, save_path)
+                #sg.popup("Configuration saved successfully!", title="Save Config")
+                window["-CONFIG-"].update(save_path)
+                window["-CONFIG_TO_RUN-"].update(save_path)
         
     elif event == "-RESET_CONFIG-":
         default_masses = {
