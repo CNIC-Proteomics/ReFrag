@@ -477,8 +477,8 @@ while True:
                     window["-OUTPUT-"].print(err, text_color='orange')
         
         current_text = window["-PROGRESS_LABEL-"].get()
-        updated_text = current_text.replace("Searching file ", "Searched")
-        updated_text = current_text.replace("...", "files")
+        updated_text = current_text.replace("Searching file ", "Searched ")
+        updated_text = updated_text.replace("...", "files")
         window["-PROGRESS_LABEL-"].update(updated_text)
 
         window["Run"].update(disabled=False)
