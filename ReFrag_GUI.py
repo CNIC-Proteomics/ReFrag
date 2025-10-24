@@ -253,9 +253,9 @@ iniedit_layout = [
         *aa_rows,
         
         [sg.Text("\nOTHER MASSES", font=bold)],
-        [sg.Text("Proton", size=(25,1)), sg.Input(key="-PROTON_MASS-", size=(20,1), disabled=True, justification="right")],
-        [sg.Text("Hydrogen", size=(25,1)), sg.Input(key="-HYDROGEN_MASS-", size=(20,1), disabled=True, justification="right")],
-        [sg.Text("Oxygen", size=(25,1)), sg.Input(key="-OXYGEN_MASS-", size=(20,1), disabled=True, justification="right")],
+        [sg.Text("Proton", size=(25,1)), sg.Input(default_text=1.007276, key="-PROTON_MASS-", size=(20,1), disabled=True, justification="right")],
+        [sg.Text("Hydrogen", size=(25,1)), sg.Input(default_text=1.007825, key="-HYDROGEN_MASS-", size=(20,1), disabled=True, justification="right")],
+        [sg.Text("Oxygen", size=(25,1)), sg.Input(default_text=15.994915, key="-OXYGEN_MASS-", size=(20,1), disabled=True, justification="right")],
         
         [sg.Text("\nLOGGING", font=bold)],
         [sg.Text("Create Log", size=(25,1), tooltip=" Create a log file. "),
@@ -423,34 +423,37 @@ while True:
             "H": 0, "I": 0, "L": 0, "K": 0, "M": 0, "F": 0, "P": 0, "S": 0,
             "T": 0, "U": 0, "W": 0, "Y": 0, "V": 0, "O": 0, "Z": 0
         }
-        window["-CONFIG-"].update(settings.get("-CONFIG-", ""))
-        window["-BATCH_SIZE-"].update(settings.get("-BATCH_SIZE-", 1000))
-        window["-FRAGMENT_TOLERANCE-"].update(settings.get("-FRAGMENT_TOLERANCE-", 20.0))
-        window["-DELTAMASS_TOLERANCE-"].update(settings.get("-DELTAMASS_TOLERANCE-", 3.0))
+        # window["-CONFIG-"].update(settings.get("-CONFIG-", ""))
+        window["-BATCH_SIZE-"].update(1000)
+        window["-FRAGMENT_TOLERANCE-"].update(20.0)
+        window["-DELTAMASS_TOLERANCE-"].update(3.0)
         window["-MODE_A-"].update(True)
         window["-MODE_B-"].update(False)
         window["-Y_A-"].update(True)
         window["-Y_B-"].update(False)
         window["-PREF_A-"].update(True)
         window["-PREF_B-"].update(False)
-        window["-TOP_N-"].update(settings.get("-TOP_N-", 150))
-        window["-MIN_RATIO-"].update(settings.get("-MIN_RATIO-", 0.01))
-        window["-BIN_TOP_N-"].update(settings.get("-BIN_TOP_N-", False))
-        window["-MIN_FRAG_MZ-"].update(settings.get("-MIN_FRAG_MZ-", 0))
-        window["-MAX_FRAG_MZ-"].update(settings.get("-MAX_FRAG_MZ-", 0))
-        window["-DEISO-"].update(settings.get("-DEISO-", False))
-        window["-PROTEIN-"].update(settings.get("-PROTEIN-", ""))
-        window["-DECOY-"].update(settings.get("-DECOY-", ""))
-        window["-FILTER_TARGET-"].update(settings.get("-FILTER_TARGET-", False))
-        window["-FILTER_FDR-"].update(settings.get("-FILTER_FDR-", 0))
-        window["-CREATE_LOG-"].update(settings.get("-CREATE_LOG-", True))
-        window["-CREATE_INI-"].update(settings.get("-CREATE_INI-", True))
-        window["-DEBUG_SCORES-"].update(settings.get("-DEBUG_SCORES-", False))
+        window["-TOP_N-"].update(150)
+        window["-MIN_RATIO-"].update(0.01)
+        window["-BIN_TOP_N-"].update(False)
+        window["-MIN_FRAG_MZ-"].update(0)
+        window["-MAX_FRAG_MZ-"].update(0)
+        window["-DEISO-"].update(False)
+        window["-PROTEIN-"].update("protein")
+        window["-DECOY-"].update("DECOY")
+        window["-FILTER_TARGET-"].update(False)
+        window["-FILTER_FDR-"].update(0)
+        window["-CREATE_LOG-"].update(True)
+        window["-CREATE_INI-"].update(True)
+        window["-DEBUG_SCORES-"].update(False)
         for name, code in amino_acids:
                 mass = default_masses.get(code.upper(), "")
                 mods = default_mods.get(code.upper(), "")
                 window[f"-{code}_MASS-"].update(mass)
                 window[f"-{code}_FM-"].update(mods)
+        window["-PROTON_MASS-"].update(1.007276)
+        window["-HYDROGEN_MASS-"].update(1.007825)
+        window["-OXYGEN_MASS-"].update(15.994915)
             
     elif event == "Help":
         try:
