@@ -246,14 +246,14 @@ iniedit_layout = [
 run_layout = [
     [sg.Text("MSFragger Results", size=(25,1), justification='right'),
      sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1)),
-     sg.FileBrowse(button_text = "Load File",  target="-INFILE-", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),)),
-     sg.FolderBrowse(button_text = "Load Folder", target="-INFILE-")],
+     sg.FileBrowse(button_text = "Load File",  target="-INFILE-", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_FILE-"),
+     sg.FolderBrowse(button_text = "Load Folder", target="-INFILE-", key="-BROWSE_FOLDER-")],
     [sg.Text("MS Data File", size=(25,1), justification='right'),
      sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1)),
-     sg.FileBrowse(file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),))],
+     sg.FileBrowse(file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),), key="-BROWSE_RAW-")], # TODO disable all these buttons when running
     [sg.Text("Δmass File", size=(25,1), justification='right'),
      sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1)),
-     sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),))],
+     sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_DM-")],
     [sg.Text("_chN Files", size=(25,1), justification='right'),
      sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1))],
     [sg.Text("Scan Range", size=(25,1), justification='right'),
@@ -262,10 +262,10 @@ run_layout = [
      sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_END-", 0)), key="-SCAN_END-", enable_events=True, size=(8,1)),
      sg.Text("A value of 0 ignores these parameters.", font=italic)],
     [sg.Text("Output directory", size=(25,1), justification='right'), sg.Input(settings.get("-OUTDIR-", ""), key="-OUTDIR-", size=(60,1)),
-     sg.FolderBrowse()],
+     sg.FolderBrowse(key="-BROWSE_OUTPUT-")],
     [sg.Text("Config file", size=(25,1), justification='right'), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-", size=(60,1)),
-     sg.FileBrowse(),
-     sg.Button("Load Config")],
+     sg.FileBrowse(key="-BROWSE_CONFIG-"),
+     sg.Button("Load Config", key="-LOAD_CONFIG-")],
     [sg.Text("Number of workers", size=(25,1), justification='right'),
      sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
@@ -316,6 +316,13 @@ while True:
         window["Stop"].update(disabled=False)
         window["Exit"].update(disabled=True)
         window["-INI_TAB-"].update(disabled=True)
+        window["-BROWSE_FILE-"].update(disabled=True)
+        window["-BROWSE_FOLDER-"].update(disabled=True)
+        window["-BROWSE_RAW-"].update(disabled=True)
+        window["-BROWSE_DM-"].update(disabled=True)
+        window["-BROWSE_OUTPUT-"].update(disabled=True)
+        window["-BROWSE_CONFIG-"].update(disabled=True)
+        window["-LOAD_CONFIG-"].update(disabled=True)
 
         threading.Thread(target=run_script, args=(values, window), daemon=True).start() # TODO: always save INI showing in GUI?
         
@@ -438,6 +445,13 @@ while True:
         window["Run"].update(disabled=False)
         window["Exit"].update(disabled=False)
         window["-INI_TAB-"].update(disabled=False)
+        window["-BROWSE_FILE-"].update(disabled=False)
+        window["-BROWSE_FOLDER-"].update(disabled=False)
+        window["-BROWSE_RAW-"].update(disabled=False)
+        window["-BROWSE_DM-"].update(disabled=False)
+        window["-BROWSE_OUTPUT-"].update(disabled=False)
+        window["-BROWSE_CONFIG-"].update(disabled=False)
+        window["-LOAD_CONFIG-"].update(disabled=False)
 
     elif event == "-DONE-":
         code = values[event]
@@ -451,6 +465,13 @@ while True:
         window["Stop"].update(disabled=True)
         window["Exit"].update(disabled=False)
         window["-INI_TAB-"].update(disabled=False)
+        window["-BROWSE_FILE-"].update(disabled=False)
+        window["-BROWSE_FOLDER-"].update(disabled=False)
+        window["-BROWSE_RAW-"].update(disabled=False)
+        window["-BROWSE_DM-"].update(disabled=False)
+        window["-BROWSE_OUTPUT-"].update(disabled=False)
+        window["-BROWSE_CONFIG-"].update(disabled=False)
+        window["-LOAD_CONFIG-"].update(disabled=False)
         process = None
         
 window.close()
