@@ -106,6 +106,8 @@ def run_script(values, window):
     )
 
     window.write_event_value('-PROCESS-', process)
+    
+    error_lines = []
 
     progress = 0
     progress_current = 1
@@ -113,6 +115,7 @@ def run_script(values, window):
     if os.path.isfile(values["-INFILE-"]): progress_total = 1
     elif os.path.isdir(values["-INFILE-"]): progress_total = len([f for f in os.listdir(values["-INFILE-"]) if any(f.lower().endswith(s) for s in [".tsv"])]) # , ".txt"])])
     window["-PROGRESS_BAR-"].update(0, progress_total)
+    
     for line in iter(process.stdout.readline, ''):
         if '%|' in line:
             # tqdm line
@@ -124,11 +127,14 @@ def run_script(values, window):
                 progress_current += 1
             elif " - INFO - Done." in line: # update progress bar
                 window["-PROGRESS_BAR-"].update(progress)
+            elif " - INFO - ERROR: " in line:
+                error_lines.append(line)
             #elif "INFO - end script" in line:
             # normal line
             window.write_event_value('-APPEND-', line)
 
     process.wait()
+    window.write_event_value('-ERRORS-', error_lines)
     window.write_event_value('-DONE-', process.returncode)
 
 
@@ -402,6 +408,9 @@ while True:
         else:
             buffer.append(values[event])
         window["-OUTPUT-"].update(''.join(buffer))
+    
+    elif event == "-ERRORS-":
+        error_lines = values[event]
         
     elif event in ["-BATCH_SIZE-", "-TOP_N-", "-SCAN_START-", "-SCAN_END-"]:
         # Keep only digits
@@ -461,6 +470,17 @@ while True:
         else:
             # sg.popup("ReFrag finished with an error or was stopped.")
             window["-OUTPUT-"].print("\nReFrag finished with an error or was stopped.\n", text_color='red')
+        if error_lines:
+            window["-PROGRESS_BAR-"].update(bar_color=("orange", "white"))
+            window["-OUTPUT-"].print("\nWarnings detected during execution:\n", text_color='orange')
+            for err in error_lines:
+                    window["-OUTPUT-"].print(err, text_color='orange')
+        
+        current_text = window["-PROGRESS_LABEL-"].get()
+        updated_text = current_text.replace("Searching file ", "Searched")
+        updated_text = current_text.replace("...", "files")
+        window["-PROGRESS_LABEL-"].update(updated_text)
+
         window["Run"].update(disabled=False)
         window["Stop"].update(disabled=True)
         window["Exit"].update(disabled=False)
