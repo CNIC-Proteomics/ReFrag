@@ -88,8 +88,8 @@ def run_script(values, window):
         cmd += ["-s", scan_range]
     if values["-OUTDIR-"]:
         cmd += ["-o", values["-OUTDIR-"]]
-    if values["-CONFIG-"]:
-        cmd += ["-c", values["-CONFIG-"]]
+    if values["-CONFIG_TO_RUN-"]:
+        cmd += ["-c", values["-CONFIG_TO_RUN-"]]
     if values["-WORKERS-"]:
         cmd += ["-w", str(values["-WORKERS-"])]
     if values["-VERBOSE-"]:
@@ -251,29 +251,31 @@ iniedit_layout = [
 
 run_layout = [
     [sg.Text("MSFragger Results", size=(25,1), justification='right'),
-     sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1)),
+     sg.Input(settings.get("-INFILE-", ""), key="-INFILE-", size=(60,1), enable_events=True),
      sg.FileBrowse(button_text = "Load File",  target="-INFILE-", file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_FILE-"),
      sg.FolderBrowse(button_text = "Load Folder", target="-INFILE-", key="-BROWSE_FOLDER-")],
     [sg.Text("MS Data File", size=(25,1), justification='right'),
-     sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1)),
+     sg.Input(settings.get("-RAWFILE-", ""), key="-RAWFILE-", size=(60,1), enable_events=True),
      sg.FileBrowse(file_types = (('MS Data Files', '*.mzML;*.MGF;*.mzml;*.mgf'),), key="-BROWSE_RAW-")], # TODO disable all these buttons when running
     [sg.Text("Δmass File", size=(25,1), justification='right'),
-     sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1)),
+     sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1), enable_events=True),
      sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_DM-")],
     [sg.Text("_chN Files", size=(25,1), justification='right'),
-     sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1))],
+     sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1), enable_events=True)],
     [sg.Text("Scan Range", size=(25,1), justification='right'),
      sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_START-", 0)), key="-SCAN_START-", enable_events=True, size=(8,1)),
      sg.Text("-", pad=(0,0)),
      sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_END-", 0)), key="-SCAN_END-", enable_events=True, size=(8,1)),
      sg.Text("A value of 0 ignores these parameters.", font=italic)],
-    [sg.Text("Output directory", size=(25,1), justification='right'), sg.Input(settings.get("-OUTDIR-", ""), key="-OUTDIR-", size=(60,1)),
+    [sg.Text("Output directory", size=(25,1), justification='right'),
+     sg.Input(settings.get("-OUTDIR-", ""), key="-OUTDIR-", size=(60,1), enable_events=True),
      sg.FolderBrowse(key="-BROWSE_OUTPUT-")],
-    [sg.Text("Config file", size=(25,1), justification='right'), sg.Input(settings.get("-CONFIG-", ""), key="-CONFIG-", size=(60,1)),
+    [sg.Text("Config file", size=(25,1), justification='right'),
+     sg.Input(settings.get("-CONFIG_TO_RUN-", ""), key="-CONFIG_TO_RUN-", size=(60,1), enable_events=True),
      sg.FileBrowse(key="-BROWSE_CONFIG-"),
      sg.Button("Load Config", key="-LOAD_CONFIG-")],
     [sg.Text("Number of workers", size=(25,1), justification='right'),
-     sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1))],
+     sg.Spin([i for i in range(0, os.cpu_count()+1)], initial_value=os.cpu_count(), key="-WORKERS-", size=(8,1), enable_events=True)],
     [sg.Text("", size=(25,1)), sg.Checkbox("Verbose (-v)", default=settings.get("-VERBOSE-", False), key="-VERBOSE-")],
     [sg.Column([[sg.Multiline(size=(90, 25), key='-OUTPUT-', autoscroll=True, write_only=True, font=('Courier', 10))]], element_justification='center', expand_x=True)],
     [sg.Column([[sg.ProgressBar(100, orientation='h', size=(45, 20), bar_color=('green', 'white'), key='-PROGRESS_BAR-')]], pad=((30, 5), (10)), element_justification='left', expand_x=False),
@@ -321,14 +323,18 @@ while True:
         window["Run"].update(disabled=True)
         window["Stop"].update(disabled=False)
         window["Exit"].update(disabled=True)
-        window["-INI_TAB-"].update(disabled=True)
-        window["-BROWSE_FILE-"].update(disabled=True)
-        window["-BROWSE_FOLDER-"].update(disabled=True)
-        window["-BROWSE_RAW-"].update(disabled=True)
-        window["-BROWSE_DM-"].update(disabled=True)
-        window["-BROWSE_OUTPUT-"].update(disabled=True)
-        window["-BROWSE_CONFIG-"].update(disabled=True)
-        window["-LOAD_CONFIG-"].update(disabled=True)
+        
+        disable_keys = [
+            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
+            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-", "-LOAD_CONFIG-",
+            "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
+            "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
+        ]
+        for key in disable_keys:
+            try:
+                window[key].update(disabled=True, text_color="gray")
+            except TypeError:
+                window[key].update(disabled=True)
 
         threading.Thread(target=run_script, args=(values, window), daemon=True).start() # TODO: always save INI showing in GUI?
         
@@ -453,28 +459,31 @@ while True:
         window["Stop"].update(disabled=True)
         window["Run"].update(disabled=False)
         window["Exit"].update(disabled=False)
-        window["-INI_TAB-"].update(disabled=False)
-        window["-BROWSE_FILE-"].update(disabled=False)
-        window["-BROWSE_FOLDER-"].update(disabled=False)
-        window["-BROWSE_RAW-"].update(disabled=False)
-        window["-BROWSE_DM-"].update(disabled=False)
-        window["-BROWSE_OUTPUT-"].update(disabled=False)
-        window["-BROWSE_CONFIG-"].update(disabled=False)
-        window["-LOAD_CONFIG-"].update(disabled=False)
-
+        enable_keys = [
+            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
+            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-", "-LOAD_CONFIG-",
+            "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
+            "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
+        ]
+        for key in enable_keys:
+            try:
+                window[key].update(disabled=False, text_color="black")
+            except TypeError:
+                window[key].update(disabled=False)
+            
     elif event == "-DONE-":
         code = values[event]
+        if error_lines:
+            window["-PROGRESS_BAR-"].update(bar_color=("orange", "white"))
+            window["-OUTPUT-"].print("\nWarnings detected during execution:\n", text_color='orange')
+            for err in error_lines:
+                    window["-OUTPUT-"].print(err, text_color='orange')
         if code == 0:
             # sg.popup("ReFrag finished successfully!")
             window["-OUTPUT-"].print("\nReFrag finished successfully!\n", text_color='green') # TODO list errors and warnings that occurred, if any.
         else:
             # sg.popup("ReFrag finished with an error or was stopped.")
             window["-OUTPUT-"].print("\nReFrag finished with an error or was stopped.\n", text_color='red')
-        if error_lines:
-            window["-PROGRESS_BAR-"].update(bar_color=("orange", "white"))
-            window["-OUTPUT-"].print("\nWarnings detected during execution:\n", text_color='orange')
-            for err in error_lines:
-                    window["-OUTPUT-"].print(err, text_color='orange')
         
         current_text = window["-PROGRESS_LABEL-"].get()
         updated_text = current_text.replace("Searching file ", "Searched ")
@@ -484,14 +493,18 @@ while True:
         window["Run"].update(disabled=False)
         window["Stop"].update(disabled=True)
         window["Exit"].update(disabled=False)
-        window["-INI_TAB-"].update(disabled=False)
-        window["-BROWSE_FILE-"].update(disabled=False)
-        window["-BROWSE_FOLDER-"].update(disabled=False)
-        window["-BROWSE_RAW-"].update(disabled=False)
-        window["-BROWSE_DM-"].update(disabled=False)
-        window["-BROWSE_OUTPUT-"].update(disabled=False)
-        window["-BROWSE_CONFIG-"].update(disabled=False)
-        window["-LOAD_CONFIG-"].update(disabled=False)
+        enable_keys = [
+            "-INI_TAB-", "-BROWSE_FILE-", "-BROWSE_FOLDER-", "-BROWSE_RAW-",
+            "-BROWSE_DM-", "-BROWSE_OUTPUT-", "-BROWSE_CONFIG-", "-LOAD_CONFIG-",
+            "-INFILE-", "-RAWFILE-", "-DMFILE-", "-DIA-", "-SCAN_START-",
+            "-SCAN_END-", "-OUTDIR-", "-CONFIG_TO_RUN-", "-WORKERS-"
+        ]
+        for key in enable_keys:
+            try:
+                window[key].update(disabled=False, text_color="black")
+            except TypeError:
+                window[key].update(disabled=False)
+            
         process = None
         
 window.close()
