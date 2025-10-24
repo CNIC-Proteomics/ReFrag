@@ -279,8 +279,9 @@ run_layout = [
     [sg.Text("Δmass File", size=(25,1), justification='right'),
      sg.Input(settings.get("-DMFILE-", ""), key="-DMFILE-", size=(60,1), enable_events=True),
      sg.FileBrowse(file_types = (('Tab-separated Text Files', '*.tsv;*.txt'),), key="-BROWSE_DM-")],
-    [sg.Text("_chN Files", size=(25,1), justification='right'),
-     sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1), enable_events=True)],
+    # [sg.Text("_chN Files", size=(25,1), justification='right'),
+    #  sg.Input(settings.get("-DIA-", ""), key="-DIA-", size=(60,1), enable_events=True)],
+    [sg.Input("", key="-DIA-", visible=False)],
     [sg.Text("Scan Range", size=(25,1), justification='right'),
      sg.Spin([i for i in range(0, 1000000)], initial_value=int(settings.get("-SCAN_START-", 0)), key="-SCAN_START-", enable_events=True, size=(8,1)),
      sg.Text("-", pad=(0,0)),
@@ -305,7 +306,7 @@ run_layout = [
         sg.Button("Exit")]], element_justification='center', expand_x=True)] # TODO add progress bar for 1 out of n files, etc
 ]
 layout = [
-    [sg.Text("ReFrag v1.0"+" "*67, font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold")), sg.Button("About"), sg.Button("Help")], # TODO get version from script
+    [sg.Text("DeltaMatch v1.0"+" "*67, font=(sg.DEFAULT_FONT[0], sg.DEFAULT_FONT[1]*2, "bold")), sg.Button("About"), sg.Button("Help")], # TODO get version from script
     [sg.TabGroup([
         [sg.Tab('Parameters', iniedit_layout, key='-INI_TAB-'), sg.Tab('Run ReFrag', run_layout, key='-RUN_TAB-')]
     ])]
